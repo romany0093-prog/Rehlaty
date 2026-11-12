@@ -78,14 +78,13 @@ function viewHome() {
   const heroTrip = featured[0] || trips[0];
   const destOpts = db.destinations.map((d) => `<option value="${d.id}">${esc(L(d.name))}</option>`).join('');
   return publicLayout(`
-  <section class="hero"><div class="hero-art"><img src="${artURL('nile', 1)}" alt=""></div>
+  <section class="hero"><div class="hero-art"><img src="assets/hero.jpg" srcset="assets/hero-800.jpg 800w, assets/hero.jpg 1376w" sizes="100vw" alt="" fetchpriority="high" onerror="this.onerror=null;this.removeAttribute('srcset');this.src=artURL('nile',1)"></div>
     <div class="wrap hero-in" style="position:relative">
-      <span class="hero-dest">${ic('pin')} ${tr('أسوان، صعيد مصر', 'Aswan, Upper Egypt')}</span>
       <h1>${tr('كل رحلات مصر، من شركات موثوقة، في حجز واحد', 'Every Egyptian trip, from trusted operators, in one booking')}</h1>
       <p class="lead">${tr('قارن البرامج والأسعار والمواعيد بين أكثر من شركة سياحة مرخصة، واحجز مقعدك وادفع أونلاين.', 'Compare programmes, prices and dates across licensed tour operators, then book your seat and pay online.')}</p>
       <form class="ticket" data-f="hero-search" role="search">
         <div class="tf"><label for="hs-dest">${tr('رايح فين؟', 'Where to?')}</label><select id="hs-dest" name="dest"><option value="">${tr('كل الوجهات', 'All destinations')}</option>${destOpts}</select></div>
-        <div class="tf"><label for="hs-date">${tr('من تاريخ', 'From date')}</label><input id="hs-date" name="date" type="date" min="${iso(addDays(TODAY, 1))}"></div>
+        <div class="tf"><label for="hs-date">${tr('تاريخ السفر (من – إلى)', 'Travel dates (from – to)')}</label><div class="price-pair date-pair"><input id="hs-date" name="date" type="date" min="${iso(addDays(TODAY, 1))}" data-ch="date-from" data-to="hs-to" aria-label="${tr('من تاريخ', 'From date')}"><span class="sep">–</span><input id="hs-to" name="to" type="date" min="${iso(addDays(TODAY, 1))}" aria-label="${tr('إلى تاريخ', 'To date')}"></div></div>
         <div class="tf"><label>${tr('الميزانية للفرد (ج.م)', 'Budget per person (EGP)')}</label><div class="price-pair"><input name="min" type="number" min="0" step="500" placeholder="${tr('من', 'Min')}" aria-label="${tr('أقل سعر', 'Min price')}"><span class="faint">–</span><input name="max" type="number" min="0" step="500" placeholder="${tr('إلى', 'Max')}" aria-label="${tr('أعلى سعر', 'Max price')}"></div></div>
         <div class="go"><button class="btn btn-teal btn-lg" type="submit">${ic('search')}${tr('ابحث', 'Search')}</button></div>
       </form>
@@ -130,7 +129,8 @@ function viewHome() {
 
   <section class="sec"><div class="wrap"><div class="card card-pad row wrapx between" style="gap:20px;padding:28px"><div><h2 style="font-size:22px">${tr('عندك شركة سياحة؟', 'Run a tour company?')}</h2><p class="muted" style="margin-top:6px">${tr('اعرض رحلاتك لآلاف المسافرين وخلّي الحجز والتحصيل علينا. العمولة ' + db.settings.commission + '٪ على الحجز المكتمل فقط.', 'Reach thousands of travellers and let us handle booking and payment. ' + db.settings.commission + '% commission on completed bookings only.')}</p></div><a class="btn btn-primary btn-lg" href="#/register/company">${tr('سجّل شركتك', 'List your company')}</a></div></div></section>`);
 }
-FORMS['hero-search'] = (f) => { const d = formData(f); const q = new URLSearchParams(); Object.entries(d).forEach(([k, v]) => v && q.set(k, v)); go('#/trips' + (q.toString() ? '?' + q : '')); };
+CHANGES['date-from'] = (el) => { const to = document.getElementById(el.dataset.to); if (!to) return; to.min = el.value || to.min; if (to.value && el.value && to.value < el.value) to.value = ''; };
+FORMS['hero-search'] = (f) => { const d = formData(f); if (d.date && d.to && d.to < d.date) return toast(tr('تاريخ "إلى" لازم يكون بعد تاريخ "من".', 'The “to” date must be after the “from” date.'), 'bad'); const q = new URLSearchParams(); Object.entries(d).forEach(([k, v]) => v && q.set(k, v)); go('#/trips' + (q.toString() ? '?' + q : '')); };
 function companyCard(c) {
   const cr = companyRating(c.id), n = publicTrips().filter((t) => t.companyId === c.id).length;
   return `<a class="card card-pad" href="#/company/${c.id}" style="display:flex;flex-direction:column;gap:10px"><div class="row">${coLogo(c, 'md')}<div class="grow" style="min-width:0"><h3 style="font-size:16px">${esc(L(c.name))}</h3><div class="xs faint">${esc(L(c.city))}</div></div></div><p class="small muted" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(L(c.desc))}</p><div class="row between small">${starsHTML(cr.avg, cr.count)}<span class="muted">${tr(`${n} رحلة`, `${n} trips`)}</span></div></a>`;
@@ -145,7 +145,7 @@ function filterTrips(q) {
   if (q.cat) { const cs = q.cat.split(','); list = list.filter(({ t }) => cs.includes(t.catId)); }
   if (q.co) list = list.filter(({ t }) => t.companyId === q.co);
   if (q.dur) list = list.filter(({ t }) => (q.dur === '1' ? t.days === 1 : q.dur === '2-3' ? t.days >= 2 && t.days <= 3 : q.dur === '4-5' ? t.days >= 4 && t.days <= 5 : t.days >= 6));
-  if (q.date) list = list.filter(({ s }) => s.deps.some((d) => d.start >= q.date));
+  if (q.date || q.to) { const from = q.date || '', to = q.to && (!q.date || q.to >= q.date) ? q.to : ''; list = list.filter(({ s }) => s.deps.some((d) => (!from || d.start >= from) && (!to || d.start <= to))); }
   if (q.min) list = list.filter(({ s }) => s.minPrice >= +q.min);
   if (q.max) list = list.filter(({ s }) => s.minPrice <= +q.max);
   if (q.rating) list = list.filter(({ s }) => s.rating >= +q.rating);
@@ -167,7 +167,7 @@ function viewTrips() {
       <div class="fg"><div class="search" style="position:relative"><input class="input" placeholder="${tr('ابحث باسم الرحلة أو الشركة', 'Search trip or company')}" value="${esc(q.q || '')}" data-ch="flt-text" data-k="q" aria-label="${tr('بحث', 'Search')}"></div></div>
       <div class="fg"><h4>${tr('الوجهة', 'Destination')}</h4>${db.destinations.map((d) => chk('dest', d.id, L(d.name))).join('')}</div>
       <div class="fg"><h4>${tr('السعر للفرد (ج.م)', 'Price per person (EGP)')}</h4><div class="row"><input class="input" type="number" min="0" step="500" placeholder="${tr('من', 'Min')}" value="${esc(q.min || '')}" data-ch="flt-text" data-k="min" aria-label="${tr('أقل سعر', 'Min')}"><input class="input" type="number" min="0" step="500" placeholder="${tr('إلى', 'Max')}" value="${esc(q.max || '')}" data-ch="flt-text" data-k="max" aria-label="${tr('أعلى سعر', 'Max')}"></div></div>
-      <div class="fg"><h4>${tr('تاريخ السفر', 'Travel date')}</h4><input class="input" type="date" min="${iso(addDays(TODAY, 1))}" value="${esc(q.date || '')}" data-ch="flt-text" data-k="date" aria-label="${tr('من تاريخ', 'From date')}"><span class="hint">${tr('رحلات لها مواعيد في هذا التاريخ أو بعده', 'Trips with a departure on or after this date')}</span></div>
+      <div class="fg"><h4>${tr('تاريخ السفر', 'Travel date')}</h4><div class="stack" style="--gap:8px"><label class="small muted" for="fl-from">${tr('من', 'From')}</label><input class="input" id="fl-from" type="date" min="${iso(addDays(TODAY, 1))}" value="${esc(q.date || '')}" data-ch="flt-text" data-k="date"><label class="small muted" for="fl-to">${tr('إلى', 'To')}</label><input class="input" id="fl-to" type="date" min="${esc(q.date || iso(addDays(TODAY, 1)))}" value="${esc(q.to || '')}" data-ch="flt-text" data-k="to"></div><span class="hint">${q.date && q.to && q.to < q.date ? tr('تاريخ "إلى" قبل "من"، تم تجاهله.', 'The “to” date is before “from”, so it was ignored.') : tr('رحلات لها موعد سفر داخل الفترة دي', 'Trips with a departure in this range')}</span></div>
       <div class="fg"><h4>${tr('المدة', 'Duration')}</h4>${rad('dur', '', tr('أي مدة', 'Any'))}${rad('dur', '1', tr('يوم واحد', '1 day'))}${rad('dur', '2-3', tr('٢–٣ أيام', '2–3 days'))}${rad('dur', '4-5', tr('٤–٥ أيام', '4–5 days'))}${rad('dur', '6', tr('٦ أيام أو أكثر', '6+ days'))}</div>
       <div class="fg"><h4>${tr('نوع الرحلة', 'Trip type')}</h4>${db.categories.map((c) => chk('cat', c.id, L(c.name))).join('')}</div>
       <div class="fg"><h4>${tr('الشركة', 'Operator')}</h4><select class="select" data-ch="flt-text" data-k="co" aria-label="${tr('الشركة', 'Operator')}"><option value="">${tr('كل الشركات', 'All operators')}</option>${db.companies.filter((c) => c.status === 'approved').map((c) => `<option value="${c.id}" ${q.co === c.id ? 'selected' : ''}>${esc(L(c.name))}</option>`).join('')}</select></div>
