@@ -148,6 +148,12 @@ ACTIONS['dep-cancel'] = async (el) => {
   const dep = depById(el.dataset.id), si = seatInfo(dep), t = tripById(dep.tripId);
   if (!si.booked && !si.held) { if (!(await confirmDialog({ title: tr('حذف الموعد؟', 'Delete departure?'), text: tr(`موعد ${fmtD(dep.start)} مفيش عليه حجوزات وهيتحذف.`, `${fmtD(dep.start)} has no bookings and will be deleted.`), ok: tr('حذف', 'Delete'), danger: true }))) return; tx((x) => { assertCompanyOwns(x, byId(x.trips, t.id)); x.departures = x.departures.filter((y) => y.id !== dep.id); }); toast(tr('تم حذف الموعد.', 'Departure deleted.')); return render(); }
   if (!(await confirmDialog({ title: tr('إلغاء موعد عليه حجوزات', 'Cancel a booked departure'), text: tr(`فيه ${si.booked} مقعد محجوز. الإلغاء هيرجّع للعملاء فلوسهم كاملة ويبعتلهم إشعار. الإجراء ده مينفعش يترجع.`, `${si.booked} seats are booked. Cancelling refunds every customer in full and notifies them. This can’t be undone.`), ok: tr('إلغاء الموعد ورد المبالغ', 'Cancel & refund everyone'), danger: true }))) return;
+  await cancelDeparture(dep.id);
+  toast(tr('تم إلغاء الموعد ورد المبالغ للعملاء.', 'Departure cancelled and customers refunded.')); render();
+};
+
+function cancelDeparture(depId) {
+  const dep = depById(depId), t = tripById(dep.tripId);
   tx((x) => {
     assertCompanyOwns(x, byId(x.trips, t.id));
     const d = byId(x.departures, dep.id); d.status = 'cancelled';
@@ -162,8 +168,7 @@ ACTIONS['dep-cancel'] = async (el) => {
     });
     notify(x, 'admin', { ar: 'إلغاء موعد', en: 'Departure cancelled' }, { ar: `${myCompany().name.ar} ألغت موعد ${dep.start} لرحلة ${t.title.ar}.`, en: `${myCompany().name.en} cancelled ${dep.start} of ${t.title.en}.` }, '#/admin/bookings');
   });
-  toast(tr('تم إلغاء الموعد ورد المبالغ للعملاء.', 'Departure cancelled and customers refunded.')); render();
-};
+}
 
 /* company bookings */
 function viewCoBookings() {
@@ -222,7 +227,8 @@ function viewCoProfile() {
       ${inp('website', tr('الموقع الإلكتروني', 'Website'), c.website, { attrs: 'dir="ltr"' })}${inp('city', tr('العنوان', 'Address'), L(c.city))}
       ${inp('license', tr('رقم الترخيص', 'Licence'), c.license)}${inp('founded', tr('سنة التأسيس', 'Founded'), c.founded, { type: 'number' })}
       ${txa('desc', tr('نبذة عن الشركة', 'About the company'), L(c.desc), { full: true, rows: 4 })}
-    </div></div><div class="row" style="justify-content:flex-end"><button class="btn btn-primary btn-lg" type="submit">${tr('حفظ الملف', 'Save profile')}</button></div></form>`, c.status === 'approved' ? `<a class="btn btn-ghost btn-sm" href="#/company/${c.id}">${ic('eye')}${tr('الصفحة العامة', 'Public page')}</a>` : '');
+    </div></div><div class="row" style="justify-content:flex-end"><button class="btn btn-primary btn-lg" type="submit">${tr('حفظ الملف', 'Save profile')}</button></div></form>
+    <div style="margin-top:20px;max-width:520px">${passwordCard()}</div>`, c.status === 'approved' ? `<a class="btn btn-ghost btn-sm" href="#/company/${c.id}">${ic('eye')}${tr('الصفحة العامة', 'Public page')}</a>` : '');
 }
 CHANGES['co-logo'] = async (el) => { try { UI.coLogo = await readImage(el.files[0], 300); render(); toast(tr('اضغط "حفظ الملف" لتثبيت الشعار.', 'Press “Save profile” to keep the logo.'), 'info'); } catch (e) { handleErr(e); } };
 CHANGES['co-cover'] = async (el) => { try { UI.coCover = await readImage(el.files[0], 1600); render(); toast(tr('اضغط "حفظ الملف" لتثبيت الغلاف.', 'Press “Save profile” to keep the cover.'), 'info'); } catch (e) { handleErr(e); } };

@@ -60,6 +60,7 @@ const RULES = {
   email: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || tr('اكتب بريدًا صحيحًا مثل name@mail.com', 'Enter a valid email like name@mail.com'),
   phone: (v) => !v || /^01[0125]\d{8}$/.test(v.replace(/\s/g, '')) || tr('رقم موبايل مصري من ١١ رقم يبدأ بـ 01', 'An 11‑digit Egyptian mobile starting with 01'),
   min6: (v) => !v || v.length >= 6 || tr('٦ أحرف على الأقل.', 'At least 6 characters.'),
+  username: (v) => !v || /^[a-z0-9_.]{3,24}$/.test(v.toLowerCase()) || tr('من ٣ إلى ٢٤ حرف إنجليزي أو أرقام أو _ أو . بدون مسافات.', '3–24 letters, numbers, _ or . — no spaces.'),
   pos: (v) => v === '' || +v > 0 || tr('أدخل رقمًا أكبر من صفر.', 'Enter a number above zero.'),
   int: (v) => v === '' || Number.isInteger(+v) || tr('رقم صحيح فقط.', 'Whole numbers only.'),
   future: (v) => !v || new Date(v) > TODAY || tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),

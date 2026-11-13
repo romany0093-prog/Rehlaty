@@ -511,6 +511,7 @@ details.faq p{padding-bottom:14px;color:var(--muted)}
 </head>
 <body>
 <div id="app" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
 <div id="layer"></div>
 <div class="toasts" id="toasts" role="status"></div>
 <noscript><p style="padding:40px;text-align:center">رحلاتي يحتاج تفعيل JavaScript في المتصفح.</p></noscript>
@@ -1074,7 +1075,7 @@ function sweep() {
 
 /* ---------- repositories / selectors ---------- */
 const byId = (arr, id) => arr.find((x) => x.id === id);
-const userById = (id) => byId(db.users, id);
+const userById = (id) => byId(db.users, id) || { id, name: tr('مسافر', 'Traveller'), phone: '', email: '', role: 'customer', status: 'active' };
 const compById = (id) => byId(db.companies, id);
 const tripById = (id) => byId(db.trips, id);
 const depById = (id) => byId(db.departures, id);
@@ -1111,15 +1112,18 @@ const retained = (b) => b.total - (b.refunded || 0);
 /* ---------- session & RBAC ---------- */
 const SESS_KEY = 'rehlati_session';
 let SESSION = (() => { try { return JSON.parse(localStorage.getItem(SESS_KEY) || 'null'); } catch (e) { return null; } })();
-const me = () => (SESSION ? userById(SESSION.userId) : null);
+let me = () => (SESSION ? byId(db.users, SESSION.userId) || null : null);
 const role = () => (me() ? me().role : 'guest');
 function setSession(u) { SESSION = u ? { userId: u.id, at: Date.now() } : null; try { u ? localStorage.setItem(SESS_KEY, JSON.stringify(SESSION)) : localStorage.removeItem(SESS_KEY); } catch (e) { } }
-function login(email, pw) {
-  const u = db.users.find((x) => x.email.toLowerCase() === String(email).trim().toLowerCase());
+function login(ident, pw) {
+  const v = String(ident).trim().toLowerCase();
+  const u = db.users.find((x) => x.email.toLowerCase() === v || (x.username || x.email.split('@')[0].toLowerCase()) === v);
   if (!u || u.password !== pw) throw new AppError('BAD_LOGIN', tr('البريد أو كلمة المرور غير صحيحة.', 'Email or password is incorrect.'));
   if (u.status === 'suspended') throw new AppError('SUSPENDED', tr('هذا الحساب موقوف. تواصل مع خدمة العملاء.', 'This account is suspended. Contact support.'));
   setSession(u); return u;
 }
+function logout() { setSession(null); }
+function changePassword(oldPw, newPw) { if (oldPw !== me().password) throw new AppError('BAD_PW', tr('كلمة المرور الحالية غير صحيحة.', 'Current password is wrong.')); tx((d) => { byId(d.users, me().id).password = newPw; }); }
 const homeFor = (u) => (!u ? '#/' : u.role === 'admin' ? '#/admin' : u.role === 'company' ? '#/co' : '#/me');
 /** Company-scoped reads: a company user can only ever see rows with its own companyId. */
 const myCompany = () => (role() === 'company' ? compById(me().companyId) : null);
@@ -1128,36 +1132,42 @@ function assertCompanyOwns(d, obj) { const u = me(); if (!u || u.role !== 'compa
 function assertRole(r) { if (role() !== r) throw new AppError('FORBIDDEN', tr('غير مسموح.', 'Not allowed.')); }
 
 /* ---------- notifications ---------- */
-function notify(d, to, title, body, link) {
-  const targets = to === 'admin' ? ['admin'] : to.startsWith('company:') ? d.users.filter((u) => u.companyId === to.slice(8)).map((u) => u.id) : [to];
-  targets.forEach((t) => d.notifications.push({ id: uid('n'), to: t, title, body, link: link || '', read: false, createdAt: new Date().toISOString() }));
+/* `to` is a user id, 'admin', or 'company:<id>' (every user of that company sees it) */
+function notify(d, to, title, body, link) { d.notifications.push({ id: uid('n'), to, title, body, link: link || '', read: false, createdAt: new Date().toISOString() }); }
+const logAct = (d, ar, en) => d.activity.unshift({ id: uid('a'), at: new Date().toISOString(), text: { ar, en } });
+function myNotifs() {
+  const u = me(); if (!u) return [];
+  const keys = [u.id]; if (u.role === 'admin') keys.push('admin'); if (u.role === 'company') keys.push('company:' + u.companyId, ...db.users.filter((x) => x.companyId === u.companyId && x.id !== u.id).map((x) => x.id));
+  return db.notifications.filter((n) => keys.includes(n.to)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
-const logAct = (d, ar, en) => d.activity.unshift({ at: new Date().toISOString(), text: { ar, en } });
-function myNotifs() { const u = me(); if (!u) return []; const key = u.role === 'admin' ? 'admin' : u.id; return db.notifications.filter((n) => n.to === key).sort((a, b) => b.createdAt.localeCompare(a.createdAt)); }
 const unread = () => myNotifs().filter((n) => !n.read).length;
 
 /* ---------- auth services ---------- */
 function registerCustomer(f) {
-  return tx((d) => {
+  const nu = tx((d) => {
     if (d.users.some((u) => u.email.toLowerCase() === f.email.toLowerCase())) throw new AppError('EMAIL_TAKEN', tr('البريد مسجل بالفعل. سجّل الدخول بدلًا من ذلك.', 'This email is already registered. Log in instead.'));
-    const u = { id: uid('u'), role: 'customer', name: f.name, email: f.email, password: f.password, phone: f.phone, city: f.city || '', status: 'active', createdAt: new Date().toISOString(), favorites: [] };
+    if (d.users.some((u) => (u.username || u.email.split('@')[0]) === f.username)) throw new AppError('USERNAME_TAKEN', tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken.'));
+    const u = { id: uid('u'), role: 'customer', username: f.username, name: f.name, email: f.email, password: f.password, phone: f.phone, city: f.city || '', status: 'active', createdAt: new Date().toISOString(), favorites: [] };
     d.users.push(u);
     notify(d, u.id, { ar: 'أهلًا بك في رحلاتي', en: 'Welcome to Rehlati' }, { ar: 'حسابك جاهز. ابدأ باكتشاف الرحلات.', en: 'Your account is ready. Start exploring trips.' }, '#/trips');
     return u;
   });
+  setSession(nu); return nu;
 }
 function registerCompany(f) {
-  return tx((d) => {
+  const nu = tx((d) => {
     if (d.users.some((u) => u.email.toLowerCase() === f.email.toLowerCase())) throw new AppError('EMAIL_TAKEN', tr('البريد مسجل بالفعل.', 'This email is already registered.'));
     const palette = ['#2E6F6F', '#8C5A2B', '#5E4B8B', '#2F5D8A', '#9A3B3B', '#4E7A3A'];
     const c = { id: uid('c'), name: { ar: f.company, en: f.companyEn || f.company }, color: palette[d.companies.length % palette.length], city: { ar: f.city, en: f.city }, phone: f.phone, email: f.email, website: '', license: f.license, founded: +f.founded || new Date().getFullYear(), status: 'pending', commission: null, desc: { ar: f.desc || '', en: '' }, createdAt: new Date().toISOString(), logo: null, cover: 'art:sea:0', docs: (f.docs || []).map((n) => ({ name: n })) };
     d.companies.push(c);
-    const u = { id: uid('u'), role: 'company', companyId: c.id, name: f.name, email: f.email, password: f.password, phone: f.phone, status: 'active', createdAt: new Date().toISOString() };
+    if (d.users.some((u) => (u.username || u.email.split('@')[0]) === f.username)) throw new AppError('USERNAME_TAKEN', tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken.'));
+    const u = { id: uid('u'), role: 'company', companyId: c.id, username: f.username, name: f.name, email: f.email, password: f.password, phone: f.phone, status: 'active', createdAt: new Date().toISOString() };
     d.users.push(u);
     notify(d, 'admin', { ar: 'طلب تسجيل شركة', en: 'Company application' }, { ar: `${f.company} أرسلت طلب انضمام.`, en: `${f.companyEn || f.company} applied to join.` }, '#/admin/companies');
     logAct(d, `${f.company} سجلت كشركة جديدة`, `${f.companyEn || f.company} registered`);
     return u;
   });
+  setSession(nu); return nu;
 }
 
 /* ---------- booking & payment services ---------- */
@@ -1334,6 +1344,174 @@ const TSTAT = { active: { c: 'b-ok', l: { ar: 'منشورة', en: 'Live' } }, pe
 const DSTAT = { open: { c: 'b-ok', l: { ar: 'متاح للحجز', en: 'Open' } }, closed: { c: 'b-mute', l: { ar: 'مغلق', en: 'Closed' } }, cancelled: { c: 'b-bad', l: { ar: 'ملغي', en: 'Cancelled' } }, full: { c: 'b-bad', l: { ar: 'مكتمل', en: 'Sold out' } } };
 const badge = (map, k) => { const s = map[k] || { c: 'b-mute', l: { ar: k, en: k } }; return `<span class="badge ${s.c}">${L(s.l)}</span>`; };
 
+/* ---------- 4b. Cloud backend (Supabase) ----------
+   When SUPA_CFG is set and the Supabase library loaded, the app runs on the
+   shared database: real accounts (username or email + password), Row Level
+   Security on every table, and booking / payment / refund logic inside
+   Postgres functions. Open the site with ?demo=1 to use the offline demo. */
+const SUPA_CFG = { url: 'https://soysfbirinxmkivenvnp.supabase.co', key: 'sb_publishable_s8gZKounghBOLKBAFgxe0g_EP-aQ6f7' };
+const WANT_DEMO = /[?&]demo=1/.test(location.search);
+const CLOUD = !WANT_DEMO && !!SUPA_CFG.url && typeof window.supabase !== 'undefined' && !!window.supabase.createClient;
+const CLOUD_MISSING = !WANT_DEMO && !!SUPA_CFG.url && !CLOUD;
+const sb = CLOUD ? window.supabase.createClient(SUPA_CFG.url, SUPA_CFG.key, { auth: { persistSession: true, autoRefreshToken: true } }) : null;
+let AUTH_UID = null, SEATS = null, CO_STATS = {};
+
+/* object <-> row mapping: listed fields are real columns, everything else lives in `data` */
+const MAP = {
+  companies: { t: 'companies', c: { id: 'id', status: 'status', commission: 'commission', owner: 'owner', createdAt: 'created_at' } },
+  users: { t: 'profiles', c: { id: 'id', username: 'username', email: 'email', role: 'role', name: 'name', phone: 'phone', city: 'city', status: 'status', companyId: 'company_id', favorites: 'favorites', createdAt: 'created_at' } },
+  destinations: { t: 'destinations', c: { id: 'id' } },
+  categories: { t: 'categories', c: { id: 'id' } },
+  trips: { t: 'trips', c: { id: 'id', companyId: 'company_id', status: 'status', createdAt: 'created_at' } },
+  departures: { t: 'departures', c: { id: 'id', tripId: 'trip_id', companyId: 'company_id', start: 'start_date', end: 'end_date', price: 'price', seats: 'seats', status: 'status' } },
+  bookings: { t: 'bookings', ro: true, c: { id: 'id', ref: 'ref', customerId: 'customer_id', companyId: 'company_id', tripId: 'trip_id', departureId: 'departure_id', count: 'count', status: 'status', paymentStatus: 'payment_status', total: 'total', commission: 'commission', commissionRate: 'commission_rate', refunded: 'refunded', holdUntil: 'hold_until', createdAt: 'created_at', paidAt: 'paid_at' } },
+  payments: { t: 'payments', ro: true, c: { id: 'id', bookingId: 'booking_id', customerId: 'customer_id', companyId: 'company_id', method: 'method', amount: 'amount', status: 'status', idemKey: 'idem_key', txn: 'txn', createdAt: 'created_at' } },
+  refunds: { t: 'refunds', ro: true, c: { id: 'id', bookingId: 'booking_id', customerId: 'customer_id', companyId: 'company_id', amount: 'amount', pct: 'pct', status: 'status', reason: 'reason', createdAt: 'created_at', processedAt: 'processed_at' } },
+  reviews: { t: 'reviews', c: { id: 'id', bookingId: 'booking_id', tripId: 'trip_id', companyId: 'company_id', customerId: 'customer_id', customerName: 'customer_name', ratings: 'ratings', text: 'text', reply: 'reply', createdAt: 'created_at' } },
+  notifications: { t: 'notifications', c: { id: 'id', to: 'to_user', title: 'title', body: 'body', link: 'link', read: 'read', createdAt: 'created_at' } },
+  settlements: { t: 'settlements', c: { id: 'id', companyId: 'company_id', amount: 'amount', method: 'method', note: 'note', createdAt: 'created_at' } },
+  disputes: { t: 'disputes', c: { id: 'id', bookingId: 'booking_id', companyId: 'company_id', customerId: 'customer_id', subject: 'subject', status: 'status', resolution: 'resolution', createdAt: 'created_at' } },
+  activity: { t: 'activity', c: { id: 'id', at: 'at', text: 'text' } }
+};
+const ORDER = ['companies', 'users', 'destinations', 'categories', 'trips', 'departures', 'bookings', 'payments', 'refunds', 'reviews', 'notifications', 'settlements', 'disputes', 'activity'];
+function fromRow(m, r) {
+  const o = Object.assign({}, r.data || {});
+  Object.entries(m.c).forEach(([k, col]) => { if (r[col] !== undefined) o[k] = r[col]; });
+  ['price', 'seats', 'total', 'commission', 'commissionRate', 'refunded', 'amount', 'pct', 'count'].forEach((k) => { if (o[k] != null && typeof o[k] === 'string') o[k] = +o[k]; });
+  if (o.commission === undefined) o.commission = null;
+  return o;
+}
+function toRow(m, o) {
+  const r = { data: {} }; const cols = m.c;
+  Object.keys(o).forEach((k) => { if (o[k] === undefined) return; if (cols[k]) r[cols[k]] = o[k]; else r.data[k] = o[k]; });
+  if (m.t === 'departures') delete r.company_id; // filled by trigger from the trip
+  return r;
+}
+async function fetchAll(table) {
+  const out = []; const page = 1000;
+  for (let from = 0; ; from += page) {
+    const { data, error } = await sb.from(table).select('*').range(from, from + page - 1);
+    if (error) throw error;
+    out.push(...data); if (data.length < page) break;
+  }
+  return out;
+}
+async function loadCloud() {
+  const { data: s } = await sb.auth.getSession();
+  AUTH_UID = s && s.session ? s.session.user.id : null;
+  await sb.rpc('housekeeping').then(() => {}, () => {});
+  const [settingsRows, seats, cstats, ...lists] = await Promise.all([
+    fetchAll('settings'), sb.rpc('seat_counts').then((r) => r.data || []), sb.rpc('company_travellers').then((r) => r.data || []),
+    ...ORDER.map((k) => fetchAll(MAP[k].t))
+  ]);
+  const d = { version: DB_VERSION, settings: (settingsRows.find((r) => r.id === 'main') || { data: {} }).data };
+  ORDER.forEach((k, i) => { d[k] = lists[i].map((r) => fromRow(MAP[k], r)); });
+  d.activity.sort((a, b) => b.at.localeCompare(a.at));
+  SEATS = {}; seats.forEach((r) => { SEATS[r.departure_id] = { booked: r.booked, held: r.held }; });
+  CO_STATS = {}; cstats.forEach((r) => { CO_STATS[r.company_id] = r; });
+  db = d;
+  if (AUTH_UID) { const u = me(); if (u && u.status === 'suspended') { await sb.auth.signOut(); AUTH_UID = null; toast(tr('هذا الحساب موقوف. تواصل مع خدمة العملاء.', 'This account is suspended. Contact support.'), 'bad'); return loadCloud(); } }
+}
+const reloadCloud = () => loadCloud().then(() => render(), handleErr);
+
+/* push the difference between two snapshots; RLS + triggers on the server decide what sticks */
+async function pushDiff(before, after) {
+  const jobs = [];
+  for (const k of ORDER) {
+    const m = MAP[k]; if (m.ro) continue;
+    const old = new Map((before[k] || []).map((x) => [x.id, x])), nw = new Map((after[k] || []).map((x) => [x.id, x]));
+    const ins = [], upd = [], del = [];
+    nw.forEach((o, id) => { const p = old.get(id); if (!p) ins.push(o); else if (JSON.stringify(p) !== JSON.stringify(o)) upd.push(o); });
+    old.forEach((o, id) => { if (!nw.has(id)) del.push(id); });
+    jobs.push({ k, m, ins, upd, del });
+  }
+  for (const j of jobs) {
+    if (j.ins.length) { const { error } = await sb.from(j.m.t).insert(j.ins.map((o) => toRow(j.m, o))); if (error) throw error; }
+    for (const o of j.upd) { const r = toRow(j.m, o); delete r.id; const { error } = await sb.from(j.m.t).update(r).eq('id', o.id); if (error) throw error; }
+  }
+  for (const j of jobs.slice().reverse()) if (j.del.length) { const { error } = await sb.from(j.m.t).delete().in('id', j.del); if (error) throw error; }
+  if (JSON.stringify(before.settings) !== JSON.stringify(after.settings)) { const { error } = await sb.from('settings').update({ data: after.settings }).eq('id', 'main'); if (error) throw error; }
+}
+let SYNCING = Promise.resolve();
+function cloudTx(fn) {
+  const before = db; const draft = JSON.parse(JSON.stringify(db));
+  const result = fn(draft);
+  db = draft;
+  SYNCING = SYNCING.then(() => pushDiff(before, draft)).catch((e) => { toast(cloudMsg(e), 'bad'); return reloadCloud(); });
+  return result;
+}
+function cloudMsg(e) {
+  const m = String((e && (e.message || e.error_description)) || e || '');
+  const code = m.split(':')[0].trim(), n = m.split(':')[1];
+  const M = {
+    DUPLICATE: tr(`لديك حجز على نفس الموعد بالفعل (${n || ''}).`, `You already have a booking on this date (${n || ''}).`),
+    NO_SEATS: +n ? tr(`المتاح الآن ${n} مقاعد فقط.`, `Only ${n} seats are left.`) : tr('اكتملت المقاعد في هذا الموعد.', 'This date is fully booked.'),
+    DEP_CLOSED: tr('هذا الموعد لم يعد متاحًا. اختر موعدًا آخر.', 'This date is no longer available.'), UNAVAILABLE: tr('هذه الرحلة غير متاحة للحجز حاليًا.', 'This trip is not available right now.'),
+    SUSPENDED: tr('حسابك موقوف.', 'Your account is suspended.'), AUTH: tr('سجّل الدخول كعميل لإتمام الحجز.', 'Log in as a customer to book.'), FORBIDDEN: tr('غير مسموح.', 'Not allowed.'),
+    NOT_COMPLETED: tr('التقييم متاح بعد انتهاء الرحلة فقط.', 'You can review only after the trip ends.'), DUP_REVIEW: tr('قيّمت هذا الحجز من قبل.', 'You already reviewed this booking.'),
+    EXPIRED: tr('انتهت مهلة حجز المقاعد. ابدأ الحجز من جديد.', 'The seat hold expired. Please start again.'), STATE: tr('تمت معالجة هذا الطلب بالفعل.', 'Already processed.'),
+    USERNAME_TAKEN: tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken. Choose another.'), EMAIL_TAKEN: tr('البريد مسجل بالفعل. سجّل الدخول بدلًا من ذلك.', 'This email is already registered. Log in instead.'),
+    BAD_USERNAME: tr('اسم المستخدم من ٣ إلى ٢٤ حرف إنجليزي صغير أو أرقام أو _ .', 'Username: 3–24 lowercase letters, numbers, _ or .'), WEAK_PASSWORD: tr('كلمة المرور ٦ أحرف على الأقل.', 'Password must be at least 6 characters.'),
+    SEATS_BELOW_BOOKED: tr('مينفعش تقلل المقاعد عن المحجوز.', 'Seats can’t go below seats booked.'), DATE_IN_PAST: tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
+    COMPANY_NOT_APPROVED: tr('شركتك لسه ما اتعتمدتش.', 'Your company isn’t approved yet.'), SHORT_TEXT: tr('اكتب ٢٠ حرف على الأقل.', 'Write at least 20 characters.')
+  };
+  if (M[code]) return M[code];
+  if (/Invalid login credentials/i.test(m)) return tr('اسم المستخدم أو كلمة المرور غير صحيحة.', 'Username or password is incorrect.');
+  if (/foreign key|violates.*constraint.*fkey/i.test(m)) return tr('مينفعش تحذفه لأنه مرتبط ببيانات تانية (حجوزات مثلًا).', 'It can’t be deleted because other data (e.g. bookings) uses it.');
+  if (/row-level security|permission denied/i.test(m)) return tr('مش مسموح لحسابك بالتعديل ده.', 'Your account isn’t allowed to make this change.');
+  if (/Failed to fetch|NetworkError|network/i.test(m)) return tr('مفيش اتصال بالسيرفر. اتأكد من الإنترنت وحاول تاني.', 'Can’t reach the server. Check your connection and try again.');
+  return m || tr('حدث خطأ غير متوقع.', 'Something went wrong.');
+}
+async function rpc(name, args) {
+  const { data, error } = await sb.rpc(name, args);
+  if (error) { const e = new AppError((error.message || '').split(':')[0], cloudMsg(error)); throw e; }
+  return data;
+}
+
+/* ---------- swap the data layer when running on Supabase ---------- */
+if (CLOUD) {
+  tx = cloudTx;
+  sweep = () => {};
+  initDB = () => {};
+  resetDB = () => toast(tr('إعادة الضبط متاحة في وضع العرض التجريبي فقط.', 'Reset is only available in demo mode.'), 'info');
+  me = () => (AUTH_UID ? byId(db.users, AUTH_UID) : null);
+  setSession = () => {};
+  seatInfo = function (dep) { const s = (SEATS && SEATS[dep.id]) || { booked: 0, held: 0 }; return { seats: dep.seats, booked: s.booked, held: s.held, remaining: Math.max(0, dep.seats - s.booked - s.held) }; };
+  login = async function (ident, pw) {
+    const email = await rpc('resolve_login', { p_ident: ident });
+    if (!email) throw new AppError('BAD_LOGIN', tr('اسم المستخدم أو كلمة المرور غير صحيحة.', 'Username or password is incorrect.'));
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) throw new AppError('BAD_LOGIN', cloudMsg(error));
+    AUTH_UID = data.user.id; await loadCloud();
+    const u = me(); if (!u) throw new AppError('BAD_LOGIN', tr('تعذر تحميل الحساب.', 'Couldn’t load the account.'));
+    return u;
+  };
+  logout = async function () { await sb.auth.signOut(); AUTH_UID = null; await loadCloud(); };
+  registerCustomer = async function (f) { await rpc('register_account', { p_username: f.username, p_email: f.email, p_password: f.password, p_name: f.name, p_phone: f.phone, p_role: 'customer', p_company: null }); return login(f.username, f.password); };
+  registerCompany = async function (f) {
+    const palette = ['#2E6F6F', '#8C5A2B', '#5E4B8B', '#2F5D8A', '#9A3B3B', '#4E7A3A'];
+    const company = { name: { ar: f.company, en: f.companyEn || f.company }, color: palette[Math.floor(Math.random() * palette.length)], city: { ar: f.city, en: f.city }, phone: f.phone, website: '', license: f.license, founded: +f.founded || new Date().getFullYear(), desc: { ar: f.desc || '', en: '' }, logo: null, cover: 'art:sea:0', docs: (f.docs || []).map((n) => ({ name: n })) };
+    await rpc('register_account', { p_username: f.username, p_email: f.email, p_password: f.password, p_name: f.name, p_phone: f.phone, p_role: 'company', p_company: company });
+    return login(f.username, f.password);
+  };
+  changePassword = async function (oldPw, newPw) {
+    const { error } = await sb.auth.signInWithPassword({ email: me().email, password: oldPw });
+    if (error) throw new AppError('BAD_PW', tr('كلمة المرور الحالية غير صحيحة.', 'Current password is wrong.'));
+    const r = await sb.auth.updateUser({ password: newPw }); if (r.error) throw new AppError('PW', cloudMsg(r.error));
+  };
+  const afterRpc = async (p) => { try { return await p; } finally { await SYNCING; await loadCloud(); } };
+  createBooking = ({ depId, travelers, code }) => afterRpc(rpc('create_booking', { p_dep: depId, p_travelers: travelers, p_code: code || null }).then((r) => fromRow(MAP.bookings, r)));
+  payBooking = ({ bookingId, method, idemKey, details }) => afterRpc(rpc('pay_booking', { p_booking: bookingId, p_method: method, p_idem: idemKey, p_details: details || {} }).then((r) => {
+    if (r.error) throw new AppError(r.error, cloudMsg(r.error));
+    return { payment: r.payment ? fromRow(MAP.payments, r.payment) : null, booking: fromRow(MAP.bookings, r.booking), failed: !!r.failed, replay: !!r.replay };
+  }));
+  requestCancel = (bookingId, reason) => afterRpc(rpc('request_cancel', { p_booking: bookingId, p_reason: reason || '' }));
+  processRefund = (refundId, approve, note) => afterRpc(rpc('process_refund', { p_refund: refundId, p_approve: !!approve, p_note: note || '' }));
+  addReview = (bookingId, ratings, text) => afterRpc(rpc('add_review', { p_booking: bookingId, p_ratings: ratings, p_text: text }));
+  cancelDeparture = (depId) => afterRpc(rpc('cancel_departure', { p_dep: depId }));
+  sb.auth.onAuthStateChange((ev, s) => { const id = s && s.user ? s.user.id : null; if (ev === 'SIGNED_OUT' && AUTH_UID) { AUTH_UID = null; reloadCloud(); } else if (id) AUTH_UID = id; });
+}
+
 /* ---------- 5. UI kit ---------- */
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
@@ -1395,6 +1573,7 @@ const RULES = {
   email: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || tr('اكتب بريدًا صحيحًا مثل name@mail.com', 'Enter a valid email like name@mail.com'),
   phone: (v) => !v || /^01[0125]\d{8}$/.test(v.replace(/\s/g, '')) || tr('رقم موبايل مصري من ١١ رقم يبدأ بـ 01', 'An 11‑digit Egyptian mobile starting with 01'),
   min6: (v) => !v || v.length >= 6 || tr('٦ أحرف على الأقل.', 'At least 6 characters.'),
+  username: (v) => !v || /^[a-z0-9_.]{3,24}$/.test(v.toLowerCase()) || tr('من ٣ إلى ٢٤ حرف إنجليزي أو أرقام أو _ أو . بدون مسافات.', '3–24 letters, numbers, _ or . — no spaces.'),
   pos: (v) => v === '' || +v > 0 || tr('أدخل رقمًا أكبر من صفر.', 'Enter a number above zero.'),
   int: (v) => v === '' || Number.isInteger(+v) || tr('رقم صحيح فقط.', 'Whole numbers only.'),
   future: (v) => !v || new Date(v) > TODAY || tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
@@ -1540,14 +1719,14 @@ function userMenu(u) {
 ACTIONS.umenu = () => { UI.menu = !UI.menu; render(); };
 ACTIONS.mnav = () => { UI.mnav = !UI.mnav; render(); };
 ACTIONS.lang = () => { LANG = LANG === 'ar' ? 'en' : 'ar'; try { localStorage.setItem(LANG_KEY, LANG); } catch (e) { } applyLang(); render(); };
-ACTIONS.logout = () => { setSession(null); UI.menu = null; toast(tr('تم تسجيل الخروج.', 'Logged out.')); go('#/'); };
+ACTIONS.logout = async () => { UI.menu = null; await logout(); toast(tr('تم تسجيل الخروج.', 'Logged out.')); go('#/'); };
 function footer() {
   return `<footer class="site-f"><div class="wrap"><div class="f-grid">
     <div><a href="#/" class="logo" style="color:#fff">${logoMark()}<span>${tr('رحلاتي', 'Rehlati')}</span></a><p style="margin-top:12px;font-size:14.5px;max-width:320px">${tr('منصة تجمع شركات السياحة المرخصة في مصر. قارن واحجز وادفع في مكان واحد.', 'Licensed Egyptian tour operators in one place. Compare, book and pay securely.')}</p></div>
     <div><h4>${tr('اكتشف', 'Explore')}</h4><a href="#/trips">${tr('كل الرحلات', 'All trips')}</a><a href="#/destinations">${tr('الوجهات', 'Destinations')}</a><a href="#/companies">${tr('شركات السياحة', 'Tour operators')}</a><a href="#/trips?cat=day">${tr('رحلات اليوم الواحد', 'Day trips')}</a></div>
     <div><h4>${tr('رحلاتي', 'Rehlati')}</h4><a href="#/page/about">${tr('من نحن', 'About')}</a><a href="#/page/faq">${tr('الأسئلة الشائعة', 'FAQ')}</a><a href="#/page/terms">${tr('الشروط والأحكام', 'Terms')}</a><a href="#/page/privacy">${tr('الخصوصية', 'Privacy')}</a><a href="#/register/company">${tr('سجّل شركتك معنا', 'List your company')}</a></div>
     <div><h4>${tr('تواصل معنا', 'Contact')}</h4><a href="#/page/contact" class="row" style="gap:8px">${ic('phone')}<span dir="ltr">16xxx</span></a><a href="#/page/contact" class="row" style="gap:8px">${ic('mail')}support@rehlati.eg</a><p style="font-size:14px;margin-top:6px">${tr('التجمع الخامس، القاهرة الجديدة', 'Fifth Settlement, New Cairo')}</p></div>
-  </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('رحلاتي. نسخة تجريبية للعرض.', 'Rehlati. Demo prototype.')}</span><button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button></div></div></footer>`;
+  </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('رحلاتي', 'Rehlati')}${CLOUD ? '' : ' · ' + tr('وضع العرض التجريبي (البيانات في متصفحك فقط)', 'Demo mode (data stays in your browser)')}</span>${CLOUD ? '' : `<button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button>`}</div></div></footer>`;
 }
 ACTIONS['reset-demo'] = async () => { if (await confirmDialog({ title: tr('إعادة ضبط البيانات؟', 'Reset demo data?'), text: tr('ستُحذف كل التعديلات والحجوزات التي أضفتها وتعود البيانات التجريبية الأصلية.', 'All your changes and bookings will be removed and the original demo data restored.'), ok: tr('إعادة الضبط', 'Reset'), danger: true })) { resetDB(); setSession(null); toast(tr('تمت إعادة ضبط البيانات.', 'Demo data reset.')); go('#/'); } };
 const publicLayout = (inner) => header() + `<main id="main" class="route-fade">${inner}</main>` + footer();
@@ -1585,7 +1764,7 @@ function viewHome() {
   const latest = trips.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
   const dests = db.destinations.filter((d) => d.featured);
   const comps = db.companies.filter((c) => c.status === 'approved');
-  const revs = db.reviews.filter((r) => r.ratings.overall >= 5 && r.text.length > 40).slice(0, 3);
+  const revs = db.reviews.filter((r) => r.ratings.overall >= 5 && r.text.length > 40 && tripById(r.tripId)).slice(0, 3);
   const banner = db.settings.banners.find((b) => b.active);
   const heroTrip = featured[0] || trips[0];
   const destOpts = db.destinations.map((d) => `<option value="${d.id}">${esc(L(d.name))}</option>`).join('');
@@ -1636,7 +1815,7 @@ function viewHome() {
 
   <section class="sec band"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('قالوا عن رحلاتهم', 'What travellers said')}</h2><p>${tr('تقييمات منشورة من حجوزات مكتملة.', 'Published reviews from completed bookings.')}</p></div></div>
-    <div class="grid g3">${revs.map((r) => { const u = userById(r.customerId), t = tripById(r.tripId); return `<figure class="quote" style="margin:0">${starsHTML(r.ratings.overall)}<p style="margin:10px 0 14px">${esc(r.text)}</p><figcaption class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint"><a href="#/trip/${t.id}">${esc(L(t.title))}</a></div></div></figcaption></figure>`; }).join('')}</div>
+    <div class="grid g3">${revs.map((r) => { const u = { name: r.customerName || userById(r.customerId).name }, t = tripById(r.tripId); return `<figure class="quote" style="margin:0">${starsHTML(r.ratings.overall)}<p style="margin:10px 0 14px">${esc(r.text)}</p><figcaption class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint"><a href="#/trip/${t.id}">${esc(L(t.title))}</a></div></div></figcaption></figure>`; }).join('')}</div>
   </div></section>
 
   <section class="sec"><div class="wrap"><div class="card card-pad row wrapx between" style="gap:20px;padding:28px"><div><h2 style="font-size:22px">${tr('عندك شركة سياحة؟', 'Run a tour company?')}</h2><p class="muted" style="margin-top:6px">${tr('اعرض رحلاتك لآلاف المسافرين وخلّي الحجز والتحصيل علينا. العمولة ' + db.settings.commission + '٪ على الحجز المكتمل فقط.', 'Reach thousands of travellers and let us handle booking and payment. ' + db.settings.commission + '% commission on completed bookings only.')}</p></div><a class="btn btn-primary btn-lg" href="#/register/company">${tr('سجّل شركتك', 'List your company')}</a></div></div></section>`);
@@ -1750,7 +1929,7 @@ function viewTrip(id) {
     <aside><div class="bw" id="bw">${bookingWidget(t)}</div></aside></div></div>`);
 }
 function reviewItem(r) {
-  const u = userById(r.customerId); const c = compById(r.companyId);
+  const u = { name: r.customerName || userById(r.customerId).name }; const c = compById(r.companyId) || { name: '' };
   return `<div class="rev"><div class="row between"><div class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint">${fmtD(r.createdAt)} · ${tr('حجز مؤكد', 'Verified booking')}</div></div></div>${starsHTML(r.ratings.overall)}</div><p style="margin-top:8px">${esc(r.text)}</p>${r.reply ? `<div class="reply"><b class="small" style="color:var(--navy)">${tr('رد', 'Reply from')} ${esc(L(c.name))}</b><p class="small">${esc(r.reply.text)}</p></div>` : ''}</div>`;
 }
 function bookingWidget(t) {
@@ -1786,7 +1965,7 @@ function viewCompany(id) {
   const c = compById(id);
   if (!c || (c.status !== 'approved' && role() !== 'admin')) return viewNotFound(tr('الشركة غير موجودة', 'Company not found'), tr('ممكن تكون الشركة غير مفعّلة حاليًا.', 'It may be inactive right now.'));
   const trips = publicTrips().filter((t) => t.companyId === c.id), revs = companyReviews(c.id), cr = companyRating(c.id);
-  const done = db.bookings.filter((b) => b.companyId === c.id && b.status === 'completed').reduce((a, b) => a + b.count, 0);
+  const done = CLOUD ? ((CO_STATS[c.id] || {}).travellers || 0) : db.bookings.filter((b) => b.companyId === c.id && b.status === 'completed').reduce((a, b) => a + b.count, 0);
   return publicLayout(`<section style="position:relative;height:240px;overflow:hidden;background:var(--navy)"><img src="${imgSrc(c.cover)}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.85"></section>
   <div class="wrap"><div class="card card-pad" style="margin-top:-70px;position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">${coLogo(c, 'lg')}<div class="grow"><h1 style="font-size:28px">${esc(L(c.name))}</h1><div class="row wrapx small muted" style="gap:14px;margin-top:4px"><span class="row" style="gap:5px">${ic('pin')}${esc(L(c.city))}</span><span class="row" style="gap:5px">${ic('shield')}${esc(c.license)}</span></div></div><div class="row" style="gap:28px"><div><small class="muted">${tr('التقييم', 'Rating')}</small><div>${starsHTML(cr.avg, cr.count)}</div></div><div><small class="muted">${tr('مسافرون', 'Travellers')}</small><div><b class="num" style="color:var(--navy)">${fmtN(done)}</b></div></div><div><small class="muted">${tr('منذ', 'Since')}</small><div><b style="color:var(--navy)">${c.founded}</b></div></div></div></div>
   <div class="detail-layout"><div>
@@ -1801,36 +1980,38 @@ function viewCompany(id) {
 /* ---- auth ---- */
 function viewLogin() {
   const q = readQuery();
-  const demo = [['mariam@demo.eg', '123456', tr('عميل', 'Customer'), 'مريم عادل', 'user'], ['bahr@demo.eg', '123456', tr('شركة سياحة', 'Tour company'), L(compById('c2').name), 'building'], ['nilestar@demo.eg', '123456', tr('شركة سياحة', 'Tour company'), L(compById('c1').name), 'building'], ['admin@rehlati.eg', 'admin123', tr('مدير المنصة', 'Platform admin'), tr('إدارة رحلاتي', 'Rehlati admin'), 'shield']];
+  const co = (id) => (compById(id) ? L(compById(id).name) : id);
+  const demo = db.settings.showDemo === false ? [] : [['mariam', '123456', tr('عميل', 'Customer'), 'مريم عادل', 'user'], ['bahr', '123456', tr('شركة سياحة', 'Tour company'), co('c2'), 'building'], ['nilestar', '123456', tr('شركة سياحة', 'Tour company'), co('c1'), 'building'], ...(CLOUD ? [] : [['admin', 'admin123', tr('مدير المنصة', 'Platform admin'), tr('إدارة رحلاتي', 'Rehlati admin'), 'shield']])];
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('sinai', 2)}" alt=""><p class="cap">${tr('الشروق من فوق جبل موسى، دهب', 'Sunrise from Mount Sinai, Dahab')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('تسجيل الدخول', 'Log in')}</h1><p class="muted" style="margin:6px 0 22px">${tr('ادخل علشان تتابع حجوزاتك أو تدير شركتك.', 'Log in to manage your bookings or your company.')}</p>
-    <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
+    <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('ident', tr('اسم المستخدم أو البريد الإلكتروني', 'Username or email'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('دخول', 'Log in')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('ما عندكش حساب؟', 'No account?')} <a class="btn-link" href="#/register${q.next ? '?next=' + encodeURIComponent(q.next) : ''}">${tr('أنشئ حساب', 'Sign up')}</a> · <a class="btn-link" href="#/register/company">${tr('سجّل شركتك', 'Register a company')}</a></p>
-    <div style="margin-top:26px"><div class="lbl">${tr('حسابات تجريبية (اضغط للدخول مباشرة)', 'Demo accounts (click to log in)')}</div><div class="demo-acc">${demo.map(([e, p, r, n, i]) => `<button type="button" data-a="demo-login" data-e="${e}" data-p="${p}"><span class="kpi"><span class="ic" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--teal-50);color:var(--teal-700)">${ic(i)}</span></span><span class="grow"><b style="color:var(--navy);font-size:14px">${esc(n)}</b><div class="xs muted">${r} · <span dir="ltr">${e}</span></div></span>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</button>`).join('')}</div></div>
+    ${demo.length ? `<div style="margin-top:26px"><div class="lbl">${tr('حسابات تجريبية (اضغط للدخول مباشرة)', 'Demo accounts (click to log in)')}</div><div class="demo-acc">${demo.map(([e, p, r, n, i]) => `<button type="button" data-a="demo-login" data-e="${e}" data-p="${p}"><span style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--teal-50);color:var(--teal-700);flex:none">${ic(i)}</span><span class="grow"><b style="color:var(--navy);font-size:14px">${esc(n)}</b><div class="xs muted">${r} · <span dir="ltr">${e}</span> / <span dir="ltr">${p}</span></div></span>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</button>`).join('')}</div></div>` : ''}
   </div></div></main>`;
 }
 FORMS.login = async (f) => {
-  const d = validate(f, { email: ['req', 'email'], password: ['req'] }); if (!d) return;
-  const btn = $('button[type=submit]', f); busy(btn, true); await wait(350);
-  try { const u = login(d.email, d.password); toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(f.dataset.next && u.role === 'customer' ? f.dataset.next : homeFor(u)); }
+  const d = validate(f, { ident: ['req'], password: ['req'] }); if (!d) return;
+  const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(350);
+  try { const u = await login(d.ident, d.password); toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(f.dataset.next && u.role === 'customer' ? f.dataset.next : homeFor(u)); }
   catch (e) { busy(btn, false); const fe = f.elements.password.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
 };
-ACTIONS['demo-login'] = (el) => { const u = login(el.dataset.e, el.dataset.p); const nx = readQuery().next; toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(nx && u.role === 'customer' ? nx : homeFor(u)); };
+ACTIONS['demo-login'] = async (el) => { el.disabled = true; let u; try { u = await login(el.dataset.e, el.dataset.p); } finally { el.disabled = false; } const nx = readQuery().next; toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(nx && u.role === 'customer' ? nx : homeFor(u)); };
 function viewRegister() {
   const q = readQuery();
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('coast', 0)}" alt=""><p class="cap">${tr('العلمين الجديدة، الساحل الشمالي', 'New Alamein, North Coast')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('إنشاء حساب مسافر', 'Create a traveller account')}</h1><p class="muted" style="margin:6px 0 22px">${tr('دقيقة واحدة وتقدر تحجز وتتابع رحلاتك.', 'One minute and you can book and track your trips.')}</p>
-    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('name', tr('الاسم بالكامل', 'Full name'), '', { attrs: 'autocomplete="name"' })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('phone', tr('رقم الموبايل', 'Mobile number'), '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٦ أحرف على الأقل', 'At least 6 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
+    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('name', tr('الاسم بالكامل', 'Full name'), '', { attrs: 'autocomplete="name"' })}${inp('username', tr('اسم المستخدم', 'Username'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو . (٣–٢٤)، هتدخل بيه بدل البريد', 'Lowercase letters, numbers, _ or . (3–24). You can log in with it.') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('phone', tr('رقم الموبايل', 'Mobile number'), '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٦ أحرف على الأقل', 'At least 6 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
     <label class="check field"><input type="checkbox" name="terms" value="1"><span>${tr('أوافق على', 'I agree to the')} <a class="btn-link" href="#/page/terms" target="_blank">${tr('الشروط والأحكام', 'terms')}</a></span><span class="err-msg"></span></label>
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('إنشاء الحساب', 'Create account')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('عندك حساب؟', 'Have an account?')} <a class="btn-link" href="#/login">${tr('سجّل الدخول', 'Log in')}</a> · <a class="btn-link" href="#/register/company">${tr('تسجيل شركة سياحة', 'Register a tour company')}</a></p></div></div></main>`;
 }
 FORMS.register = async (f) => {
-  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], email: ['req', 'email'], phone: ['req', 'phone'], password: ['req', 'min6'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
-  const btn = $('button[type=submit]', f); busy(btn, true); await wait(400);
-  try { const u = registerCustomer(d); setSession(u); toast(tr('تم إنشاء حسابك.', 'Account created.')); go(f.dataset.next || '#/me'); }
-  catch (e) { busy(btn, false); const fe = f.elements.email.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
+  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], username: ['req', 'username'], email: ['req', 'email'], phone: ['req', 'phone'], password: ['req', 'min6'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
+  d.username = d.username.toLowerCase();
+  const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(400);
+  try { await registerCustomer(d); toast(tr('تم إنشاء حسابك.', 'Account created.')); go(f.dataset.next || '#/me'); }
+  catch (e) { busy(btn, false); const fe = f.elements[e.code === 'USERNAME_TAKEN' || e.code === 'BAD_USERNAME' ? 'username' : 'email'].closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
 };
 function viewRegisterCompany() {
   return header() + `<main class="route-fade"><section class="phead"><div class="wrap"><h1>${tr('سجّل شركتك على رحلاتي', 'List your company on Rehlati')}</h1><p>${tr('بنراجع الطلب والمستندات خلال يومين عمل. بعد الاعتماد تقدر تنشر رحلاتك وتستقبل حجوزات.', 'We review applications within two business days. Once approved you can publish trips and take bookings.')}</p></div></section>
@@ -1841,17 +2022,18 @@ function viewRegisterCompany() {
     ${txa('desc', tr('نبذة عن الشركة', 'About the company'), '', { full: true, rows: 3 })}
     <div class="field full"><span class="lbl">${tr('المستندات المطلوبة', 'Required documents')}</span><label class="upload">${ic('upload', 'lg')}<div style="margin-top:6px">${tr('ارفع السجل التجاري، ترخيص وزارة السياحة، والبطاقة الضريبية (PDF أو صورة)', 'Upload commercial register, tourism licence and tax card (PDF or image)')}</div><input type="file" name="docs" multiple accept=".pdf,image/*" class="sr" data-ch="docs-pick"></label><div id="docs-list" class="small muted" style="margin-top:6px"></div><span class="err-msg"></span></div>
   </div><h3 style="margin:24px 0 16px">${tr('حساب المسؤول', 'Account owner')}</h3><div class="form-grid">
-    ${inp('name', tr('اسم المسؤول', 'Contact name'), '')}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'dir="ltr"' })}
+    ${inp('name', tr('اسم المسؤول', 'Contact name'), '')}${inp('username', tr('اسم المستخدم للدخول', 'Login username'), '', { attrs: 'dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو .', 'Lowercase letters, numbers, _ or .') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}
   </div><div class="row" style="margin-top:22px;justify-content:flex-end"><a class="btn btn-ghost" href="#/">${tr('إلغاء', 'Cancel')}</a><button class="btn btn-primary btn-lg" type="submit">${tr('إرسال الطلب', 'Submit application')}</button></div></form></div></main>` + footer();
 }
 CHANGES['docs-pick'] = (el) => { $('#docs-list').textContent = Array.from(el.files).map((f) => f.name).join('، '); el.closest('.field').classList.remove('err'); };
 FORMS['register-company'] = async (f) => {
   const files = Array.from(f.elements.docs.files || []);
-  const d = validate(f, { company: ['req'], license: ['req'], founded: ['req', 'int', (v) => (+v >= 1950 && +v <= 2026) || tr('سنة غير صحيحة.', 'Invalid year.')], city: ['req'], phone: ['req', 'phone'], name: ['req'], email: ['req', 'email'], password: ['req', 'min6'] });
+  const d = validate(f, { company: ['req'], license: ['req'], founded: ['req', 'int', (v) => (+v >= 1950 && +v <= 2026) || tr('سنة غير صحيحة.', 'Invalid year.')], city: ['req'], phone: ['req', 'phone'], name: ['req', (v) => v.length >= 3 || tr('اكتب الاسم بالكامل.', 'Enter the full name.')], username: ['req', 'username'], email: ['req', 'email'], password: ['req', 'min6'] });
   if (!files.length) { const fe = f.elements.docs.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = tr('ارفع مستندًا واحدًا على الأقل.', 'Upload at least one document.'); }
   if (!d || !files.length) return;
-  const btn = $('button[type=submit]', f); busy(btn, true); await wait(500);
-  try { d.docs = files.map((x) => x.name); const u = registerCompany(d); setSession(u); toast(tr('تم إرسال طلبك. هنبلغك بعد المراجعة.', 'Application sent. We’ll notify you after review.')); go('#/co'); }
+  d.username = d.username.toLowerCase();
+  const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(500);
+  try { d.docs = files.map((x) => x.name); await registerCompany(d); toast(tr('تم إرسال طلبك. هنبلغك بعد المراجعة.', 'Application sent. We’ll notify you after review.')); go('#/co'); }
   catch (e) { busy(btn, false); toast(e.message, 'bad'); }
 };
 
@@ -1929,7 +2111,7 @@ FORMS['co-2'] = async (f) => {
   if (!validate(f, { terms: [(v) => !!v || tr('لازم توافق على الشروط علشان تكمل.', 'You must accept the terms to continue.')] })) return;
   const btn = $('button[type=submit]', f); busy(btn, true, tr('جاري حجز المقاعد…', 'Holding seats…')); await wait(500);
   try {
-    const b = createBooking({ depId: UI.co.depId, travelers: UI.co.travelers, code: UI.co.code });
+    const b = await createBooking({ depId: UI.co.depId, travelers: UI.co.travelers, code: UI.co.code });
     UI.co.bookingId = b.id; UI.co.idemKey = uid('idem'); UI.co.step = 3; render(); scrollTo(0, 0);
   } catch (e) {
     busy(btn, false);
@@ -1961,7 +2143,7 @@ function coStep3(t, dep, b) {
 CHANGES['card-fmt'] = (el) => { const v = el.value.replace(/\D/g, '').slice(0, 16); el.value = v.replace(/(.{4})/g, '$1 ').trim(); };
 ACTIONS['co-method'] = (el) => { UI.co.method = el.dataset.m; UI.co.otpSent = false; UI.co.fawryCode = null; render(); };
 ACTIONS['co-restart'] = () => { const t = UI.co.tripId; UI.co = null; go('#/trip/' + t); };
-ACTIONS['co-cancel-hold'] = async () => { if (!(await confirmDialog({ title: tr('إلغاء الحجز؟', 'Cancel this booking?'), text: tr('هنفك حجز المقاعد ومش هيتم خصم أي مبلغ.', 'We’ll release the seats. Nothing will be charged.'), ok: tr('إلغاء الحجز', 'Cancel booking'), danger: true }))) return; requestCancel(UI.co.bookingId, 'customer_abandoned'); const t = UI.co.tripId; UI.co = null; toast(tr('تم إلغاء الحجز وفك المقاعد.', 'Booking cancelled and seats released.')); go('#/trip/' + t); };
+ACTIONS['co-cancel-hold'] = async () => { if (!(await confirmDialog({ title: tr('إلغاء الحجز؟', 'Cancel this booking?'), text: tr('هنفك حجز المقاعد ومش هيتم خصم أي مبلغ.', 'We’ll release the seats. Nothing will be charged.'), ok: tr('إلغاء الحجز', 'Cancel booking'), danger: true }))) return; await requestCancel(UI.co.bookingId, 'customer_abandoned'); const t = UI.co.tripId; UI.co = null; toast(tr('تم إلغاء الحجز وفك المقاعد.', 'Booking cancelled and seats released.')); go('#/trip/' + t); };
 FORMS['co-pay'] = async (f) => {
   const co = UI.co, m = co.method, btn = $('#pay-btn');
   if (btn.disabled) return; // double-submit guard (idempotency key also protects the server side)
@@ -1972,13 +2154,13 @@ FORMS['co-pay'] = async (f) => {
   busy(btn, true, tr('جاري تأكيد الدفع…', 'Confirming payment…'));
   await wait(1300);
   try {
-    const res = payBooking({ bookingId: co.bookingId, method: m, idemKey: co.idemKey, details });
+    const res = await payBooking({ bookingId: co.bookingId, method: m, idemKey: co.idemKey, details });
     if (res.failed) { co.idemKey = uid('idem'); co.otpSent = false; render(); toast(L(res.payment.failReason), 'bad'); return; }
     co.done = true; toast(tr('تم الدفع وتأكيد الحجز.', 'Payment complete — booking confirmed.'));
     go('#/me/booking/' + res.booking.ref + '?new=1');
   } catch (e) { busy(btn, false); toast(e.message, 'bad'); if (e.code === 'EXPIRED') render(); }
 };
-function tickHold() { const el = $('#hold-timer'); if (!el) return; const ms = new Date(el.dataset.until) - Date.now(); if (ms <= 0) { el.textContent = '00:00'; if (UI.co && UI.co.step === 3 && !UI.co.expiredShown) { UI.co.expiredShown = true; sweep(); render(); } return; } el.textContent = String(Math.floor(ms / 6e4)).padStart(2, '0') + ':' + String(Math.floor(ms / 1e3) % 60).padStart(2, '0'); }
+function tickHold() { const el = $('#hold-timer'); if (!el) return; const ms = new Date(el.dataset.until) - Date.now(); if (ms <= 0) { el.textContent = '00:00'; if (UI.co && UI.co.step === 3 && !UI.co.expiredShown) { UI.co.expiredShown = true; if (CLOUD) reloadCloud(); else { sweep(); render(); } } return; } el.textContent = String(Math.floor(ms / 6e4)).padStart(2, '0') + ':' + String(Math.floor(ms / 1e3) % 60).padStart(2, '0'); }
 setInterval(tickHold, 1000);
 
 /* ---------- dashboard shell (shared by customer / company / admin) ---------- */
@@ -2076,7 +2258,7 @@ ACTIONS['cancel-open'] = async (el) => {
   else { const p = refundPolicy(b); text = p.amount ? tr(`حسب سياسة الرحلة هتسترد ${p.pct}٪ (${money(p.amount)}). الطلب هيتراجع من إدارة رحلاتي ويرجع المبلغ بنفس طريقة الدفع.`, `Under the trip policy you’ll get ${p.pct}% back (${money(p.amount)}). Rehlati will review it and refund to the original payment method.`) : tr('باقي أقل من ٧ أيام على السفر، فمفيش استرداد حسب سياسة الرحلة. متأكد إنك عايز تلغي؟', 'It’s less than 7 days to departure, so there’s no refund under the policy. Cancel anyway?'); }
   const reason = await confirmDialog({ title: tr('إلغاء الحجز', 'Cancel booking'), text, ok: tr('تأكيد الإلغاء', 'Confirm cancellation'), danger: true, input: tr('سبب الإلغاء (اختياري)', 'Reason (optional)') });
   if (reason === false) return;
-  const r = requestCancel(b.id, reason || tr('بدون سبب', 'No reason given'));
+  const r = await requestCancel(b.id, reason || tr('بدون سبب', 'No reason given'));
   toast(r.kind === 'refund_pending' ? tr('تم إرسال طلب الاسترداد. هنبلغك بعد المراجعة.', 'Refund request sent. We’ll notify you after review.') : tr('تم إلغاء الحجز.', 'Booking cancelled.'));
   render();
 };
@@ -2086,10 +2268,11 @@ ACTIONS['review-open'] = (el) => {
   modal({ title: tr('قيّم رحلتك', 'Review your trip'), body: `<form data-f="review" data-id="${b.id}" id="rv-form" class="stack" novalidate><p class="muted small">${esc(L(t.title))}</p>${rows.map(([k, l]) => `<div class="field" style="flex-direction:row;justify-content:space-between;align-items:center"><span class="lbl">${l}</span>${starInput(k, 0)}<span class="err-msg" style="flex-basis:100%"></span></div>`).join('')}${txa('text', tr('اكتب رأيك', 'Your review'), '', { rows: 4, hint: tr('٢٠ حرف على الأقل. هيتنشر باسمك على صفحة الرحلة.', 'At least 20 characters. Published under your name.') })}</form>`, foot: `<button class="btn btn-ghost" data-a="close-modal">${tr('إلغاء', 'Cancel')}</button><button class="btn btn-primary" data-a="review-submit">${tr('نشر التقييم', 'Publish review')}</button>` });
 };
 ACTIONS['review-submit'] = () => $('#rv-form').requestSubmit();
-FORMS.review = (f) => {
+FORMS.review = async (f) => {
   const st = (v) => +v >= 1 || tr('اختر عدد النجوم.', 'Pick a rating.');
   const d = validate(f, { overall: [st], organization: [st], service: [st], punctuality: [st], company: [st], text: ['req', (v) => v.length >= 20 || tr('اكتب ٢٠ حرف على الأقل.', 'Write at least 20 characters.')] }); if (!d) return;
-  addReview(f.dataset.id, { overall: +d.overall, organization: +d.organization, service: +d.service, punctuality: +d.punctuality, company: +d.company }, d.text);
+  const btn = $('#layer [data-a=review-submit]'); busy(btn, true);
+  try { await addReview(f.dataset.id, { overall: +d.overall, organization: +d.organization, service: +d.service, punctuality: +d.punctuality, company: +d.company }, d.text); } catch (e) { busy(btn, false); throw e; }
   closeModal(); toast(tr('شكرًا! تم نشر تقييمك.', 'Thanks! Your review is published.')); render();
 };
 function docHTML(title, inner) {
@@ -2129,11 +2312,18 @@ function viewMyReviews() {
 }
 function viewMyProfile() {
   const u = me();
-  return dashLayout('me', tr('بياناتي', 'My details'), `<div class="grid g2" style="align-items:start"><form class="card card-pad stack" data-f="me-profile" novalidate><h3>${tr('البيانات الشخصية', 'Personal details')}</h3>${inp('name', tr('الاسم', 'Name'), u.name)}${inp('email', tr('البريد', 'Email'), u.email, { type: 'email', attrs: 'dir="ltr"' })}${inp('phone', tr('الموبايل', 'Mobile'), u.phone, { type: 'tel', attrs: 'dir="ltr"' })}${inp('city', tr('المدينة', 'City'), u.city || '')}<div><button class="btn btn-primary" type="submit">${tr('حفظ التغييرات', 'Save changes')}</button></div></form>
-  <form class="card card-pad stack" data-f="me-pass" novalidate><h3>${tr('تغيير كلمة المرور', 'Change password')}</h3>${inp('old', tr('كلمة المرور الحالية', 'Current password'), '', { type: 'password', attrs: 'dir="ltr"' })}${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr"' })}<div><button class="btn btn-ghost" type="submit">${tr('تحديث كلمة المرور', 'Update password')}</button></div></form></div>`);
+  return dashLayout('me', tr('بياناتي', 'My details'), `<div class="grid g2" style="align-items:start"><form class="card card-pad stack" data-f="me-profile" novalidate><h3>${tr('البيانات الشخصية', 'Personal details')}</h3><div class="form-grid">${inp('username', tr('اسم المستخدم', 'Username'), u.username || u.email.split('@')[0], { attrs: 'dir="ltr" readonly disabled' })}${inp('email_ro', tr('البريد', 'Email'), u.email, { attrs: 'dir="ltr" readonly disabled' })}</div>${inp('name', tr('الاسم', 'Name'), u.name)}${inp('phone', tr('الموبايل', 'Mobile'), u.phone, { type: 'tel', attrs: 'dir="ltr"' })}${inp('city', tr('المدينة', 'City'), u.city || '')}<div><button class="btn btn-primary" type="submit">${tr('حفظ التغييرات', 'Save changes')}</button></div></form>
+  ${passwordCard()}</div>`);
 }
-FORMS['me-profile'] = (f) => { const d = validate(f, { name: ['req'], email: ['req', 'email', (v) => !db.users.some((x) => x.email === v && x.id !== me().id) || tr('البريد مستخدم لحساب آخر.', 'Email used by another account.')], phone: ['req', 'phone'] }); if (!d) return; tx((x) => Object.assign(byId(x.users, me().id), { name: d.name, email: d.email, phone: d.phone, city: d.city })); toast(tr('تم حفظ بياناتك.', 'Details saved.')); render(); };
-FORMS['me-pass'] = (f) => { const d = validate(f, { old: ['req', (v) => v === me().password || tr('كلمة المرور الحالية غير صحيحة.', 'Current password is wrong.')], nw: ['req', 'min6'] }); if (!d) return; tx((x) => { byId(x.users, me().id).password = d.nw; }); f.reset(); toast(tr('تم تحديث كلمة المرور.', 'Password updated.')); };
+FORMS['me-profile'] = (f) => { const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], phone: ['req', 'phone'] }); if (!d) return; tx((x) => Object.assign(byId(x.users, me().id), { name: d.name, phone: d.phone, city: d.city })); toast(tr('تم حفظ بياناتك.', 'Details saved.')); render(); };
+const passwordCard = () => `<form class="card card-pad stack" data-f="me-pass" novalidate><h3>${tr('تغيير كلمة المرور', 'Change password')}</h3>${inp('old', tr('كلمة المرور الحالية', 'Current password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="current-password"' })}${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}${inp('nw2', tr('تأكيد كلمة المرور الجديدة', 'Confirm new password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"' })}<div><button class="btn btn-ghost" type="submit">${tr('تحديث كلمة المرور', 'Update password')}</button></div></form>`;
+FORMS['me-pass'] = async (f) => {
+  const d = validate(f, { old: ['req'], nw: ['req', 'min6', (v, a) => v !== a.old || tr('اختر كلمة مرور مختلفة عن الحالية.', 'Choose a different password.')], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
+  const btn = $('button[type=submit]', f); busy(btn, true);
+  try { await changePassword(d.old, d.nw); f.reset(); toast(tr('تم تحديث كلمة المرور.', 'Password updated.')); }
+  catch (e) { const fe = f.elements.old.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
+  finally { busy(btn, false); }
+};
 
 /* ---------- 9. Company dashboard (every read goes through the company scope) ---------- */
 const coTrips = () => db.trips.filter((t) => t.companyId === me().companyId);
@@ -2284,6 +2474,12 @@ ACTIONS['dep-cancel'] = async (el) => {
   const dep = depById(el.dataset.id), si = seatInfo(dep), t = tripById(dep.tripId);
   if (!si.booked && !si.held) { if (!(await confirmDialog({ title: tr('حذف الموعد؟', 'Delete departure?'), text: tr(`موعد ${fmtD(dep.start)} مفيش عليه حجوزات وهيتحذف.`, `${fmtD(dep.start)} has no bookings and will be deleted.`), ok: tr('حذف', 'Delete'), danger: true }))) return; tx((x) => { assertCompanyOwns(x, byId(x.trips, t.id)); x.departures = x.departures.filter((y) => y.id !== dep.id); }); toast(tr('تم حذف الموعد.', 'Departure deleted.')); return render(); }
   if (!(await confirmDialog({ title: tr('إلغاء موعد عليه حجوزات', 'Cancel a booked departure'), text: tr(`فيه ${si.booked} مقعد محجوز. الإلغاء هيرجّع للعملاء فلوسهم كاملة ويبعتلهم إشعار. الإجراء ده مينفعش يترجع.`, `${si.booked} seats are booked. Cancelling refunds every customer in full and notifies them. This can’t be undone.`), ok: tr('إلغاء الموعد ورد المبالغ', 'Cancel & refund everyone'), danger: true }))) return;
+  await cancelDeparture(dep.id);
+  toast(tr('تم إلغاء الموعد ورد المبالغ للعملاء.', 'Departure cancelled and customers refunded.')); render();
+};
+
+function cancelDeparture(depId) {
+  const dep = depById(depId), t = tripById(dep.tripId);
   tx((x) => {
     assertCompanyOwns(x, byId(x.trips, t.id));
     const d = byId(x.departures, dep.id); d.status = 'cancelled';
@@ -2298,8 +2494,7 @@ ACTIONS['dep-cancel'] = async (el) => {
     });
     notify(x, 'admin', { ar: 'إلغاء موعد', en: 'Departure cancelled' }, { ar: `${myCompany().name.ar} ألغت موعد ${dep.start} لرحلة ${t.title.ar}.`, en: `${myCompany().name.en} cancelled ${dep.start} of ${t.title.en}.` }, '#/admin/bookings');
   });
-  toast(tr('تم إلغاء الموعد ورد المبالغ للعملاء.', 'Departure cancelled and customers refunded.')); render();
-};
+}
 
 /* company bookings */
 function viewCoBookings() {
@@ -2358,7 +2553,8 @@ function viewCoProfile() {
       ${inp('website', tr('الموقع الإلكتروني', 'Website'), c.website, { attrs: 'dir="ltr"' })}${inp('city', tr('العنوان', 'Address'), L(c.city))}
       ${inp('license', tr('رقم الترخيص', 'Licence'), c.license)}${inp('founded', tr('سنة التأسيس', 'Founded'), c.founded, { type: 'number' })}
       ${txa('desc', tr('نبذة عن الشركة', 'About the company'), L(c.desc), { full: true, rows: 4 })}
-    </div></div><div class="row" style="justify-content:flex-end"><button class="btn btn-primary btn-lg" type="submit">${tr('حفظ الملف', 'Save profile')}</button></div></form>`, c.status === 'approved' ? `<a class="btn btn-ghost btn-sm" href="#/company/${c.id}">${ic('eye')}${tr('الصفحة العامة', 'Public page')}</a>` : '');
+    </div></div><div class="row" style="justify-content:flex-end"><button class="btn btn-primary btn-lg" type="submit">${tr('حفظ الملف', 'Save profile')}</button></div></form>
+    <div style="margin-top:20px;max-width:520px">${passwordCard()}</div>`, c.status === 'approved' ? `<a class="btn btn-ghost btn-sm" href="#/company/${c.id}">${ic('eye')}${tr('الصفحة العامة', 'Public page')}</a>` : '');
 }
 CHANGES['co-logo'] = async (el) => { try { UI.coLogo = await readImage(el.files[0], 300); render(); toast(tr('اضغط "حفظ الملف" لتثبيت الشعار.', 'Press “Save profile” to keep the logo.'), 'info'); } catch (e) { handleErr(e); } };
 CHANGES['co-cover'] = async (el) => { try { UI.coCover = await readImage(el.files[0], 1600); render(); toast(tr('اضغط "حفظ الملف" لتثبيت الغلاف.', 'Press “Save profile” to keep the cover.'), 'info'); } catch (e) { handleErr(e); } };
@@ -2481,8 +2677,8 @@ function viewAdBookings() {
 }
 ACTIONS['adbk-tab'] = (el) => { UI.adBkTab = el.dataset.k; render(); };
 ACTIONS['ad-bk'] = (el) => bookingModal(byId(db.bookings, el.dataset.id), 'admin');
-ACTIONS['rf-ok'] = async (el) => { const r = byId(db.refunds, el.dataset.id), b = byId(db.bookings, r.bookingId); if (!(await confirmDialog({ title: tr('الموافقة على الاسترداد', 'Approve refund'), text: tr(`هيترد ${money(r.amount)} للعميل على الحجز ${b.ref} بنفس طريقة الدفع. لا يمكن التراجع.`, `${money(r.amount)} will be refunded on ${b.ref} to the original payment method. This can’t be undone.`), ok: tr('رد المبلغ', 'Refund') }))) return; processRefund(r.id, true); closeModal(); toast(tr('تم رد المبلغ وإبلاغ العميل.', 'Refunded and customer notified.')); render(); };
-ACTIONS['rf-dec'] = async (el) => { const note = await confirmDialog({ title: tr('رفض الاسترداد', 'Decline refund'), text: tr('الحجز هيرجع مؤكد، والعميل هيستلم السبب.', 'The booking returns to confirmed and the customer gets the reason.'), ok: tr('رفض', 'Decline'), danger: true, input: tr('السبب', 'Reason') }); if (note === false) return; processRefund(el.dataset.id, false, note); closeModal(); toast(tr('تم رفض الطلب.', 'Request declined.')); render(); };
+ACTIONS['rf-ok'] = async (el) => { const r = byId(db.refunds, el.dataset.id), b = byId(db.bookings, r.bookingId); if (!(await confirmDialog({ title: tr('الموافقة على الاسترداد', 'Approve refund'), text: tr(`هيترد ${money(r.amount)} للعميل على الحجز ${b.ref} بنفس طريقة الدفع. لا يمكن التراجع.`, `${money(r.amount)} will be refunded on ${b.ref} to the original payment method. This can’t be undone.`), ok: tr('رد المبلغ', 'Refund') }))) return; await processRefund(r.id, true); closeModal(); toast(tr('تم رد المبلغ وإبلاغ العميل.', 'Refunded and customer notified.')); render(); };
+ACTIONS['rf-dec'] = async (el) => { const note = await confirmDialog({ title: tr('رفض الاسترداد', 'Decline refund'), text: tr('الحجز هيرجع مؤكد، والعميل هيستلم السبب.', 'The booking returns to confirmed and the customer gets the reason.'), ok: tr('رفض', 'Decline'), danger: true, input: tr('السبب', 'Reason') }); if (note === false) return; await processRefund(el.dataset.id, false, note); closeModal(); toast(tr('تم رفض الطلب.', 'Request declined.')); render(); };
 ACTIONS['dp-resolve'] = async (el) => { const res = await confirmDialog({ title: tr('إغلاق الشكوى', 'Resolve dispute'), text: tr('اكتب ملخص الحل اللي اتفقت عليه مع العميل والشركة.', 'Summarise the resolution agreed with the customer and company.'), ok: tr('إغلاق', 'Resolve'), input: tr('الحل', 'Resolution') }); if (res === false) return; tx((d) => { const x = byId(d.disputes, el.dataset.id); x.status = 'resolved'; x.resolution = res; const b = byId(d.bookings, x.bookingId); notify(d, b.customerId, { ar: 'تم حل شكواك', en: 'Your complaint was resolved' }, { ar: res || x.subject, en: res || x.subject }, '#/me/booking/' + b.ref); }); toast(tr('تم إغلاق الشكوى.', 'Dispute resolved.')); render(); };
 
 /* finance */
@@ -2552,9 +2748,12 @@ ACTIONS['tx-del'] = async (el) => { const isD = el.dataset.k === 'dest', n = db.
 
 function viewAdSettings() {
   return dashLayout('admin', tr('الإعدادات', 'Settings'), `<div class="grid g2" style="align-items:start"><form class="card card-pad stack" data-f="ad-set" novalidate><h3>${tr('إعدادات الحجز', 'Booking settings')}</h3>${inp('hold', tr('مدة حجز المقاعد أثناء الدفع (دقيقة)', 'Seat hold during payment (minutes)'), db.settings.holdMinutes, { type: 'number', attrs: 'min="5" max="60"' })}${inp('commission', tr('العمولة الافتراضية ٪', 'Default commission %'), db.settings.commission, { type: 'number', attrs: 'min="0" max="50" step="0.5"' })}<div><button class="btn btn-primary" type="submit">${tr('حفظ', 'Save')}</button></div></form>
-  <div class="card card-pad stack"><h3>${tr('البيانات التجريبية', 'Demo data')}</h3><p class="small muted">${tr('كل البيانات محفوظة في متصفحك فقط (localStorage). إعادة الضبط بترجع الشركات والرحلات والحجوزات الأصلية.', 'All data lives in this browser only (localStorage). Resetting restores the original companies, trips and bookings.')}</p>${MEMORY_ONLY ? `<div class="callout warn">${ic('alert')}<div>${tr('المتصفح مانع التخزين، فالتعديلات هتضيع لما تقفل الصفحة.', 'Browser storage is blocked, so changes are lost when you close the page.')}</div></div>` : ''}<div><button class="btn btn-danger-soft" data-a="reset-demo">${ic('undo')}${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button></div></div></div>`);
+  <div class="stack">${passwordCard()}
+  <form class="card card-pad stack" data-f="ad-demo" novalidate><h3>${tr('حسابات العرض على صفحة الدخول', 'Demo accounts on the login page')}</h3><p class="small muted">${tr('أزرار الدخول السريع بحسابات العميل والشركات التجريبية. اقفلها قبل الإطلاق الفعلي واحذف الحسابات التجريبية.', 'Quick‑login buttons for the demo customer and company accounts. Turn them off before launch and remove the demo accounts.')}</p><label class="check"><input type="checkbox" name="show" value="1" ${db.settings.showDemo !== false ? 'checked' : ''}>${tr('إظهار الحسابات التجريبية', 'Show demo accounts')}</label><div><button class="btn btn-ghost" type="submit">${tr('حفظ', 'Save')}</button></div></form>
+  ${CLOUD ? `<div class="card card-pad"><h3>${tr('قاعدة البيانات', 'Database')}</h3><p class="small muted" style="margin-top:6px">${tr('المنصة متصلة بـ Supabase. كل الحسابات والرحلات والحجوزات محفوظة على السيرفر ومشتركة بين كل المستخدمين.', 'The platform is connected to Supabase. Accounts, trips and bookings are stored on the server and shared by everyone.')}</p></div>` : `<div class="card card-pad stack"><h3>${tr('البيانات التجريبية', 'Demo data')}</h3><p class="small muted">${tr('كل البيانات محفوظة في متصفحك فقط (localStorage). إعادة الضبط بترجع الشركات والرحلات والحجوزات الأصلية.', 'All data lives in this browser only (localStorage). Resetting restores the original companies, trips and bookings.')}</p>${MEMORY_ONLY ? `<div class="callout warn">${ic('alert')}<div>${tr('المتصفح مانع التخزين، فالتعديلات هتضيع لما تقفل الصفحة.', 'Browser storage is blocked, so changes are lost when you close the page.')}</div></div>` : ''}<div><button class="btn btn-danger-soft" data-a="reset-demo">${ic('undo')}${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button></div></div>`}</div></div>`);
 }
 FORMS['ad-set'] = (f) => { const d = validate(f, { hold: ['req', 'int', (v) => (+v >= 5 && +v <= 60) || tr('من ٥ إلى ٦٠ دقيقة.', '5 to 60 minutes.')], commission: ['req', 'pct'] }); if (!d) return; tx((x) => { x.settings.holdMinutes = +d.hold; x.settings.commission = +d.commission; }); toast(tr('تم حفظ الإعدادات.', 'Settings saved.')); render(); };
+FORMS['ad-demo'] = (f) => { const on = !!formData(f).show; tx((x) => { x.settings.showDemo = on; }); toast(on ? tr('الحسابات التجريبية ظاهرة في صفحة الدخول.', 'Demo accounts are shown on the login page.') : tr('تم إخفاء الحسابات التجريبية.', 'Demo accounts hidden.')); };
 
 /* ---------- 11. Router (hash-based, role-guarded) ---------- */
 const ROUTES = [
@@ -2631,10 +2830,18 @@ function render() {
   if (path !== LAST_PATH) { scrollTo(0, 0); LAST_PATH = path; }
   tickHold();
 }
-window.addEventListener('hashchange', render);
-initDB();
-if (SESSION && !me()) setSession(null);
-render();
+window.addEventListener('hashchange', () => { if (db) render(); });
+function bootScreen(inner) { $('#app').innerHTML = `<main style="min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center"><div class="stack" style="max-width:440px;align-items:center;display:flex;flex-direction:column">${logoMark().replace('logo-mark', 'logo-mark" style="width:56px;height:56px;border-radius:16px')}${inner}</div></main>`; }
+async function boot() {
+  if (CLOUD_MISSING) return bootScreen(`<h2 style="font-size:20px">${tr('تعذر تحميل مكتبة الاتصال بالسيرفر', 'Couldn’t load the server library')}</h2><p class="muted">${tr('غالبًا مشكلة في الإنترنت أو مانع إعلانات. حدّث الصفحة.', 'Usually a connection problem or an ad blocker. Refresh the page.')}</p><div class="row"><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button><a class="btn btn-ghost" href="?demo=1">${tr('افتح العرض التجريبي', 'Open the offline demo')}</a></div>`);
+  if (CLOUD) {
+    bootScreen(`<span class="spin" style="color:var(--teal);width:28px;height:28px;margin-top:8px"></span><p class="muted">${tr('جاري تحميل الرحلات…', 'Loading trips…')}</p>`);
+    try { await loadCloud(); }
+    catch (e) { console.error(e); return bootScreen(`<h2 style="font-size:20px">${tr('السيرفر مش بيرد دلوقتي', 'The server isn’t responding')}</h2><p class="muted">${esc(cloudMsg(e))}</p><div class="row"><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button><a class="btn btn-ghost" href="?demo=1">${tr('افتح العرض التجريبي', 'Open the offline demo')}</a></div>`); }
+  } else { initDB(); if (SESSION && !me()) setSession(null); }
+  render();
+}
+boot();
 
 </script>
 </body>

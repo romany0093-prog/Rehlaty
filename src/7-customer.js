@@ -63,7 +63,7 @@ FORMS['co-2'] = async (f) => {
   if (!validate(f, { terms: [(v) => !!v || tr('لازم توافق على الشروط علشان تكمل.', 'You must accept the terms to continue.')] })) return;
   const btn = $('button[type=submit]', f); busy(btn, true, tr('جاري حجز المقاعد…', 'Holding seats…')); await wait(500);
   try {
-    const b = createBooking({ depId: UI.co.depId, travelers: UI.co.travelers, code: UI.co.code });
+    const b = await createBooking({ depId: UI.co.depId, travelers: UI.co.travelers, code: UI.co.code });
     UI.co.bookingId = b.id; UI.co.idemKey = uid('idem'); UI.co.step = 3; render(); scrollTo(0, 0);
   } catch (e) {
     busy(btn, false);
@@ -95,7 +95,7 @@ function coStep3(t, dep, b) {
 CHANGES['card-fmt'] = (el) => { const v = el.value.replace(/\D/g, '').slice(0, 16); el.value = v.replace(/(.{4})/g, '$1 ').trim(); };
 ACTIONS['co-method'] = (el) => { UI.co.method = el.dataset.m; UI.co.otpSent = false; UI.co.fawryCode = null; render(); };
 ACTIONS['co-restart'] = () => { const t = UI.co.tripId; UI.co = null; go('#/trip/' + t); };
-ACTIONS['co-cancel-hold'] = async () => { if (!(await confirmDialog({ title: tr('إلغاء الحجز؟', 'Cancel this booking?'), text: tr('هنفك حجز المقاعد ومش هيتم خصم أي مبلغ.', 'We’ll release the seats. Nothing will be charged.'), ok: tr('إلغاء الحجز', 'Cancel booking'), danger: true }))) return; requestCancel(UI.co.bookingId, 'customer_abandoned'); const t = UI.co.tripId; UI.co = null; toast(tr('تم إلغاء الحجز وفك المقاعد.', 'Booking cancelled and seats released.')); go('#/trip/' + t); };
+ACTIONS['co-cancel-hold'] = async () => { if (!(await confirmDialog({ title: tr('إلغاء الحجز؟', 'Cancel this booking?'), text: tr('هنفك حجز المقاعد ومش هيتم خصم أي مبلغ.', 'We’ll release the seats. Nothing will be charged.'), ok: tr('إلغاء الحجز', 'Cancel booking'), danger: true }))) return; await requestCancel(UI.co.bookingId, 'customer_abandoned'); const t = UI.co.tripId; UI.co = null; toast(tr('تم إلغاء الحجز وفك المقاعد.', 'Booking cancelled and seats released.')); go('#/trip/' + t); };
 FORMS['co-pay'] = async (f) => {
   const co = UI.co, m = co.method, btn = $('#pay-btn');
   if (btn.disabled) return; // double-submit guard (idempotency key also protects the server side)
@@ -106,13 +106,13 @@ FORMS['co-pay'] = async (f) => {
   busy(btn, true, tr('جاري تأكيد الدفع…', 'Confirming payment…'));
   await wait(1300);
   try {
-    const res = payBooking({ bookingId: co.bookingId, method: m, idemKey: co.idemKey, details });
+    const res = await payBooking({ bookingId: co.bookingId, method: m, idemKey: co.idemKey, details });
     if (res.failed) { co.idemKey = uid('idem'); co.otpSent = false; render(); toast(L(res.payment.failReason), 'bad'); return; }
     co.done = true; toast(tr('تم الدفع وتأكيد الحجز.', 'Payment complete — booking confirmed.'));
     go('#/me/booking/' + res.booking.ref + '?new=1');
   } catch (e) { busy(btn, false); toast(e.message, 'bad'); if (e.code === 'EXPIRED') render(); }
 };
-function tickHold() { const el = $('#hold-timer'); if (!el) return; const ms = new Date(el.dataset.until) - Date.now(); if (ms <= 0) { el.textContent = '00:00'; if (UI.co && UI.co.step === 3 && !UI.co.expiredShown) { UI.co.expiredShown = true; sweep(); render(); } return; } el.textContent = String(Math.floor(ms / 6e4)).padStart(2, '0') + ':' + String(Math.floor(ms / 1e3) % 60).padStart(2, '0'); }
+function tickHold() { const el = $('#hold-timer'); if (!el) return; const ms = new Date(el.dataset.until) - Date.now(); if (ms <= 0) { el.textContent = '00:00'; if (UI.co && UI.co.step === 3 && !UI.co.expiredShown) { UI.co.expiredShown = true; if (CLOUD) reloadCloud(); else { sweep(); render(); } } return; } el.textContent = String(Math.floor(ms / 6e4)).padStart(2, '0') + ':' + String(Math.floor(ms / 1e3) % 60).padStart(2, '0'); }
 setInterval(tickHold, 1000);
 
 /* ---------- dashboard shell (shared by customer / company / admin) ---------- */
@@ -210,7 +210,7 @@ ACTIONS['cancel-open'] = async (el) => {
   else { const p = refundPolicy(b); text = p.amount ? tr(`حسب سياسة الرحلة هتسترد ${p.pct}٪ (${money(p.amount)}). الطلب هيتراجع من إدارة رحلاتي ويرجع المبلغ بنفس طريقة الدفع.`, `Under the trip policy you’ll get ${p.pct}% back (${money(p.amount)}). Rehlati will review it and refund to the original payment method.`) : tr('باقي أقل من ٧ أيام على السفر، فمفيش استرداد حسب سياسة الرحلة. متأكد إنك عايز تلغي؟', 'It’s less than 7 days to departure, so there’s no refund under the policy. Cancel anyway?'); }
   const reason = await confirmDialog({ title: tr('إلغاء الحجز', 'Cancel booking'), text, ok: tr('تأكيد الإلغاء', 'Confirm cancellation'), danger: true, input: tr('سبب الإلغاء (اختياري)', 'Reason (optional)') });
   if (reason === false) return;
-  const r = requestCancel(b.id, reason || tr('بدون سبب', 'No reason given'));
+  const r = await requestCancel(b.id, reason || tr('بدون سبب', 'No reason given'));
   toast(r.kind === 'refund_pending' ? tr('تم إرسال طلب الاسترداد. هنبلغك بعد المراجعة.', 'Refund request sent. We’ll notify you after review.') : tr('تم إلغاء الحجز.', 'Booking cancelled.'));
   render();
 };
@@ -220,10 +220,11 @@ ACTIONS['review-open'] = (el) => {
   modal({ title: tr('قيّم رحلتك', 'Review your trip'), body: `<form data-f="review" data-id="${b.id}" id="rv-form" class="stack" novalidate><p class="muted small">${esc(L(t.title))}</p>${rows.map(([k, l]) => `<div class="field" style="flex-direction:row;justify-content:space-between;align-items:center"><span class="lbl">${l}</span>${starInput(k, 0)}<span class="err-msg" style="flex-basis:100%"></span></div>`).join('')}${txa('text', tr('اكتب رأيك', 'Your review'), '', { rows: 4, hint: tr('٢٠ حرف على الأقل. هيتنشر باسمك على صفحة الرحلة.', 'At least 20 characters. Published under your name.') })}</form>`, foot: `<button class="btn btn-ghost" data-a="close-modal">${tr('إلغاء', 'Cancel')}</button><button class="btn btn-primary" data-a="review-submit">${tr('نشر التقييم', 'Publish review')}</button>` });
 };
 ACTIONS['review-submit'] = () => $('#rv-form').requestSubmit();
-FORMS.review = (f) => {
+FORMS.review = async (f) => {
   const st = (v) => +v >= 1 || tr('اختر عدد النجوم.', 'Pick a rating.');
   const d = validate(f, { overall: [st], organization: [st], service: [st], punctuality: [st], company: [st], text: ['req', (v) => v.length >= 20 || tr('اكتب ٢٠ حرف على الأقل.', 'Write at least 20 characters.')] }); if (!d) return;
-  addReview(f.dataset.id, { overall: +d.overall, organization: +d.organization, service: +d.service, punctuality: +d.punctuality, company: +d.company }, d.text);
+  const btn = $('#layer [data-a=review-submit]'); busy(btn, true);
+  try { await addReview(f.dataset.id, { overall: +d.overall, organization: +d.organization, service: +d.service, punctuality: +d.punctuality, company: +d.company }, d.text); } catch (e) { busy(btn, false); throw e; }
   closeModal(); toast(tr('شكرًا! تم نشر تقييمك.', 'Thanks! Your review is published.')); render();
 };
 function docHTML(title, inner) {
@@ -263,8 +264,15 @@ function viewMyReviews() {
 }
 function viewMyProfile() {
   const u = me();
-  return dashLayout('me', tr('بياناتي', 'My details'), `<div class="grid g2" style="align-items:start"><form class="card card-pad stack" data-f="me-profile" novalidate><h3>${tr('البيانات الشخصية', 'Personal details')}</h3>${inp('name', tr('الاسم', 'Name'), u.name)}${inp('email', tr('البريد', 'Email'), u.email, { type: 'email', attrs: 'dir="ltr"' })}${inp('phone', tr('الموبايل', 'Mobile'), u.phone, { type: 'tel', attrs: 'dir="ltr"' })}${inp('city', tr('المدينة', 'City'), u.city || '')}<div><button class="btn btn-primary" type="submit">${tr('حفظ التغييرات', 'Save changes')}</button></div></form>
-  <form class="card card-pad stack" data-f="me-pass" novalidate><h3>${tr('تغيير كلمة المرور', 'Change password')}</h3>${inp('old', tr('كلمة المرور الحالية', 'Current password'), '', { type: 'password', attrs: 'dir="ltr"' })}${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr"' })}<div><button class="btn btn-ghost" type="submit">${tr('تحديث كلمة المرور', 'Update password')}</button></div></form></div>`);
+  return dashLayout('me', tr('بياناتي', 'My details'), `<div class="grid g2" style="align-items:start"><form class="card card-pad stack" data-f="me-profile" novalidate><h3>${tr('البيانات الشخصية', 'Personal details')}</h3><div class="form-grid">${inp('username', tr('اسم المستخدم', 'Username'), u.username || u.email.split('@')[0], { attrs: 'dir="ltr" readonly disabled' })}${inp('email_ro', tr('البريد', 'Email'), u.email, { attrs: 'dir="ltr" readonly disabled' })}</div>${inp('name', tr('الاسم', 'Name'), u.name)}${inp('phone', tr('الموبايل', 'Mobile'), u.phone, { type: 'tel', attrs: 'dir="ltr"' })}${inp('city', tr('المدينة', 'City'), u.city || '')}<div><button class="btn btn-primary" type="submit">${tr('حفظ التغييرات', 'Save changes')}</button></div></form>
+  ${passwordCard()}</div>`);
 }
-FORMS['me-profile'] = (f) => { const d = validate(f, { name: ['req'], email: ['req', 'email', (v) => !db.users.some((x) => x.email === v && x.id !== me().id) || tr('البريد مستخدم لحساب آخر.', 'Email used by another account.')], phone: ['req', 'phone'] }); if (!d) return; tx((x) => Object.assign(byId(x.users, me().id), { name: d.name, email: d.email, phone: d.phone, city: d.city })); toast(tr('تم حفظ بياناتك.', 'Details saved.')); render(); };
-FORMS['me-pass'] = (f) => { const d = validate(f, { old: ['req', (v) => v === me().password || tr('كلمة المرور الحالية غير صحيحة.', 'Current password is wrong.')], nw: ['req', 'min6'] }); if (!d) return; tx((x) => { byId(x.users, me().id).password = d.nw; }); f.reset(); toast(tr('تم تحديث كلمة المرور.', 'Password updated.')); };
+FORMS['me-profile'] = (f) => { const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], phone: ['req', 'phone'] }); if (!d) return; tx((x) => Object.assign(byId(x.users, me().id), { name: d.name, phone: d.phone, city: d.city })); toast(tr('تم حفظ بياناتك.', 'Details saved.')); render(); };
+const passwordCard = () => `<form class="card card-pad stack" data-f="me-pass" novalidate><h3>${tr('تغيير كلمة المرور', 'Change password')}</h3>${inp('old', tr('كلمة المرور الحالية', 'Current password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="current-password"' })}${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}${inp('nw2', tr('تأكيد كلمة المرور الجديدة', 'Confirm new password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"' })}<div><button class="btn btn-ghost" type="submit">${tr('تحديث كلمة المرور', 'Update password')}</button></div></form>`;
+FORMS['me-pass'] = async (f) => {
+  const d = validate(f, { old: ['req'], nw: ['req', 'min6', (v, a) => v !== a.old || tr('اختر كلمة مرور مختلفة عن الحالية.', 'Choose a different password.')], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
+  const btn = $('button[type=submit]', f); busy(btn, true);
+  try { await changePassword(d.old, d.nw); f.reset(); toast(tr('تم تحديث كلمة المرور.', 'Password updated.')); }
+  catch (e) { const fe = f.elements.old.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
+  finally { busy(btn, false); }
+};

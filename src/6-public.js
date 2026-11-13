@@ -28,14 +28,14 @@ function userMenu(u) {
 ACTIONS.umenu = () => { UI.menu = !UI.menu; render(); };
 ACTIONS.mnav = () => { UI.mnav = !UI.mnav; render(); };
 ACTIONS.lang = () => { LANG = LANG === 'ar' ? 'en' : 'ar'; try { localStorage.setItem(LANG_KEY, LANG); } catch (e) { } applyLang(); render(); };
-ACTIONS.logout = () => { setSession(null); UI.menu = null; toast(tr('تم تسجيل الخروج.', 'Logged out.')); go('#/'); };
+ACTIONS.logout = async () => { UI.menu = null; await logout(); toast(tr('تم تسجيل الخروج.', 'Logged out.')); go('#/'); };
 function footer() {
   return `<footer class="site-f"><div class="wrap"><div class="f-grid">
     <div><a href="#/" class="logo" style="color:#fff">${logoMark()}<span>${tr('رحلاتي', 'Rehlati')}</span></a><p style="margin-top:12px;font-size:14.5px;max-width:320px">${tr('منصة تجمع شركات السياحة المرخصة في مصر. قارن واحجز وادفع في مكان واحد.', 'Licensed Egyptian tour operators in one place. Compare, book and pay securely.')}</p></div>
     <div><h4>${tr('اكتشف', 'Explore')}</h4><a href="#/trips">${tr('كل الرحلات', 'All trips')}</a><a href="#/destinations">${tr('الوجهات', 'Destinations')}</a><a href="#/companies">${tr('شركات السياحة', 'Tour operators')}</a><a href="#/trips?cat=day">${tr('رحلات اليوم الواحد', 'Day trips')}</a></div>
     <div><h4>${tr('رحلاتي', 'Rehlati')}</h4><a href="#/page/about">${tr('من نحن', 'About')}</a><a href="#/page/faq">${tr('الأسئلة الشائعة', 'FAQ')}</a><a href="#/page/terms">${tr('الشروط والأحكام', 'Terms')}</a><a href="#/page/privacy">${tr('الخصوصية', 'Privacy')}</a><a href="#/register/company">${tr('سجّل شركتك معنا', 'List your company')}</a></div>
     <div><h4>${tr('تواصل معنا', 'Contact')}</h4><a href="#/page/contact" class="row" style="gap:8px">${ic('phone')}<span dir="ltr">16xxx</span></a><a href="#/page/contact" class="row" style="gap:8px">${ic('mail')}support@rehlati.eg</a><p style="font-size:14px;margin-top:6px">${tr('التجمع الخامس، القاهرة الجديدة', 'Fifth Settlement, New Cairo')}</p></div>
-  </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('رحلاتي. نسخة تجريبية للعرض.', 'Rehlati. Demo prototype.')}</span><button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button></div></div></footer>`;
+  </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('رحلاتي', 'Rehlati')}${CLOUD ? '' : ' · ' + tr('وضع العرض التجريبي (البيانات في متصفحك فقط)', 'Demo mode (data stays in your browser)')}</span>${CLOUD ? '' : `<button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button>`}</div></div></footer>`;
 }
 ACTIONS['reset-demo'] = async () => { if (await confirmDialog({ title: tr('إعادة ضبط البيانات؟', 'Reset demo data?'), text: tr('ستُحذف كل التعديلات والحجوزات التي أضفتها وتعود البيانات التجريبية الأصلية.', 'All your changes and bookings will be removed and the original demo data restored.'), ok: tr('إعادة الضبط', 'Reset'), danger: true })) { resetDB(); setSession(null); toast(tr('تمت إعادة ضبط البيانات.', 'Demo data reset.')); go('#/'); } };
 const publicLayout = (inner) => header() + `<main id="main" class="route-fade">${inner}</main>` + footer();
@@ -73,7 +73,7 @@ function viewHome() {
   const latest = trips.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
   const dests = db.destinations.filter((d) => d.featured);
   const comps = db.companies.filter((c) => c.status === 'approved');
-  const revs = db.reviews.filter((r) => r.ratings.overall >= 5 && r.text.length > 40).slice(0, 3);
+  const revs = db.reviews.filter((r) => r.ratings.overall >= 5 && r.text.length > 40 && tripById(r.tripId)).slice(0, 3);
   const banner = db.settings.banners.find((b) => b.active);
   const heroTrip = featured[0] || trips[0];
   const destOpts = db.destinations.map((d) => `<option value="${d.id}">${esc(L(d.name))}</option>`).join('');
@@ -124,7 +124,7 @@ function viewHome() {
 
   <section class="sec band"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('قالوا عن رحلاتهم', 'What travellers said')}</h2><p>${tr('تقييمات منشورة من حجوزات مكتملة.', 'Published reviews from completed bookings.')}</p></div></div>
-    <div class="grid g3">${revs.map((r) => { const u = userById(r.customerId), t = tripById(r.tripId); return `<figure class="quote" style="margin:0">${starsHTML(r.ratings.overall)}<p style="margin:10px 0 14px">${esc(r.text)}</p><figcaption class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint"><a href="#/trip/${t.id}">${esc(L(t.title))}</a></div></div></figcaption></figure>`; }).join('')}</div>
+    <div class="grid g3">${revs.map((r) => { const u = { name: r.customerName || userById(r.customerId).name }, t = tripById(r.tripId); return `<figure class="quote" style="margin:0">${starsHTML(r.ratings.overall)}<p style="margin:10px 0 14px">${esc(r.text)}</p><figcaption class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint"><a href="#/trip/${t.id}">${esc(L(t.title))}</a></div></div></figcaption></figure>`; }).join('')}</div>
   </div></section>
 
   <section class="sec"><div class="wrap"><div class="card card-pad row wrapx between" style="gap:20px;padding:28px"><div><h2 style="font-size:22px">${tr('عندك شركة سياحة؟', 'Run a tour company?')}</h2><p class="muted" style="margin-top:6px">${tr('اعرض رحلاتك لآلاف المسافرين وخلّي الحجز والتحصيل علينا. العمولة ' + db.settings.commission + '٪ على الحجز المكتمل فقط.', 'Reach thousands of travellers and let us handle booking and payment. ' + db.settings.commission + '% commission on completed bookings only.')}</p></div><a class="btn btn-primary btn-lg" href="#/register/company">${tr('سجّل شركتك', 'List your company')}</a></div></div></section>`);
@@ -238,7 +238,7 @@ function viewTrip(id) {
     <aside><div class="bw" id="bw">${bookingWidget(t)}</div></aside></div></div>`);
 }
 function reviewItem(r) {
-  const u = userById(r.customerId); const c = compById(r.companyId);
+  const u = { name: r.customerName || userById(r.customerId).name }; const c = compById(r.companyId) || { name: '' };
   return `<div class="rev"><div class="row between"><div class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint">${fmtD(r.createdAt)} · ${tr('حجز مؤكد', 'Verified booking')}</div></div></div>${starsHTML(r.ratings.overall)}</div><p style="margin-top:8px">${esc(r.text)}</p>${r.reply ? `<div class="reply"><b class="small" style="color:var(--navy)">${tr('رد', 'Reply from')} ${esc(L(c.name))}</b><p class="small">${esc(r.reply.text)}</p></div>` : ''}</div>`;
 }
 function bookingWidget(t) {
@@ -274,7 +274,7 @@ function viewCompany(id) {
   const c = compById(id);
   if (!c || (c.status !== 'approved' && role() !== 'admin')) return viewNotFound(tr('الشركة غير موجودة', 'Company not found'), tr('ممكن تكون الشركة غير مفعّلة حاليًا.', 'It may be inactive right now.'));
   const trips = publicTrips().filter((t) => t.companyId === c.id), revs = companyReviews(c.id), cr = companyRating(c.id);
-  const done = db.bookings.filter((b) => b.companyId === c.id && b.status === 'completed').reduce((a, b) => a + b.count, 0);
+  const done = CLOUD ? ((CO_STATS[c.id] || {}).travellers || 0) : db.bookings.filter((b) => b.companyId === c.id && b.status === 'completed').reduce((a, b) => a + b.count, 0);
   return publicLayout(`<section style="position:relative;height:240px;overflow:hidden;background:var(--navy)"><img src="${imgSrc(c.cover)}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.85"></section>
   <div class="wrap"><div class="card card-pad" style="margin-top:-70px;position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">${coLogo(c, 'lg')}<div class="grow"><h1 style="font-size:28px">${esc(L(c.name))}</h1><div class="row wrapx small muted" style="gap:14px;margin-top:4px"><span class="row" style="gap:5px">${ic('pin')}${esc(L(c.city))}</span><span class="row" style="gap:5px">${ic('shield')}${esc(c.license)}</span></div></div><div class="row" style="gap:28px"><div><small class="muted">${tr('التقييم', 'Rating')}</small><div>${starsHTML(cr.avg, cr.count)}</div></div><div><small class="muted">${tr('مسافرون', 'Travellers')}</small><div><b class="num" style="color:var(--navy)">${fmtN(done)}</b></div></div><div><small class="muted">${tr('منذ', 'Since')}</small><div><b style="color:var(--navy)">${c.founded}</b></div></div></div></div>
   <div class="detail-layout"><div>
@@ -289,36 +289,38 @@ function viewCompany(id) {
 /* ---- auth ---- */
 function viewLogin() {
   const q = readQuery();
-  const demo = [['mariam@demo.eg', '123456', tr('عميل', 'Customer'), 'مريم عادل', 'user'], ['bahr@demo.eg', '123456', tr('شركة سياحة', 'Tour company'), L(compById('c2').name), 'building'], ['nilestar@demo.eg', '123456', tr('شركة سياحة', 'Tour company'), L(compById('c1').name), 'building'], ['admin@rehlati.eg', 'admin123', tr('مدير المنصة', 'Platform admin'), tr('إدارة رحلاتي', 'Rehlati admin'), 'shield']];
+  const co = (id) => (compById(id) ? L(compById(id).name) : id);
+  const demo = db.settings.showDemo === false ? [] : [['mariam', '123456', tr('عميل', 'Customer'), 'مريم عادل', 'user'], ['bahr', '123456', tr('شركة سياحة', 'Tour company'), co('c2'), 'building'], ['nilestar', '123456', tr('شركة سياحة', 'Tour company'), co('c1'), 'building'], ...(CLOUD ? [] : [['admin', 'admin123', tr('مدير المنصة', 'Platform admin'), tr('إدارة رحلاتي', 'Rehlati admin'), 'shield']])];
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('sinai', 2)}" alt=""><p class="cap">${tr('الشروق من فوق جبل موسى، دهب', 'Sunrise from Mount Sinai, Dahab')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('تسجيل الدخول', 'Log in')}</h1><p class="muted" style="margin:6px 0 22px">${tr('ادخل علشان تتابع حجوزاتك أو تدير شركتك.', 'Log in to manage your bookings or your company.')}</p>
-    <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
+    <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('ident', tr('اسم المستخدم أو البريد الإلكتروني', 'Username or email'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('دخول', 'Log in')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('ما عندكش حساب؟', 'No account?')} <a class="btn-link" href="#/register${q.next ? '?next=' + encodeURIComponent(q.next) : ''}">${tr('أنشئ حساب', 'Sign up')}</a> · <a class="btn-link" href="#/register/company">${tr('سجّل شركتك', 'Register a company')}</a></p>
-    <div style="margin-top:26px"><div class="lbl">${tr('حسابات تجريبية (اضغط للدخول مباشرة)', 'Demo accounts (click to log in)')}</div><div class="demo-acc">${demo.map(([e, p, r, n, i]) => `<button type="button" data-a="demo-login" data-e="${e}" data-p="${p}"><span class="kpi"><span class="ic" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--teal-50);color:var(--teal-700)">${ic(i)}</span></span><span class="grow"><b style="color:var(--navy);font-size:14px">${esc(n)}</b><div class="xs muted">${r} · <span dir="ltr">${e}</span></div></span>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</button>`).join('')}</div></div>
+    ${demo.length ? `<div style="margin-top:26px"><div class="lbl">${tr('حسابات تجريبية (اضغط للدخول مباشرة)', 'Demo accounts (click to log in)')}</div><div class="demo-acc">${demo.map(([e, p, r, n, i]) => `<button type="button" data-a="demo-login" data-e="${e}" data-p="${p}"><span style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--teal-50);color:var(--teal-700);flex:none">${ic(i)}</span><span class="grow"><b style="color:var(--navy);font-size:14px">${esc(n)}</b><div class="xs muted">${r} · <span dir="ltr">${e}</span> / <span dir="ltr">${p}</span></div></span>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</button>`).join('')}</div></div>` : ''}
   </div></div></main>`;
 }
 FORMS.login = async (f) => {
-  const d = validate(f, { email: ['req', 'email'], password: ['req'] }); if (!d) return;
-  const btn = $('button[type=submit]', f); busy(btn, true); await wait(350);
-  try { const u = login(d.email, d.password); toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(f.dataset.next && u.role === 'customer' ? f.dataset.next : homeFor(u)); }
+  const d = validate(f, { ident: ['req'], password: ['req'] }); if (!d) return;
+  const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(350);
+  try { const u = await login(d.ident, d.password); toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(f.dataset.next && u.role === 'customer' ? f.dataset.next : homeFor(u)); }
   catch (e) { busy(btn, false); const fe = f.elements.password.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
 };
-ACTIONS['demo-login'] = (el) => { const u = login(el.dataset.e, el.dataset.p); const nx = readQuery().next; toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(nx && u.role === 'customer' ? nx : homeFor(u)); };
+ACTIONS['demo-login'] = async (el) => { el.disabled = true; let u; try { u = await login(el.dataset.e, el.dataset.p); } finally { el.disabled = false; } const nx = readQuery().next; toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(nx && u.role === 'customer' ? nx : homeFor(u)); };
 function viewRegister() {
   const q = readQuery();
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('coast', 0)}" alt=""><p class="cap">${tr('العلمين الجديدة، الساحل الشمالي', 'New Alamein, North Coast')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('إنشاء حساب مسافر', 'Create a traveller account')}</h1><p class="muted" style="margin:6px 0 22px">${tr('دقيقة واحدة وتقدر تحجز وتتابع رحلاتك.', 'One minute and you can book and track your trips.')}</p>
-    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('name', tr('الاسم بالكامل', 'Full name'), '', { attrs: 'autocomplete="name"' })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('phone', tr('رقم الموبايل', 'Mobile number'), '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٦ أحرف على الأقل', 'At least 6 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
+    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('name', tr('الاسم بالكامل', 'Full name'), '', { attrs: 'autocomplete="name"' })}${inp('username', tr('اسم المستخدم', 'Username'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو . (٣–٢٤)، هتدخل بيه بدل البريد', 'Lowercase letters, numbers, _ or . (3–24). You can log in with it.') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('phone', tr('رقم الموبايل', 'Mobile number'), '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٦ أحرف على الأقل', 'At least 6 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
     <label class="check field"><input type="checkbox" name="terms" value="1"><span>${tr('أوافق على', 'I agree to the')} <a class="btn-link" href="#/page/terms" target="_blank">${tr('الشروط والأحكام', 'terms')}</a></span><span class="err-msg"></span></label>
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('إنشاء الحساب', 'Create account')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('عندك حساب؟', 'Have an account?')} <a class="btn-link" href="#/login">${tr('سجّل الدخول', 'Log in')}</a> · <a class="btn-link" href="#/register/company">${tr('تسجيل شركة سياحة', 'Register a tour company')}</a></p></div></div></main>`;
 }
 FORMS.register = async (f) => {
-  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], email: ['req', 'email'], phone: ['req', 'phone'], password: ['req', 'min6'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
-  const btn = $('button[type=submit]', f); busy(btn, true); await wait(400);
-  try { const u = registerCustomer(d); setSession(u); toast(tr('تم إنشاء حسابك.', 'Account created.')); go(f.dataset.next || '#/me'); }
-  catch (e) { busy(btn, false); const fe = f.elements.email.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
+  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], username: ['req', 'username'], email: ['req', 'email'], phone: ['req', 'phone'], password: ['req', 'min6'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
+  d.username = d.username.toLowerCase();
+  const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(400);
+  try { await registerCustomer(d); toast(tr('تم إنشاء حسابك.', 'Account created.')); go(f.dataset.next || '#/me'); }
+  catch (e) { busy(btn, false); const fe = f.elements[e.code === 'USERNAME_TAKEN' || e.code === 'BAD_USERNAME' ? 'username' : 'email'].closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
 };
 function viewRegisterCompany() {
   return header() + `<main class="route-fade"><section class="phead"><div class="wrap"><h1>${tr('سجّل شركتك على رحلاتي', 'List your company on Rehlati')}</h1><p>${tr('بنراجع الطلب والمستندات خلال يومين عمل. بعد الاعتماد تقدر تنشر رحلاتك وتستقبل حجوزات.', 'We review applications within two business days. Once approved you can publish trips and take bookings.')}</p></div></section>
@@ -329,17 +331,18 @@ function viewRegisterCompany() {
     ${txa('desc', tr('نبذة عن الشركة', 'About the company'), '', { full: true, rows: 3 })}
     <div class="field full"><span class="lbl">${tr('المستندات المطلوبة', 'Required documents')}</span><label class="upload">${ic('upload', 'lg')}<div style="margin-top:6px">${tr('ارفع السجل التجاري، ترخيص وزارة السياحة، والبطاقة الضريبية (PDF أو صورة)', 'Upload commercial register, tourism licence and tax card (PDF or image)')}</div><input type="file" name="docs" multiple accept=".pdf,image/*" class="sr" data-ch="docs-pick"></label><div id="docs-list" class="small muted" style="margin-top:6px"></div><span class="err-msg"></span></div>
   </div><h3 style="margin:24px 0 16px">${tr('حساب المسؤول', 'Account owner')}</h3><div class="form-grid">
-    ${inp('name', tr('اسم المسؤول', 'Contact name'), '')}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'dir="ltr"' })}
+    ${inp('name', tr('اسم المسؤول', 'Contact name'), '')}${inp('username', tr('اسم المستخدم للدخول', 'Login username'), '', { attrs: 'dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو .', 'Lowercase letters, numbers, _ or .') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}
   </div><div class="row" style="margin-top:22px;justify-content:flex-end"><a class="btn btn-ghost" href="#/">${tr('إلغاء', 'Cancel')}</a><button class="btn btn-primary btn-lg" type="submit">${tr('إرسال الطلب', 'Submit application')}</button></div></form></div></main>` + footer();
 }
 CHANGES['docs-pick'] = (el) => { $('#docs-list').textContent = Array.from(el.files).map((f) => f.name).join('، '); el.closest('.field').classList.remove('err'); };
 FORMS['register-company'] = async (f) => {
   const files = Array.from(f.elements.docs.files || []);
-  const d = validate(f, { company: ['req'], license: ['req'], founded: ['req', 'int', (v) => (+v >= 1950 && +v <= 2026) || tr('سنة غير صحيحة.', 'Invalid year.')], city: ['req'], phone: ['req', 'phone'], name: ['req'], email: ['req', 'email'], password: ['req', 'min6'] });
+  const d = validate(f, { company: ['req'], license: ['req'], founded: ['req', 'int', (v) => (+v >= 1950 && +v <= 2026) || tr('سنة غير صحيحة.', 'Invalid year.')], city: ['req'], phone: ['req', 'phone'], name: ['req', (v) => v.length >= 3 || tr('اكتب الاسم بالكامل.', 'Enter the full name.')], username: ['req', 'username'], email: ['req', 'email'], password: ['req', 'min6'] });
   if (!files.length) { const fe = f.elements.docs.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = tr('ارفع مستندًا واحدًا على الأقل.', 'Upload at least one document.'); }
   if (!d || !files.length) return;
-  const btn = $('button[type=submit]', f); busy(btn, true); await wait(500);
-  try { d.docs = files.map((x) => x.name); const u = registerCompany(d); setSession(u); toast(tr('تم إرسال طلبك. هنبلغك بعد المراجعة.', 'Application sent. We’ll notify you after review.')); go('#/co'); }
+  d.username = d.username.toLowerCase();
+  const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(500);
+  try { d.docs = files.map((x) => x.name); await registerCompany(d); toast(tr('تم إرسال طلبك. هنبلغك بعد المراجعة.', 'Application sent. We’ll notify you after review.')); go('#/co'); }
   catch (e) { busy(btn, false); toast(e.message, 'bad'); }
 };
 

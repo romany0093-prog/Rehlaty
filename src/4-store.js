@@ -41,7 +41,7 @@ function sweep() {
 
 /* ---------- repositories / selectors ---------- */
 const byId = (arr, id) => arr.find((x) => x.id === id);
-const userById = (id) => byId(db.users, id);
+const userById = (id) => byId(db.users, id) || { id, name: tr('مسافر', 'Traveller'), phone: '', email: '', role: 'customer', status: 'active' };
 const compById = (id) => byId(db.companies, id);
 const tripById = (id) => byId(db.trips, id);
 const depById = (id) => byId(db.departures, id);
@@ -78,15 +78,18 @@ const retained = (b) => b.total - (b.refunded || 0);
 /* ---------- session & RBAC ---------- */
 const SESS_KEY = 'rehlati_session';
 let SESSION = (() => { try { return JSON.parse(localStorage.getItem(SESS_KEY) || 'null'); } catch (e) { return null; } })();
-const me = () => (SESSION ? userById(SESSION.userId) : null);
+let me = () => (SESSION ? byId(db.users, SESSION.userId) || null : null);
 const role = () => (me() ? me().role : 'guest');
 function setSession(u) { SESSION = u ? { userId: u.id, at: Date.now() } : null; try { u ? localStorage.setItem(SESS_KEY, JSON.stringify(SESSION)) : localStorage.removeItem(SESS_KEY); } catch (e) { } }
-function login(email, pw) {
-  const u = db.users.find((x) => x.email.toLowerCase() === String(email).trim().toLowerCase());
+function login(ident, pw) {
+  const v = String(ident).trim().toLowerCase();
+  const u = db.users.find((x) => x.email.toLowerCase() === v || (x.username || x.email.split('@')[0].toLowerCase()) === v);
   if (!u || u.password !== pw) throw new AppError('BAD_LOGIN', tr('البريد أو كلمة المرور غير صحيحة.', 'Email or password is incorrect.'));
   if (u.status === 'suspended') throw new AppError('SUSPENDED', tr('هذا الحساب موقوف. تواصل مع خدمة العملاء.', 'This account is suspended. Contact support.'));
   setSession(u); return u;
 }
+function logout() { setSession(null); }
+function changePassword(oldPw, newPw) { if (oldPw !== me().password) throw new AppError('BAD_PW', tr('كلمة المرور الحالية غير صحيحة.', 'Current password is wrong.')); tx((d) => { byId(d.users, me().id).password = newPw; }); }
 const homeFor = (u) => (!u ? '#/' : u.role === 'admin' ? '#/admin' : u.role === 'company' ? '#/co' : '#/me');
 /** Company-scoped reads: a company user can only ever see rows with its own companyId. */
 const myCompany = () => (role() === 'company' ? compById(me().companyId) : null);
@@ -95,36 +98,42 @@ function assertCompanyOwns(d, obj) { const u = me(); if (!u || u.role !== 'compa
 function assertRole(r) { if (role() !== r) throw new AppError('FORBIDDEN', tr('غير مسموح.', 'Not allowed.')); }
 
 /* ---------- notifications ---------- */
-function notify(d, to, title, body, link) {
-  const targets = to === 'admin' ? ['admin'] : to.startsWith('company:') ? d.users.filter((u) => u.companyId === to.slice(8)).map((u) => u.id) : [to];
-  targets.forEach((t) => d.notifications.push({ id: uid('n'), to: t, title, body, link: link || '', read: false, createdAt: new Date().toISOString() }));
+/* `to` is a user id, 'admin', or 'company:<id>' (every user of that company sees it) */
+function notify(d, to, title, body, link) { d.notifications.push({ id: uid('n'), to, title, body, link: link || '', read: false, createdAt: new Date().toISOString() }); }
+const logAct = (d, ar, en) => d.activity.unshift({ id: uid('a'), at: new Date().toISOString(), text: { ar, en } });
+function myNotifs() {
+  const u = me(); if (!u) return [];
+  const keys = [u.id]; if (u.role === 'admin') keys.push('admin'); if (u.role === 'company') keys.push('company:' + u.companyId, ...db.users.filter((x) => x.companyId === u.companyId && x.id !== u.id).map((x) => x.id));
+  return db.notifications.filter((n) => keys.includes(n.to)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
-const logAct = (d, ar, en) => d.activity.unshift({ at: new Date().toISOString(), text: { ar, en } });
-function myNotifs() { const u = me(); if (!u) return []; const key = u.role === 'admin' ? 'admin' : u.id; return db.notifications.filter((n) => n.to === key).sort((a, b) => b.createdAt.localeCompare(a.createdAt)); }
 const unread = () => myNotifs().filter((n) => !n.read).length;
 
 /* ---------- auth services ---------- */
 function registerCustomer(f) {
-  return tx((d) => {
+  const nu = tx((d) => {
     if (d.users.some((u) => u.email.toLowerCase() === f.email.toLowerCase())) throw new AppError('EMAIL_TAKEN', tr('البريد مسجل بالفعل. سجّل الدخول بدلًا من ذلك.', 'This email is already registered. Log in instead.'));
-    const u = { id: uid('u'), role: 'customer', name: f.name, email: f.email, password: f.password, phone: f.phone, city: f.city || '', status: 'active', createdAt: new Date().toISOString(), favorites: [] };
+    if (d.users.some((u) => (u.username || u.email.split('@')[0]) === f.username)) throw new AppError('USERNAME_TAKEN', tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken.'));
+    const u = { id: uid('u'), role: 'customer', username: f.username, name: f.name, email: f.email, password: f.password, phone: f.phone, city: f.city || '', status: 'active', createdAt: new Date().toISOString(), favorites: [] };
     d.users.push(u);
     notify(d, u.id, { ar: 'أهلًا بك في رحلاتي', en: 'Welcome to Rehlati' }, { ar: 'حسابك جاهز. ابدأ باكتشاف الرحلات.', en: 'Your account is ready. Start exploring trips.' }, '#/trips');
     return u;
   });
+  setSession(nu); return nu;
 }
 function registerCompany(f) {
-  return tx((d) => {
+  const nu = tx((d) => {
     if (d.users.some((u) => u.email.toLowerCase() === f.email.toLowerCase())) throw new AppError('EMAIL_TAKEN', tr('البريد مسجل بالفعل.', 'This email is already registered.'));
     const palette = ['#2E6F6F', '#8C5A2B', '#5E4B8B', '#2F5D8A', '#9A3B3B', '#4E7A3A'];
     const c = { id: uid('c'), name: { ar: f.company, en: f.companyEn || f.company }, color: palette[d.companies.length % palette.length], city: { ar: f.city, en: f.city }, phone: f.phone, email: f.email, website: '', license: f.license, founded: +f.founded || new Date().getFullYear(), status: 'pending', commission: null, desc: { ar: f.desc || '', en: '' }, createdAt: new Date().toISOString(), logo: null, cover: 'art:sea:0', docs: (f.docs || []).map((n) => ({ name: n })) };
     d.companies.push(c);
-    const u = { id: uid('u'), role: 'company', companyId: c.id, name: f.name, email: f.email, password: f.password, phone: f.phone, status: 'active', createdAt: new Date().toISOString() };
+    if (d.users.some((u) => (u.username || u.email.split('@')[0]) === f.username)) throw new AppError('USERNAME_TAKEN', tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken.'));
+    const u = { id: uid('u'), role: 'company', companyId: c.id, username: f.username, name: f.name, email: f.email, password: f.password, phone: f.phone, status: 'active', createdAt: new Date().toISOString() };
     d.users.push(u);
     notify(d, 'admin', { ar: 'طلب تسجيل شركة', en: 'Company application' }, { ar: `${f.company} أرسلت طلب انضمام.`, en: `${f.companyEn || f.company} applied to join.` }, '#/admin/companies');
     logAct(d, `${f.company} سجلت كشركة جديدة`, `${f.companyEn || f.company} registered`);
     return u;
   });
+  setSession(nu); return nu;
 }
 
 /* ---------- booking & payment services ---------- */
