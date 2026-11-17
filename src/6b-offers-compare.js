@@ -29,10 +29,20 @@ function viewOffers() {
   ${soon.length ? `<h2 style="margin:12px 0 14px">${tr('عروض قادمة', 'Coming soon')}</h2><div class="grid g3">${soon.map((c) => `<div class="card card-pad stack">${seasonChip(c)}<h3>${esc(L(c.title))}</h3><p class="small muted">${esc(L((compById(c.companyId) || {}).name))} · ${tr(`تبدأ ${fmtD(c.from)}`, `Starts ${fmtD(c.from)}`)}</p><b style="color:var(--ok)">${tr(`خصم ${c.percent}٪`, `${c.percent}% off`)}</b></div>`).join('')}</div>` : ''}</div>`);
 }
 
-/* ---- comparison (kept per browser; up to 4 trips) ---- */
-const CMP_KEY = 'rehlati_compare', CMP_MAX = 4;
-function cmpList() { try { const a = JSON.parse(localStorage.getItem(CMP_KEY) || '[]'); return a.filter((id) => tripById(id) && publicTrips().includes(tripById(id))).slice(0, CMP_MAX); } catch (e) { return UI.cmp || []; } }
-function cmpSave(a) { UI.cmp = a; try { localStorage.setItem(CMP_KEY, JSON.stringify(a)); } catch (e) { } }
+/* ---- comparison: up to 4 trips, a separate list per account on this device ----
+   Key = rehlati_compare:<user id> (or :guest). Logging out or switching account
+   switches lists. A guest's picks move into the account when they log in. */
+const CMP_MAX = 4, CMP_MEM = {};
+try { localStorage.removeItem('rehlati_compare'); } catch (e) { } // old shared list from before accounts were separated
+const cmpKey = (who) => 'rehlati_compare:' + (who || (me() ? me().id : 'guest'));
+function cmpRead(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return CMP_MEM[key] || []; } }
+function cmpWrite(key, a) { CMP_MEM[key] = a; try { a.length ? localStorage.setItem(key, JSON.stringify(a)) : localStorage.removeItem(key); } catch (e) { } }
+function cmpList() {
+  const key = cmpKey(); let a = cmpRead(key);
+  if (me()) { const g = cmpRead(cmpKey('guest')); if (g.length) { a = a.concat(g.filter((id) => !a.includes(id))); cmpWrite(cmpKey('guest'), []); cmpWrite(key, a.slice(0, CMP_MAX)); } }
+  return a.filter((id) => tripById(id) && publicTrips().includes(tripById(id))).slice(0, CMP_MAX);
+}
+function cmpSave(a) { cmpWrite(cmpKey(), a.slice(0, CMP_MAX)); }
 const cmpBtn = (t) => { const on = cmpList().includes(t.id); return `<button class="cmp-btn ${on ? 'on' : ''}" data-a="cmp-toggle" data-id="${t.id}" aria-pressed="${on}" title="${tr('أضف للمقارنة', 'Add to compare')}"><span class="bx">${on ? ic('check') : ''}</span>${tr('قارن', 'Compare')}</button>`; };
 function cmpTray() {
   const a = cmpList(); if (!a.length || (location.hash || '').startsWith('#/compare')) return '';
