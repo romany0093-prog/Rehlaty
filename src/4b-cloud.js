@@ -8,7 +8,12 @@ const SUPA_CFG = { url: 'https://soysfbirinxmkivenvnp.supabase.co', key: 'sb_pub
 const WANT_DEMO = /[?&]demo=1/.test(location.search);
 const CLOUD = !WANT_DEMO && !!SUPA_CFG.url && typeof window.supabase !== 'undefined' && !!window.supabase.createClient;
 const CLOUD_MISSING = !WANT_DEMO && !!SUPA_CFG.url && !CLOUD;
-const sb = CLOUD ? window.supabase.createClient(SUPA_CFG.url, SUPA_CFG.key, { auth: { persistSession: true, autoRefreshToken: true } }) : null;
+// A password-reset email link lands here as #access_token=…&type=recovery (or #error=… if it expired).
+// Read it before the client consumes it, so the router can show the right page.
+const URL_HASH = location.hash || '';
+const RECOVERY_IN_URL = /[#&]type=recovery/.test(URL_HASH) && /access_token=/.test(URL_HASH);
+const RECOVERY_ERROR_IN_URL = /[#&](error=|error_code=)/.test(URL_HASH);
+const sb = CLOUD ? window.supabase.createClient(SUPA_CFG.url, SUPA_CFG.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'implicit' } }) : null;
 let AUTH_UID = null, SEATS = null, CO_STATS = {};
 
 /* object <-> row mapping: listed fields are real columns, everything else lives in `data` */
@@ -164,5 +169,5 @@ if (CLOUD) {
   processRefund = (refundId, approve, note) => afterRpc(rpc('process_refund', { p_refund: refundId, p_approve: !!approve, p_note: note || '' }));
   addReview = (bookingId, ratings, text) => afterRpc(rpc('add_review', { p_booking: bookingId, p_ratings: ratings, p_text: text }));
   cancelDeparture = (depId) => afterRpc(rpc('cancel_departure', { p_dep: depId }));
-  sb.auth.onAuthStateChange((ev, s) => { const id = s && s.user ? s.user.id : null; if (ev === 'SIGNED_OUT' && AUTH_UID) { AUTH_UID = null; reloadCloud(); } else if (id) AUTH_UID = id; });
+  sb.auth.onAuthStateChange((ev, s) => { const id = s && s.user ? s.user.id : null; if (ev === 'PASSWORD_RECOVERY' && id) { AUTH_UID = id; RESET.recovering = id; } if (ev === 'SIGNED_OUT' && AUTH_UID) { AUTH_UID = null; reloadCloud(); } else if (id) AUTH_UID = id; });
 }

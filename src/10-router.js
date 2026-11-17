@@ -10,6 +10,8 @@ const ROUTES = [
   ['/trip/:id', (p) => viewTrip(p.id)],
   ['/company/:id', (p) => viewCompany(p.id)],
   ['/login', () => viewLogin(), 'guest'],
+  ['/forgot', () => viewForgot(), 'guest'],
+  ['/reset-password', () => viewResetPassword()],
   ['/register', () => viewRegister(), 'guest'],
   ['/register/company', () => viewRegisterCompany(), 'guest'],
   ['/page/:slug', (p) => viewPage(p.slug)],
@@ -87,6 +89,8 @@ async function boot() {
     bootScreen(`<span class="spin" style="color:var(--teal);width:28px;height:28px;margin-top:8px"></span><p class="muted">${tr('جاري تحميل الرحلات…', 'Loading trips…')}</p>`);
     try { await loadCloud(); }
     catch (e) { console.error(e); if (!navigator.onLine) return bootScreen(`<h2 style="font-size:20px">${tr('مفيش اتصال بالإنترنت', 'You’re offline')}</h2><p class="muted">${tr('رحلاتي محتاج إنترنت علشان يعرض الرحلات المتاحة والأسعار الحالية. اتصل بالإنترنت وحاول تاني.', 'Rehlati needs a connection to show current trips and prices. Connect and try again.')}</p><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button>`); return bootScreen(`<h2 style="font-size:20px">${tr('السيرفر مش بيرد دلوقتي', 'The server isn’t responding')}</h2><p class="muted">${esc(cloudMsg(e))}</p><div class="row"><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button><a class="btn btn-ghost" href="?demo=1">${tr('افتح العرض التجريبي', 'Open the offline demo')}</a></div>`); }
+    if (RECOVERY_IN_URL && AUTH_UID) { RESET.recovering = AUTH_UID; history.replaceState(null, '', location.pathname + location.search + '#/reset-password'); }
+    else if (RECOVERY_ERROR_IN_URL) history.replaceState(null, '', location.pathname + location.search + '#/forgot?expired=1');
   } else { initDB(); if (SESSION && !me()) setSession(null); }
   render();
 }

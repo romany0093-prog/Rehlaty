@@ -300,6 +300,7 @@ function viewLogin() {
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('sinai', 2)}" alt=""><p class="cap">${tr('الشروق من فوق جبل موسى، دهب', 'Sunrise from Mount Sinai, Dahab')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('تسجيل الدخول', 'Log in')}</h1><p class="muted" style="margin:6px 0 22px">${tr('ادخل علشان تتابع حجوزاتك أو تدير شركتك.', 'Log in to manage your bookings or your company.')}</p>
     <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('ident', tr('اسم المستخدم أو البريد الإلكتروني', 'Username or email'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
+    <div style="margin-top:-4px;text-align:end"><a class="btn-link small" href="#/forgot" data-a="to-forgot">${tr('نسيت كلمة المرور؟', 'Forgot password?')}</a></div>
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('دخول', 'Log in')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('ما عندكش حساب؟', 'No account?')} <a class="btn-link" href="#/register${q.next ? '?next=' + encodeURIComponent(q.next) : ''}">${tr('أنشئ حساب', 'Sign up')}</a> · <a class="btn-link" href="#/register/company">${tr('سجّل شركتك', 'Register a company')}</a></p>
     ${demo.length ? `<div style="margin-top:26px"><div class="lbl">${tr('حسابات تجريبية (اضغط للدخول مباشرة)', 'Demo accounts (click to log in)')}</div><div class="demo-acc">${demo.map(([e, p, r, n, i]) => `<button type="button" data-a="demo-login" data-e="${e}" data-p="${p}"><span style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--teal-50);color:var(--teal-700);flex:none">${ic(i)}</span><span class="grow"><b style="color:var(--navy);font-size:14px">${esc(n)}</b><div class="xs muted">${r} · <span dir="ltr">${e}</span> / <span dir="ltr">${p}</span></div></span>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</button>`).join('')}</div></div>` : ''}
@@ -311,6 +312,8 @@ FORMS.login = async (f) => {
   try { const u = await login(d.ident, d.password); toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(f.dataset.next && u.role === 'customer' ? f.dataset.next : homeFor(u)); }
   catch (e) { busy(btn, false); const fe = f.elements.password.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
 };
+// carry whatever they typed as username into the forgot page
+ACTIONS['to-forgot'] = () => { const v = ($('#f-ident') || {}).value || ''; RESET.sentTo = null; go('#/forgot' + (v ? '?u=' + encodeURIComponent(v) : '')); };
 ACTIONS['demo-login'] = async (el) => { el.disabled = true; let u; try { u = await login(el.dataset.e, el.dataset.p); } finally { el.disabled = false; } const nx = readQuery().next; toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(nx && u.role === 'customer' ? nx : homeFor(u)); };
 function viewRegister() {
   const q = readQuery();
