@@ -137,14 +137,36 @@ function registerCompany(f) {
 }
 
 /* ---------- booking & payment services ---------- */
+/* ---------- seasonal offers (agreed with companies, managed by the admin) ---------- */
+const SEASONS = {
+  christmas: { l: { ar: 'الكريسماس ورأس السنة', en: 'Christmas & New Year' }, c: '#B42318', i: 'sparkle' },
+  midyear: { l: { ar: 'إجازة نصف العام', en: 'Mid‑year break' }, c: '#1D5FA8', i: 'cal' },
+  summer: { l: { ar: 'الصيف', en: 'Summer' }, c: '#B9853A', i: 'sun' },
+  eid: { l: { ar: 'العيد', en: 'Eid' }, c: '#16807F', i: 'star' }
+};
+const campaigns = () => db.settings.campaigns || [];
+/** 'live' | 'upcoming' | 'ended' | 'off' — compares ISO dates so time zones can't shift a day */
+function campaignState(c) { const t = iso(TODAY); return !c.active ? 'off' : t < c.from ? 'upcoming' : t > c.until ? 'ended' : 'live'; }
+const liveCampaigns = () => campaigns().filter((c) => campaignState(c) === 'live' && (compById(c.companyId) || {}).status === 'approved');
+const tripCampaign = (t) => (t ? liveCampaigns().filter((c) => c.companyId === t.companyId && (c.tripIds || []).includes(t.id)).sort((a, b) => b.percent - a.percent)[0] || null : null);
+const offerPrice = (price, camp) => (camp ? price - Math.round(price * camp.percent / 100) : price);
+/** Same rule as the server: the bigger of (seasonal offer, promo code) applies — they never stack. */
 function priceQuote(dep, count, code, trip) {
   const subtotal = dep.price * count;
-  let discount = 0, offer = null;
+  let codeDisc = 0, codeOffer = null;
   if (code) {
-    offer = db.settings.offers.find((o) => o.active && o.code.toUpperCase() === String(code).trim().toUpperCase() && new Date(o.until) >= TODAY && (!o.dests.length || o.dests.includes(trip.destId)));
-    if (offer) discount = Math.round(subtotal * offer.percent / 100);
+    codeOffer = (db.settings.offers || []).find((o) => o.active && o.code.toUpperCase() === String(code).trim().toUpperCase() && o.until >= iso(TODAY) && (!o.dests.length || o.dests.includes(trip.destId))) || null;
+    if (codeOffer) codeDisc = Math.round(subtotal * codeOffer.percent / 100);
   }
-  return { subtotal, discount, total: subtotal - discount, offer };
+  const camp = tripCampaign(trip), campDisc = camp ? Math.round(subtotal * camp.percent / 100) : 0;
+  const useCamp = campDisc > 0 && campDisc >= codeDisc;
+  const discount = useCamp ? campDisc : codeDisc;
+  return { subtotal, discount, total: subtotal - discount, offer: useCamp ? null : codeOffer, codeOffer, campaign: useCamp ? camp : null, promo: useCamp ? camp.title.ar : (codeOffer ? codeOffer.code : '') };
+}
+/* ---------- company ranking: Rehlaty's own rating (set by the admin) first, then customer reviews ---------- */
+function rankedCompanies() {
+  return db.companies.filter((c) => c.status === 'approved').map((c) => ({ c, pr: +c.platformRating || 0, cr: companyRating(c.id), trips: publicTrips().filter((t) => t.companyId === c.id).length }))
+    .filter((x) => x.trips > 0).sort((a, b) => (b.pr - a.pr) || (b.cr.avg - a.cr.avg) || (b.cr.count - a.cr.count));
 }
 /** Step 1 of checkout: creates a Pending Payment booking and holds the seats for N minutes. */
 function createBooking({ depId, travelers, code }) {
@@ -163,7 +185,7 @@ function createBooking({ depId, travelers, code }) {
     if (si.remaining < n) throw new AppError('NO_SEATS', si.remaining ? tr(`المتاح الآن ${si.remaining} مقاعد فقط.`, `Only ${si.remaining} seats are left.`) : tr('اكتملت المقاعد في هذا الموعد.', 'This date is fully booked.'));
     const q = priceQuote(dep, n, code, trip);
     const rate = comp.commission != null && comp.commission !== '' ? +comp.commission : +d.settings.commission;
-    const b = { id: uid('b'), ref: 'RH-' + dep.start.slice(2, 4) + dep.start.slice(5, 7) + '-' + (1000 + d.bookings.length + Math.floor(Math.random() * 900)), customerId: u.id, companyId: trip.companyId, tripId: trip.id, departureId: dep.id, count: n, travelers, unitPrice: dep.price, subtotal: q.subtotal, discount: q.discount, promo: q.offer ? q.offer.code : '', total: q.total, commissionRate: rate, commission: Math.round(q.total * rate / 100), status: 'pending_payment', paymentStatus: 'pending', createdAt: new Date().toISOString(), holdUntil: new Date(Date.now() + d.settings.holdMinutes * 6e4).toISOString() };
+    const b = { id: uid('b'), ref: 'RH-' + dep.start.slice(2, 4) + dep.start.slice(5, 7) + '-' + (1000 + d.bookings.length + Math.floor(Math.random() * 900)), customerId: u.id, companyId: trip.companyId, tripId: trip.id, departureId: dep.id, count: n, travelers, unitPrice: dep.price, subtotal: q.subtotal, discount: q.discount, promo: q.promo, campaignId: q.campaign ? q.campaign.id : null, total: q.total, commissionRate: rate, commission: Math.round(q.total * rate / 100), status: 'pending_payment', paymentStatus: 'pending', createdAt: new Date().toISOString(), holdUntil: new Date(Date.now() + d.settings.holdMinutes * 6e4).toISOString() };
     d.bookings.push(b);
     return b;
   });

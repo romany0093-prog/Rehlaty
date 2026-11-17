@@ -501,6 +501,56 @@ details.faq[open] summary::after{content:"–"}
 details.faq p{padding-bottom:14px;color:var(--muted)}
 .route-fade{animation:fade .2s ease-out}
 
+/* seasonal offers */
+.offer-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap}
+.offer-chip svg{width:14px;height:14px}
+.tcard .off{position:absolute;bottom:12px;inset-inline-start:12px;background:var(--sand);color:var(--navy-950);font-weight:800;font-size:13px;padding:3px 10px;border-radius:8px;font-family:var(--f-disp)}
+.price s,.was{color:var(--faint);font-weight:500;font-size:13px;font-family:var(--f-body);text-decoration-thickness:1.5px}
+.camp{position:relative;border-radius:var(--r-xl);overflow:hidden;background:var(--navy);color:#fff;display:flex;flex-direction:column;min-height:300px;isolation:isolate}
+.camp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+.camp::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,28,45,.15),rgba(11,28,45,.92) 70%);z-index:-1}
+.camp .cb{margin-top:auto;padding:20px;display:flex;flex-direction:column;gap:8px}
+.camp h3{color:#fff;font-size:19px}
+.camp p{color:#D6E2EC;font-size:14px}
+.camp .pct{position:absolute;top:16px;inset-inline-end:16px;background:var(--sand);color:var(--navy-950);border-radius:16px;padding:6px 12px;font-family:var(--f-disp);font-weight:800;font-size:22px;line-height:1.1;text-align:center}
+.camp .pct small{display:block;font-size:11px;font-weight:600}
+.camp .top{position:absolute;top:16px;inset-inline-start:16px}
+.camp-band{border:1px solid var(--line);border-radius:var(--r-xl);background:#fff;overflow:hidden}
+.camp-band .bh{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:18px 20px;border-bottom:1px solid var(--line-2)}
+/* platform rating */
+.pstars{display:inline-flex;gap:1px;align-items:center;direction:ltr}
+.pstars svg{width:15px;height:15px;fill:var(--line);stroke:none}
+.pstars svg.on{fill:var(--sand)}
+.prate{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--navy);background:var(--sand-50);border:1px solid #F1DDBB;border-radius:8px;padding:2px 8px;white-space:nowrap}
+.rate-in{display:inline-flex;gap:0;direction:ltr;align-items:center}
+.rate-in button{border:0;background:none;padding:2px;cursor:pointer;line-height:0}
+.rate-in svg{width:20px;height:20px;fill:var(--line);stroke:none;transition:fill .1s}
+.rate-in button.on svg{fill:var(--sand)}
+.rate-in:hover button svg{fill:var(--sand)}
+.rate-in button:hover~button svg{fill:var(--line)}
+.rank{width:28px;height:28px;border-radius:9px;background:var(--navy);color:#fff;display:grid;place-items:center;font-family:var(--f-disp);font-weight:700;font-size:13px;flex:none}
+.rank.r1{background:var(--sand);color:var(--navy-950)}
+/* compare */
+.cmp-btn{position:absolute;top:10px;inset-inline-end:54px;height:36px;padding:0 10px;border-radius:18px;background:rgba(255,255,255,.92);border:0;display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--navy);font-weight:600;font-size:12.5px}
+.cmp-btn .bx{width:16px;height:16px;border-radius:5px;border:2px solid var(--navy);display:grid;place-items:center}
+.cmp-btn.on{background:var(--teal);color:#fff}
+.cmp-btn.on .bx{border-color:#fff;background:#fff;color:var(--teal)}
+.cmp-btn .bx svg{width:12px;height:12px;stroke-width:3}
+.cmp-tray{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:50;background:var(--navy-950);color:#fff;border-radius:18px;box-shadow:var(--sh-3);padding:10px 12px;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px)}
+.cmp-tray .th{display:flex;gap:6px}
+.cmp-tray .th img{width:44px;height:32px;border-radius:7px;object-fit:cover;border:2px solid rgba(255,255,255,.2)}
+.cmp-tray .slot{width:44px;height:32px;border-radius:7px;border:2px dashed rgba(255,255,255,.25)}
+@media (max-width:560px){.cmp-tray .th{display:none}}
+.cmp-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-lg);background:#fff}
+table.cmp{border-collapse:separate;border-spacing:0;width:100%;min-width:720px;font-size:14px}
+.cmp th,.cmp td{padding:12px 14px;border-bottom:1px solid var(--line-2);vertical-align:top;text-align:start}
+.cmp th[scope=row]{position:sticky;inset-inline-start:0;background:#FAFBFD;color:var(--muted);font-weight:600;font-size:13px;width:150px;min-width:130px;z-index:1;border-inline-end:1px solid var(--line-2)}
+.cmp thead td{vertical-align:bottom;min-width:200px}
+.cmp tr:last-child td,.cmp tr:last-child th{border-bottom:0}
+.cmp td.best{background:var(--teal-50)}
+.best-tag{display:inline-block;margin-inline-start:6px;font-size:11px;font-weight:700;color:var(--teal-700);background:#fff;border:1px solid #BFE6E6;border-radius:6px;padding:0 6px;vertical-align:middle}
+.cmp .tt img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-bottom:8px}
+
 @media print{
   .site-h,.site-f,.side,.topbar,.no-print,.toasts{display:none!important}
   body{background:#fff}
@@ -724,7 +774,7 @@ const imgSrc = (x) => (typeof x === 'string' && x.startsWith('art:')) ? artURL(x
 
 /* ---------- 3. Seed data (Egyptian demo content) ---------- */
 const DB_KEY = 'rehlati_db_v1';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 function seedDB() {
   const R = rng(42);
@@ -764,6 +814,8 @@ function seedDB() {
     { id: 'c5', name: { ar: 'مرسى للسياحة', en: 'Marsa Tourism' }, color: '#5E7A3A', city: { ar: 'مرسى علم', en: 'Marsa Alam' }, phone: '01098765432', email: 'info@marsa-tours.eg', website: '', license: 'ترخيص وزارة السياحة فئة (ب) رقم 5520', founded: 2021, status: 'pending', commission: null, desc: { ar: 'رحلات غوص وسفاري في مرسى علم وحماطة.', en: 'Diving and safari trips in Marsa Alam and Hamata.' }, createdAt: T(-2), logo: null, cover: 'art:sea:1', docs: [{ name: 'السجل التجاري.pdf' }, { name: 'ترخيص وزارة السياحة.pdf' }, { name: 'البطاقة الضريبية.pdf' }] },
     { id: 'c6', name: { ar: 'واحة الأحلام للسفر', en: 'Dream Oasis Travel' }, color: '#7A4D8C', city: { ar: 'المنصورة', en: 'Mansoura' }, phone: '01276543210', email: 'dream.oasis@mail.eg', website: '', license: 'ترخيص وزارة السياحة فئة (ج) رقم 6011', founded: 2023, status: 'pending', commission: null, desc: { ar: 'رحلات اقتصادية للأقصر وأسوان والغردقة.', en: 'Budget trips to Luxor, Aswan and Hurghada.' }, createdAt: T(-1), logo: null, cover: 'art:temple:0', docs: [{ name: 'السجل التجاري.pdf' }, { name: 'ترخيص وزارة السياحة.pdf' }] }
   ];
+  const PR = { c1: 5, c2: 4, c3: 5, c4: 3 };
+  companies.forEach((c) => { c.platformRating = PR[c.id] || null; });
   companies.forEach((c) => { c.docs = c.docs || [{ name: 'السجل التجاري.pdf' }, { name: 'ترخيص وزارة السياحة.pdf' }, { name: 'البطاقة الضريبية.pdf' }]; });
 
   const users = [
@@ -1015,6 +1067,12 @@ function seedDB() {
     banners: [{ id: 'bn1', title: P('الشتاء في أسوان أحلى', 'Winter is better in Aswan'), text: P('خصم ١٠٪ على رحلات الصعيد حتى نهاية ديسمبر بكود الخصم', '10% off Upper Egypt trips until the end of December with the code'), code: 'NILE10', art: 'art:nile:1', link: '#/trips?dest=aswan', active: true }],
     offers: [{ id: 'of1', code: 'NILE10', percent: 10, dests: ['luxor', 'aswan'], until: D(50), active: true }, { id: 'of2', code: 'WELCOME5', percent: 5, dests: [], until: D(120), active: true }],
     featuredTrips: ['t4', 't7', 't1', 't3'],
+    campaigns: [
+      { id: 'cp_xmas', season: 'christmas', title: P('عروض الكريسماس ورأس السنة على البحر الأحمر', 'Christmas & New Year on the Red Sea'), note: P('خصم على الإقامة الشاملة لحجوزات موسم الأعياد', 'Discount on all‑inclusive stays for the holiday season'), companyId: 'c2', tripIds: ['t1', 't13'], percent: 15, from: D(-3), until: D(50), active: true, agreement: 'اتفاق مع بحر وصحرا' },
+      { id: 'cp_mid', season: 'midyear', title: P('إجازة نصف العام في الصعيد', 'Mid‑year break in Upper Egypt'), note: P('خصم للعائلات والطلبة على رحلات الأقصر وأسوان', 'Family and student discount on Luxor and Aswan trips'), companyId: 'c1', tripIds: ['t4', 't5', 't6'], percent: 12, from: D(-3), until: D(85), active: true, agreement: 'اتفاق مع نيل ستار' },
+      { id: 'cp_eid', season: 'eid', title: P('عروض العيد في سيوة', 'Eid offers in Siwa'), note: P('خصم على رحلة سيوة طوال أيام عيد الفطر', 'Siwa trip discount through Eid al‑Fitr'), companyId: 'c3', tripIds: ['t7'], percent: 10, from: D(95), until: D(125), active: true, agreement: 'اتفاق مع دروب سيوة' },
+      { id: 'cp_summer', season: 'summer', title: P('صيف الساحل الشمالي', 'North Coast summer'), note: P('خصم الحجز المبكر لشقق العلمين', 'Early‑booking discount on Alamein apartments'), companyId: 'c4', tripIds: ['t10'], percent: 20, from: D(135), until: D(290), active: true, agreement: 'اتفاق مع أفق للرحلات' }
+    ],
     faq: [
       { q: P('هل الدفع على المنصة آمن؟', 'Is paying on the platform safe?'), a: P('الدفع يتم عبر بوابات دفع معتمدة، والمنصة تحتفظ بالمبلغ حتى موعد الرحلة ثم تحوله للشركة. في هذه النسخة التجريبية الدفع محاكاة فقط.', 'Payments go through licensed gateways and the platform holds the money until the trip, then pays the company. In this prototype payments are simulated.') },
       { q: P('إزاي ألغي حجزي؟', 'How do I cancel?'), a: P('من لوحة حسابك > حجوزاتي > تفاصيل الحجز > طلب إلغاء. قيمة الاسترداد تُحسب تلقائيًا حسب سياسة الرحلة.', 'Go to your account > My bookings > booking details > Request cancellation. The refund is calculated from the trip’s policy.') },
@@ -1171,14 +1229,36 @@ function registerCompany(f) {
 }
 
 /* ---------- booking & payment services ---------- */
+/* ---------- seasonal offers (agreed with companies, managed by the admin) ---------- */
+const SEASONS = {
+  christmas: { l: { ar: 'الكريسماس ورأس السنة', en: 'Christmas & New Year' }, c: '#B42318', i: 'sparkle' },
+  midyear: { l: { ar: 'إجازة نصف العام', en: 'Mid‑year break' }, c: '#1D5FA8', i: 'cal' },
+  summer: { l: { ar: 'الصيف', en: 'Summer' }, c: '#B9853A', i: 'sun' },
+  eid: { l: { ar: 'العيد', en: 'Eid' }, c: '#16807F', i: 'star' }
+};
+const campaigns = () => db.settings.campaigns || [];
+/** 'live' | 'upcoming' | 'ended' | 'off' — compares ISO dates so time zones can't shift a day */
+function campaignState(c) { const t = iso(TODAY); return !c.active ? 'off' : t < c.from ? 'upcoming' : t > c.until ? 'ended' : 'live'; }
+const liveCampaigns = () => campaigns().filter((c) => campaignState(c) === 'live' && (compById(c.companyId) || {}).status === 'approved');
+const tripCampaign = (t) => (t ? liveCampaigns().filter((c) => c.companyId === t.companyId && (c.tripIds || []).includes(t.id)).sort((a, b) => b.percent - a.percent)[0] || null : null);
+const offerPrice = (price, camp) => (camp ? price - Math.round(price * camp.percent / 100) : price);
+/** Same rule as the server: the bigger of (seasonal offer, promo code) applies — they never stack. */
 function priceQuote(dep, count, code, trip) {
   const subtotal = dep.price * count;
-  let discount = 0, offer = null;
+  let codeDisc = 0, codeOffer = null;
   if (code) {
-    offer = db.settings.offers.find((o) => o.active && o.code.toUpperCase() === String(code).trim().toUpperCase() && new Date(o.until) >= TODAY && (!o.dests.length || o.dests.includes(trip.destId)));
-    if (offer) discount = Math.round(subtotal * offer.percent / 100);
+    codeOffer = (db.settings.offers || []).find((o) => o.active && o.code.toUpperCase() === String(code).trim().toUpperCase() && o.until >= iso(TODAY) && (!o.dests.length || o.dests.includes(trip.destId))) || null;
+    if (codeOffer) codeDisc = Math.round(subtotal * codeOffer.percent / 100);
   }
-  return { subtotal, discount, total: subtotal - discount, offer };
+  const camp = tripCampaign(trip), campDisc = camp ? Math.round(subtotal * camp.percent / 100) : 0;
+  const useCamp = campDisc > 0 && campDisc >= codeDisc;
+  const discount = useCamp ? campDisc : codeDisc;
+  return { subtotal, discount, total: subtotal - discount, offer: useCamp ? null : codeOffer, codeOffer, campaign: useCamp ? camp : null, promo: useCamp ? camp.title.ar : (codeOffer ? codeOffer.code : '') };
+}
+/* ---------- company ranking: Rehlaty's own rating (set by the admin) first, then customer reviews ---------- */
+function rankedCompanies() {
+  return db.companies.filter((c) => c.status === 'approved').map((c) => ({ c, pr: +c.platformRating || 0, cr: companyRating(c.id), trips: publicTrips().filter((t) => t.companyId === c.id).length }))
+    .filter((x) => x.trips > 0).sort((a, b) => (b.pr - a.pr) || (b.cr.avg - a.cr.avg) || (b.cr.count - a.cr.count));
 }
 /** Step 1 of checkout: creates a Pending Payment booking and holds the seats for N minutes. */
 function createBooking({ depId, travelers, code }) {
@@ -1197,7 +1277,7 @@ function createBooking({ depId, travelers, code }) {
     if (si.remaining < n) throw new AppError('NO_SEATS', si.remaining ? tr(`المتاح الآن ${si.remaining} مقاعد فقط.`, `Only ${si.remaining} seats are left.`) : tr('اكتملت المقاعد في هذا الموعد.', 'This date is fully booked.'));
     const q = priceQuote(dep, n, code, trip);
     const rate = comp.commission != null && comp.commission !== '' ? +comp.commission : +d.settings.commission;
-    const b = { id: uid('b'), ref: 'RH-' + dep.start.slice(2, 4) + dep.start.slice(5, 7) + '-' + (1000 + d.bookings.length + Math.floor(Math.random() * 900)), customerId: u.id, companyId: trip.companyId, tripId: trip.id, departureId: dep.id, count: n, travelers, unitPrice: dep.price, subtotal: q.subtotal, discount: q.discount, promo: q.offer ? q.offer.code : '', total: q.total, commissionRate: rate, commission: Math.round(q.total * rate / 100), status: 'pending_payment', paymentStatus: 'pending', createdAt: new Date().toISOString(), holdUntil: new Date(Date.now() + d.settings.holdMinutes * 6e4).toISOString() };
+    const b = { id: uid('b'), ref: 'RH-' + dep.start.slice(2, 4) + dep.start.slice(5, 7) + '-' + (1000 + d.bookings.length + Math.floor(Math.random() * 900)), customerId: u.id, companyId: trip.companyId, tripId: trip.id, departureId: dep.id, count: n, travelers, unitPrice: dep.price, subtotal: q.subtotal, discount: q.discount, promo: q.promo, campaignId: q.campaign ? q.campaign.id : null, total: q.total, commissionRate: rate, commission: Math.round(q.total * rate / 100), status: 'pending_payment', paymentStatus: 'pending', createdAt: new Date().toISOString(), holdUntil: new Date(Date.now() + d.settings.holdMinutes * 6e4).toISOString() };
     d.bookings.push(b);
     return b;
   });
@@ -1358,7 +1438,7 @@ let AUTH_UID = null, SEATS = null, CO_STATS = {};
 
 /* object <-> row mapping: listed fields are real columns, everything else lives in `data` */
 const MAP = {
-  companies: { t: 'companies', c: { id: 'id', status: 'status', commission: 'commission', owner: 'owner', createdAt: 'created_at' } },
+  companies: { t: 'companies', c: { id: 'id', status: 'status', commission: 'commission', platformRating: 'platform_rating', owner: 'owner', createdAt: 'created_at' } },
   users: { t: 'profiles', c: { id: 'id', username: 'username', email: 'email', role: 'role', name: 'name', phone: 'phone', city: 'city', status: 'status', companyId: 'company_id', favorites: 'favorites', createdAt: 'created_at' } },
   destinations: { t: 'destinations', c: { id: 'id' } },
   categories: { t: 'categories', c: { id: 'id' } },
@@ -1527,7 +1607,7 @@ function toast(msg, kind) {
 }
 function closeModal() { $('#layer').innerHTML = ''; document.body.style.overflow = ''; }
 function modal({ title, body, foot, wide, onOpen }) {
-  $('#layer').innerHTML = `<div class="modal-bg" data-a="modal-bg"><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h3>${title}</h3><button class="icon-btn" data-a="close-modal" aria-label="${tr('إغلاق', 'Close')}">${ic('x')}</button></div><div class="modal-b">${body}</div>${foot ? `<div class="modal-f">${foot}</div>` : ''}</div></div>`;
+  $('#layer').innerHTML = `<div class="modal-bg"><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h3>${title}</h3><button class="icon-btn" data-a="close-modal" aria-label="${tr('إغلاق', 'Close')}">${ic('x')}</button></div><div class="modal-b">${body}</div>${foot ? `<div class="modal-f">${foot}</div>` : ''}</div></div>`;
   document.body.style.overflow = 'hidden';
   const f = $('#layer input, #layer select, #layer textarea, #layer .modal-f .btn'); if (f) setTimeout(() => f.focus(), 30);
   if (onOpen) onOpen($('#layer .modal'));
@@ -1542,7 +1622,8 @@ function confirmDialog({ title, text, ok, danger, input }) {
   });
 }
 ACTIONS['close-modal'] = closeModal;
-ACTIONS['modal-bg'] = (el, e) => { if (e.target === el) closeModal(); };
+// clicking the dimmed backdrop (not the dialog) closes it
+document.addEventListener('click', (e) => { if (e.target.classList && e.target.classList.contains('modal-bg')) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if ($('#layer').innerHTML) closeModal(); if (UI.menu) { UI.menu = null; render(); } } });
 
 /* event delegation */
@@ -1693,7 +1774,7 @@ ACTIONS.star = (el) => { const w = el.closest('.star-input'); const v = +el.data
 /* ---------- 6. Public website ---------- */
 function header() {
   const u = me(), h = location.hash || '#/';
-  const navs = [['#/', tr('الرئيسية', 'Home')], ['#/trips', tr('الرحلات', 'Trips')], ['#/destinations', tr('الوجهات', 'Destinations')], ['#/companies', tr('شركات السياحة', 'Tour operators')], ['#/page/faq', tr('الأسئلة الشائعة', 'FAQ')]];
+  const navs = [['#/', tr('الرئيسية', 'Home')], ['#/trips', tr('الرحلات', 'Trips')], ['#/offers', tr('العروض', 'Offers')], ['#/compare', tr('قارن', 'Compare') + (cmpList().length ? ` (${cmpList().length})` : '')], ['#/destinations', tr('الوجهات', 'Destinations')], ['#/companies', tr('شركات السياحة', 'Tour operators')], ['#/page/faq', tr('الأسئلة الشائعة', 'FAQ')]];
   const isOn = (p) => (p === '#/' ? h === '#/' || h === '#' : h.startsWith(p));
   return `<header class="site-h"><div class="wrap">
     <a href="#/" class="logo" aria-label="${tr('رحلاتي – الرئيسية', 'Rehlati – home')}">${logoMark()}<span>${tr('رحلاتي', 'Rehlati')}</span></a>
@@ -1729,23 +1810,23 @@ function footer() {
   </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('رحلاتي', 'Rehlati')}${CLOUD ? '' : ' · ' + tr('وضع العرض التجريبي (البيانات في متصفحك فقط)', 'Demo mode (data stays in your browser)')}</span>${CLOUD ? '' : `<button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button>`}</div></div></footer>`;
 }
 ACTIONS['reset-demo'] = async () => { if (await confirmDialog({ title: tr('إعادة ضبط البيانات؟', 'Reset demo data?'), text: tr('ستُحذف كل التعديلات والحجوزات التي أضفتها وتعود البيانات التجريبية الأصلية.', 'All your changes and bookings will be removed and the original demo data restored.'), ok: tr('إعادة الضبط', 'Reset'), danger: true })) { resetDB(); setSession(null); toast(tr('تمت إعادة ضبط البيانات.', 'Demo data reset.')); go('#/'); } };
-const publicLayout = (inner) => header() + `<main id="main" class="route-fade">${inner}</main>` + footer();
+const publicLayout = (inner) => header() + `<main id="main" class="route-fade">${inner}</main>` + footer() + cmpTray();
 
 /* trip card */
 function tripCard(t) {
   const s = tripStats(t), c = compById(t.companyId), dest = destById(t.destId), cr = companyRating(c.id);
   const fav = me() && me().role === 'customer' && (me().favorites || []).includes(t.id);
-  const low = s.next && s.remaining > 0 && s.remaining <= 5;
+  const low = s.next && s.remaining > 0 && s.remaining <= 5, camp = tripCampaign(t);
   return `<article class="tcard">
-    <a class="media" href="#/trip/${t.id}" aria-label="${esc(L(t.title))}"><img src="${imgSrc(t.images[0])}" alt=""><span class="tag">${esc(L(catById(t.catId).name))}</span></a>
-    <button class="fav ${fav ? 'on' : ''}" data-a="fav" data-id="${t.id}" aria-pressed="${fav}" aria-label="${tr('حفظ في المفضلة', 'Save')}">${ic('heart')}</button>
+    <a class="media" href="#/trip/${t.id}" aria-label="${esc(L(t.title))}"><img src="${imgSrc(t.images[0])}" alt=""><span class="tag">${camp ? esc(L(SEASONS[camp.season].l)) : esc(L(catById(t.catId).name))}</span>${camp ? `<span class="off">−${camp.percent}٪</span>` : ''}</a>
+    <button class="fav ${fav ? 'on' : ''}" data-a="fav" data-id="${t.id}" aria-pressed="${fav}" aria-label="${tr('حفظ في المفضلة', 'Save')}">${ic('heart')}</button>${cmpBtn(t)}
     <div class="body">
       <div class="row between small"><span class="row" style="gap:5px;color:var(--teal-700);font-weight:600">${ic('pin')}${esc(L(dest.name))}</span>${starsHTML(s.rating, s.reviews)}</div>
       <h3><a href="#/trip/${t.id}">${esc(L(t.title))}</a></h3>
       <a class="co" href="#/company/${c.id}">${coLogo(c)}<span>${esc(L(c.name))}</span><span class="faint">· ${cr.count ? r1(cr.avg) + ' ★' : tr('جديد', 'New')}</span></a>
       <p class="desc">${esc(L(t.summary))}</p>
       <div class="meta"><span>${ic('clock')}${nightsLabel(t.days)}</span><span>${ic('cal')}${s.next ? fmtDS(s.next.start) : tr('لا توجد مواعيد', 'No dates')}</span></div>
-      <div class="foot"><div class="price num"><small>${tr('يبدأ من / للفرد', 'From / person')}</small>${money(s.minPrice)}</div>
+      <div class="foot"><div class="price num"><small>${tr('يبدأ من / للفرد', 'From / person')}</small>${camp ? `<s>${money(s.minPrice)}</s> ` : ''}${money(offerPrice(s.minPrice, camp))}</div>
         <div style="text-align:end">${s.next ? `<div class="seats ${low ? 'low' : 'ok'}">${s.remaining ? tr(`متبقي ${s.remaining} مقعد`, `${s.remaining} seats left`) : tr('مكتمل', 'Sold out')}</div>` : ''}<a class="btn btn-soft btn-sm" href="#/trip/${t.id}" style="margin-top:4px">${tr('عرض التفاصيل', 'View details')}</a></div></div>
     </div></article>`;
 }
@@ -1782,6 +1863,7 @@ function viewHome() {
       <div class="hero-stats"><span><b class="num">${trips.length}</b>${tr('رحلة متاحة الآن', 'trips available now')}</span><span><b class="num">${comps.length}</b>${tr('شركات مرخصة', 'licensed operators')}</span><span><b class="num">${r1(avg(db.reviews.map((r) => r.ratings.overall)))} ★</b>${tr(`من ${db.reviews.length} تقييم حقيقي`, `from ${db.reviews.length} verified reviews`)}</span></div>
     </div></section>
 
+  ${homeOffers()}
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('وجهات مختارة', 'Featured destinations')}</h2><p>${tr('من البحر الأحمر إلى واحات الصحراء الغربية.', 'From the Red Sea to the Western Desert oases.')}</p></div><a class="btn btn-ghost btn-sm" href="#/destinations">${tr('كل الوجهات', 'All destinations')}</a></div>
     <div class="dest-row">${dests.map((d, i) => { const n = trips.filter((t) => t.destId === d.id).length; return `<a class="dest ${i === 0 ? 'big' : ''} ${i > 0 && i === dests.length - 1 && (dests.length + 3) % 4 === 2 ? 'wide' : ''}" href="#/trips?dest=${d.id}"><img src="${artURL(d.art, i % 3)}" alt=""><div class="dc"><h3>${esc(L(d.name))}</h3><small>${esc(L(d.region))} · ${tr(`${n} رحلة`, `${n} trips`)}</small></div></a>`; }).join('')}</div>
@@ -1824,7 +1906,7 @@ CHANGES['date-from'] = (el) => { const to = document.getElementById(el.dataset.t
 FORMS['hero-search'] = (f) => { const d = formData(f); if (d.date && d.to && d.to < d.date) return toast(tr('تاريخ "إلى" لازم يكون بعد تاريخ "من".', 'The “to” date must be after the “from” date.'), 'bad'); const q = new URLSearchParams(); Object.entries(d).forEach(([k, v]) => v && q.set(k, v)); go('#/trips' + (q.toString() ? '?' + q : '')); };
 function companyCard(c) {
   const cr = companyRating(c.id), n = publicTrips().filter((t) => t.companyId === c.id).length;
-  return `<a class="card card-pad" href="#/company/${c.id}" style="display:flex;flex-direction:column;gap:10px"><div class="row">${coLogo(c, 'md')}<div class="grow" style="min-width:0"><h3 style="font-size:16px">${esc(L(c.name))}</h3><div class="xs faint">${esc(L(c.city))}</div></div></div><p class="small muted" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(L(c.desc))}</p><div class="row between small">${starsHTML(cr.avg, cr.count)}<span class="muted">${tr(`${n} رحلة`, `${n} trips`)}</span></div></a>`;
+  return `<a class="card card-pad" href="#/company/${c.id}" style="display:flex;flex-direction:column;gap:10px"><div class="row">${coLogo(c, 'md')}<div class="grow" style="min-width:0"><h3 style="font-size:16px">${esc(L(c.name))}</h3><div class="xs faint">${esc(L(c.city))}</div></div></div><p class="small muted" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(L(c.desc))}</p><div class="row between small wrapx">${starsHTML(cr.avg, cr.count)}${prate(c)}<span class="muted">${tr(`${n} رحلة`, `${n} trips`)}</span></div></a>`;
 }
 
 /* ---- trips listing ---- */
@@ -1835,6 +1917,8 @@ function filterTrips(q) {
   if (q.dest) { const ds = q.dest.split(','); list = list.filter(({ t }) => ds.includes(t.destId)); }
   if (q.cat) { const cs = q.cat.split(','); list = list.filter(({ t }) => cs.includes(t.catId)); }
   if (q.co) list = list.filter(({ t }) => t.companyId === q.co);
+  if (q.offer) { const cp = campaigns().find((c) => c.id === q.offer); list = list.filter(({ t }) => cp && (cp.tripIds || []).includes(t.id)); }
+  if (q.deals === '1') list = list.filter(({ t }) => tripCampaign(t));
   if (q.dur) list = list.filter(({ t }) => (q.dur === '1' ? t.days === 1 : q.dur === '2-3' ? t.days >= 2 && t.days <= 3 : q.dur === '4-5' ? t.days >= 4 && t.days <= 5 : t.days >= 6));
   if (q.date || q.to) { const from = q.date || '', to = q.to && (!q.date || q.to >= q.date) ? q.to : ''; list = list.filter(({ s }) => s.deps.some((d) => (!from || d.start >= from) && (!to || d.start <= to))); }
   if (q.min) list = list.filter(({ s }) => s.minPrice >= +q.min);
@@ -1851,7 +1935,7 @@ function viewTrips() {
   const rad = (key, val, label) => `<label class="opt"><input type="radio" name="${key}" data-ch="flt-one" data-k="${key}" value="${val}" ${(q[key] || '') === val ? 'checked' : ''}>${esc(label)}</label>`;
   const active = Object.keys(q).filter((k) => k !== 'sort' && q[k]).length;
   return publicLayout(`
-  <section class="phead"><div class="wrap"><div class="crumbs"><a href="#/">${tr('الرئيسية', 'Home')}</a><span>/</span><span>${tr('الرحلات', 'Trips')}</span></div><h1>${q.dest && !q.dest.includes(',') ? tr('رحلات ', 'Trips to ') + esc(L(destById(q.dest).name)) : tr('كل الرحلات', 'All trips')}</h1><p>${tr('فلتر حسب الوجهة والسعر والتاريخ، وقارن بين الشركات.', 'Filter by destination, price and date, and compare operators.')}</p></div></section>
+  <section class="phead"><div class="wrap"><div class="crumbs"><a href="#/">${tr('الرئيسية', 'Home')}</a><span>/</span><span>${tr('الرحلات', 'Trips')}</span></div><h1>${q.offer && campaigns().find((c) => c.id === q.offer) ? esc(L(campaigns().find((c) => c.id === q.offer).title)) : q.dest && !q.dest.includes(',') ? tr('رحلات ', 'Trips to ') + esc(L(destById(q.dest).name)) : tr('كل الرحلات', 'All trips')}</h1><p>${tr('فلتر حسب الوجهة والسعر والتاريخ، وقارن بين الشركات.', 'Filter by destination, price and date, and compare operators.')}</p></div></section>
   <div class="wrap sec" style="padding-top:28px"><div class="list-layout">
     <aside class="card filters ${UI.filtersOpen ? 'open' : ''}" aria-label="${tr('الفلاتر', 'Filters')}">
       <div class="row between" style="padding-bottom:6px"><h3>${tr('الفلاتر', 'Filters')}</h3><div class="row">${active ? `<button class="btn-link small" data-a="flt-clear">${tr('مسح الكل', 'Clear all')}</button>` : ''}<button class="icon-btn filters-toggle" data-a="flt-toggle" aria-label="${tr('إغلاق', 'Close')}">${ic('x')}</button></div></div>
@@ -1863,7 +1947,7 @@ function viewTrips() {
       <div class="fg"><h4>${tr('نوع الرحلة', 'Trip type')}</h4>${db.categories.map((c) => chk('cat', c.id, L(c.name))).join('')}</div>
       <div class="fg"><h4>${tr('الشركة', 'Operator')}</h4><select class="select" data-ch="flt-text" data-k="co" aria-label="${tr('الشركة', 'Operator')}"><option value="">${tr('كل الشركات', 'All operators')}</option>${db.companies.filter((c) => c.status === 'approved').map((c) => `<option value="${c.id}" ${q.co === c.id ? 'selected' : ''}>${esc(L(c.name))}</option>`).join('')}</select></div>
       <div class="fg"><h4>${tr('التقييم', 'Rating')}</h4>${rad('rating', '', tr('أي تقييم', 'Any'))}${rad('rating', '4.5', '4.5+ ★')}${rad('rating', '4', '4+ ★')}</div>
-      <div class="fg"><label class="opt"><input type="checkbox" data-ch="flt-avail" ${q.avail === '1' ? 'checked' : ''}>${tr('فيها مقاعد متاحة فقط', 'Only with seats available')}</label></div>
+      <div class="fg"><label class="opt"><input type="checkbox" data-ch="flt-avail" ${q.avail === '1' ? 'checked' : ''}>${tr('فيها مقاعد متاحة فقط', 'Only with seats available')}</label><label class="opt"><input type="checkbox" data-ch="flt-deals" ${q.deals === '1' ? 'checked' : ''}>${tr('عليها عروض الموسم فقط', 'Only with seasonal offers')}</label></div>
       <button class="btn btn-primary btn-block filters-toggle" data-a="flt-toggle">${tr(`اعرض ${list.length} رحلة`, `Show ${list.length} trips`)}</button>
     </aside>
     <div>
@@ -1883,6 +1967,7 @@ CHANGES['flt-multi'] = (el) => { const q = readQuery(); const cur = (q[el.datase
 CHANGES['flt-one'] = (el) => setQuery(el.dataset.k, el.value);
 CHANGES['flt-text'] = (el) => setQuery(el.dataset.k, el.value);
 CHANGES['flt-avail'] = (el) => setQuery('avail', el.checked ? '1' : '');
+CHANGES['flt-deals'] = (el) => setQuery('deals', el.checked ? '1' : '');
 ACTIONS['flt-clear'] = () => { UI.filtersOpen = false; go('#/trips'); };
 ACTIONS['flt-toggle'] = () => { UI.filtersOpen = !UI.filtersOpen; render(); };
 
@@ -1907,24 +1992,26 @@ function viewTrip(id) {
   const ratingBars = ['organization', 'service', 'punctuality', 'company'].map((k) => [k, avg(revs.map((r) => r.ratings[k]))]);
   const rlabels = { organization: tr('التنظيم', 'Organization'), service: tr('الخدمة', 'Service'), punctuality: tr('الالتزام بالمواعيد', 'Punctuality'), company: tr('الشركة', 'Company') };
   const imgs = t.images.slice(0, 3); while (imgs.length < 3) imgs.push('art:' + d.art + ':' + imgs.length);
+  const camp = tripCampaign(t);
   return publicLayout(`<div class="wrap" style="padding-top:20px">
     ${t.status !== 'active' ? `<div class="callout warn" style="margin-bottom:14px">${ic('info')}<div>${tr('معاينة: هذه الرحلة غير منشورة للعملاء حاليًا', 'Preview: this trip is not visible to customers')} — ${badge(TSTAT, t.status)}</div></div>` : ''}
     <div class="crumbs" style="color:var(--faint)"><a href="#/">${tr('الرئيسية', 'Home')}</a><span>/</span><a href="#/trips?dest=${d.id}">${esc(L(d.name))}</a><span>/</span><span>${esc(L(catById(t.catId).name))}</span></div>
     <div class="row between wrapx" style="align-items:flex-end;margin-bottom:16px"><div style="max-width:820px"><h1 style="font-size:clamp(24px,3.2vw,36px)">${esc(L(t.title))}</h1>
       <div class="row wrapx small" style="margin-top:8px;gap:16px"><span class="row" style="gap:5px;color:var(--teal-700);font-weight:600">${ic('pin')}${esc(L(d.name))}، ${esc(L(d.region))}</span>${starsHTML(s.rating, s.reviews)}<a class="row" style="gap:8px" href="#/company/${c.id}">${coLogo(c)}<b style="color:var(--navy)">${esc(L(c.name))}</b></a></div></div>
-      <button class="btn btn-ghost btn-sm" data-a="fav" data-id="${t.id}">${ic('heart')}${tr('حفظ', 'Save')}</button></div>
+      <div class="row"><button class="btn btn-ghost btn-sm" data-a="cmp-toggle" data-id="${t.id}">${ic(cmpList().includes(t.id) ? 'check' : 'layers')}${cmpList().includes(t.id) ? tr('في المقارنة', 'In comparison') : tr('أضف للمقارنة', 'Add to compare')}</button><a class="btn btn-ghost btn-sm" href="#/compare?dest=${d.id}">${tr('قارن رحلات ', 'Compare ')}${esc(L(d.name))}</a><button class="btn btn-ghost btn-sm" data-a="fav" data-id="${t.id}">${ic('heart')}${tr('حفظ', 'Save')}</button></div></div>
+    ${camp ? `<div class="callout ok" style="margin-bottom:16px;align-items:center">${seasonChip(camp)}<div class="grow"><b>${esc(L(camp.title))}</b> — ${tr(`خصم ${camp.percent}٪ على كل المواعيد، للحجز حتى ${fmtD(camp.until)}`, `${camp.percent}% off every departure when you book by ${fmtD(camp.until)}`)}</div></div>` : ''}
     <div class="gallery">${imgs.map((im, i) => `<button data-a="lightbox" data-src="${i}" aria-label="${tr('تكبير الصورة', 'Enlarge image')}"><img src="${imgSrc(im)}" alt="${esc(L(t.title))}"></button>`).join('')}</div>
     <div class="detail-layout"><div>
-      <div class="facts"><div><small>${tr('المدة', 'Duration')}</small><b>${nightsLabel(t.days)}</b></div><div><small>${tr('أقرب موعد', 'Next departure')}</small><b>${s.next ? fmtDS(s.next.start) : '—'}</b></div><div><small>${tr('السعر يبدأ من', 'From')}</small><b class="num">${money(s.minPrice)}</b></div><div><small>${tr('المقاعد المتاحة', 'Seats left')}</small><b class="num">${s.next ? s.remaining : 0}</b></div></div>
+      <div class="facts"><div><small>${tr('المدة', 'Duration')}</small><b>${nightsLabel(t.days)}</b></div><div><small>${tr('أقرب موعد', 'Next departure')}</small><b>${s.next ? fmtDS(s.next.start) : '—'}</b></div><div><small>${tr('السعر يبدأ من', 'From')}</small><b class="num">${money(offerPrice(s.minPrice, camp))}</b>${camp ? ` <s class="was">${money(s.minPrice)}</s>` : ''}</div><div><small>${tr('المقاعد المتاحة', 'Seats left')}</small><b class="num">${s.next ? s.remaining : 0}</b></div></div>
       <section class="dsec"><h2>${tr('عن الرحلة', 'About this trip')}</h2><p>${esc(L(t.desc))}</p></section>
       <section class="dsec"><h2>${tr('البرنامج يوم بيوم', 'Day by day')}</h2><div class="itin">${t.itinerary.map((x) => `<div class="itin-day"><h4><small>${tr('اليوم', 'Day')} ${x.day}</small>${esc(L(x.title))}</h4><p class="muted small" style="margin-top:4px">${esc(L(x.text))}</p></div>`).join('')}</div></section>
       <section class="dsec grid g2"><div><h2 style="font-size:17px" class="row">${ic('bed')}${tr('الإقامة', 'Accommodation')}</h2><p class="muted">${esc(L(t.accommodation))}</p></div><div><h2 style="font-size:17px" class="row">${ic('bus')}${tr('الانتقالات', 'Transport')}</h2><p class="muted">${esc(L(t.transport))}</p></div></section>
       <section class="dsec grid g2"><div><h2 style="font-size:17px">${tr('السعر يشمل', 'Included')}</h2><ul class="ticklist tick-ok">${t.included.map((x) => `<li>${ic('check')}${esc(L(x))}</li>`).join('')}</ul></div><div><h2 style="font-size:17px">${tr('السعر لا يشمل', 'Not included')}</h2><ul class="ticklist tick-no">${t.excluded.map((x) => `<li>${ic('x')}${esc(L(x))}</li>`).join('')}</ul></div></section>
       <section class="dsec"><h2>${tr('سياسة الحجز والإلغاء', 'Booking & cancellation policy')}</h2><p>${esc(L(t.policy))}</p></section>
-      <section class="dsec"><h2>${tr('كل المواعيد', 'All departures')}</h2>${s.deps.length ? `<div class="tbl-wrap card"><table class="tbl"><thead><tr><th>${tr('السفر', 'Departs')}</th><th>${tr('العودة', 'Returns')}</th><th>${tr('السعر للفرد', 'Per person')}</th><th>${tr('المقاعد', 'Seats')}</th><th></th></tr></thead><tbody>${s.deps.map((dp) => { const si = seatInfo(dp); return `<tr><td>${fmtD(dp.start, { weekday: 'short', day: 'numeric', month: 'short' })}</td><td>${fmtDS(dp.end)}</td><td class="num"><b style="color:var(--navy)">${money(dp.price)}</b></td><td>${si.remaining ? `<span class="seats ${si.remaining <= 5 ? 'low' : 'ok'}">${tr(`${si.remaining} متاح`, `${si.remaining} left`)}</span>` : badge(DSTAT, 'full')}</td><td>${si.remaining ? `<button class="btn btn-soft btn-sm" data-a="bw-pick" data-id="${dp.id}">${tr('اختر', 'Select')}</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>` : `<p class="muted">${tr('لا توجد مواعيد قادمة حاليًا.', 'No upcoming departures right now.')}</p>`}</section>
+      <section class="dsec"><h2>${tr('كل المواعيد', 'All departures')}</h2>${s.deps.length ? `<div class="tbl-wrap card"><table class="tbl"><thead><tr><th>${tr('السفر', 'Departs')}</th><th>${tr('العودة', 'Returns')}</th><th>${tr('السعر للفرد', 'Per person')}</th><th>${tr('المقاعد', 'Seats')}</th><th></th></tr></thead><tbody>${s.deps.map((dp) => { const si = seatInfo(dp); return `<tr><td>${fmtD(dp.start, { weekday: 'short', day: 'numeric', month: 'short' })}</td><td>${fmtDS(dp.end)}</td><td class="num"><b style="color:var(--navy)">${money(offerPrice(dp.price, camp))}</b>${camp ? ` <s class="was">${money(dp.price)}</s>` : ''}</td><td>${si.remaining ? `<span class="seats ${si.remaining <= 5 ? 'low' : 'ok'}">${tr(`${si.remaining} متاح`, `${si.remaining} left`)}</span>` : badge(DSTAT, 'full')}</td><td>${si.remaining ? `<button class="btn btn-soft btn-sm" data-a="bw-pick" data-id="${dp.id}">${tr('اختر', 'Select')}</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>` : `<p class="muted">${tr('لا توجد مواعيد قادمة حاليًا.', 'No upcoming departures right now.')}</p>`}</section>
       <section class="dsec" id="reviews"><h2>${tr('تقييمات المسافرين', 'Traveller reviews')}</h2>
         ${revs.length ? `<div class="grid g2" style="align-items:center;margin-bottom:8px"><div class="row"><b style="font-family:var(--f-disp);font-size:44px;color:var(--navy);line-height:1">${r1(s.rating)}</b><div>${starsHTML(s.rating)}<div class="small muted">${tr(`${revs.length} تقييم من حجوزات مكتملة`, `${revs.length} reviews from completed bookings`)}</div></div></div><div class="rbars">${ratingBars.map(([k, v]) => `<div class="rbar"><span>${rlabels[k]}</span><i><b style="width:${(v / 5) * 100}%"></b></i><span class="num">${r1(v)}</span></div>`).join('')}</div></div>${revs.slice(0, 6).map(reviewItem).join('')}` : `<p class="muted">${tr('لسه مفيش تقييمات. التقييم بيكون متاح للمسافرين بعد انتهاء الرحلة.', 'No reviews yet. Travellers can review after the trip ends.')}</p>`}</section>
-      <section class="dsec" style="border:0"><h2>${tr('الشركة المنظمة', 'Organised by')}</h2><div class="card card-pad"><div class="row wrapx">${coLogo(c, 'md')}<div class="grow"><h3><a href="#/company/${c.id}">${esc(L(c.name))}</a></h3><div class="small muted">${esc(c.license)} · ${tr('منذ', 'since')} ${c.founded}</div></div>${starsHTML(cr.avg, cr.count)}</div><p class="muted small" style="margin-top:10px">${esc(L(c.desc))}</p><div class="row wrapx small" style="margin-top:12px;gap:18px"><span class="row" style="gap:6px">${ic('phone')}<span dir="ltr">${esc(c.phone)}</span></span><span class="row" style="gap:6px">${ic('mail')}${esc(c.email)}</span><span class="row" style="gap:6px">${ic('pin')}${esc(L(c.city))}</span></div></div></section>
+      <section class="dsec" style="border:0"><h2>${tr('الشركة المنظمة', 'Organised by')}</h2><div class="card card-pad"><div class="row wrapx">${coLogo(c, 'md')}<div class="grow"><h3><a href="#/company/${c.id}">${esc(L(c.name))}</a></h3><div class="small muted">${esc(c.license)} · ${tr('منذ', 'since')} ${c.founded}</div></div><div class="row wrapx">${prate(c)}${starsHTML(cr.avg, cr.count)}</div></div><p class="muted small" style="margin-top:10px">${esc(L(c.desc))}</p><div class="row wrapx small" style="margin-top:12px;gap:18px"><span class="row" style="gap:6px">${ic('phone')}<span dir="ltr">${esc(c.phone)}</span></span><span class="row" style="gap:6px">${ic('mail')}${esc(c.email)}</span><span class="row" style="gap:6px">${ic('pin')}${esc(L(c.city))}</span></div></div></section>
     </div>
     <aside><div class="bw" id="bw">${bookingWidget(t)}</div></aside></div></div>`);
 }
@@ -1936,13 +2023,13 @@ function bookingWidget(t) {
   const s = tripStats(t), st = UI.bw;
   const dep = st.depId && depById(st.depId); const si = dep ? seatInfo(dep) : null;
   if (si && st.n > si.remaining) st.n = Math.max(1, si.remaining);
-  const q = dep ? priceQuote(dep, st.n, '', t) : null;
-  return `<div class="bw-top"><div class="row between"><div class="price num"><small>${tr('السعر للفرد', 'Per person')}</small>${money(dep ? dep.price : s.minPrice)}</div>${starsHTML(s.rating, s.reviews)}</div></div>
+  const q = dep ? priceQuote(dep, st.n, '', t) : null, camp = tripCampaign(t), base = dep ? dep.price : s.minPrice;
+  return `<div class="bw-top">${camp ? `<div style="margin-bottom:10px">${seasonChip(camp)} <b class="small" style="color:var(--ok)">${tr(`خصم ${camp.percent}٪`, `${camp.percent}% off`)}</b></div>` : ''}<div class="row between"><div class="price num"><small>${tr('السعر للفرد', 'Per person')}</small>${camp ? `<s>${money(base)}</s> ` : ''}${money(offerPrice(base, camp))}</div>${starsHTML(s.rating, s.reviews)}</div></div>
     <div class="bw-cut"></div>
     <div class="bw-bot stack">
-      <div><div class="lbl" style="margin-bottom:8px">${tr('اختر موعد السفر', 'Choose a departure')}</div>${s.deps.length ? `<div class="dep-list" role="radiogroup">${s.deps.map((dp) => { const x = seatInfo(dp); return `<button class="dep ${dp.id === st.depId ? 'on' : ''} ${x.remaining ? '' : 'full'}" data-a="bw-pick" data-id="${dp.id}" ${x.remaining ? '' : 'disabled'} role="radio" aria-checked="${dp.id === st.depId}"><span class="dd"><b>${fmtD(dp.start, { weekday: 'short', day: 'numeric', month: 'short' })}</b><div class="xs muted">${tr('العودة', 'Back')} ${fmtDS(dp.end)} · ${x.remaining ? `<span class="${x.remaining <= 5 ? 'seats low' : ''}">${tr(`${x.remaining} مقعد`, `${x.remaining} seats`)}</span>` : tr('مكتمل', 'Sold out')}</div></span><span class="num" style="font-weight:700;color:var(--navy);font-size:14px">${money(dp.price)}</span></button>`; }).join('')}</div>` : `<p class="muted small">${tr('لا توجد مواعيد متاحة حاليًا.', 'No dates available right now.')}</p>`}</div>
+      <div><div class="lbl" style="margin-bottom:8px">${tr('اختر موعد السفر', 'Choose a departure')}</div>${s.deps.length ? `<div class="dep-list" role="radiogroup">${s.deps.map((dp) => { const x = seatInfo(dp); return `<button class="dep ${dp.id === st.depId ? 'on' : ''} ${x.remaining ? '' : 'full'}" data-a="bw-pick" data-id="${dp.id}" ${x.remaining ? '' : 'disabled'} role="radio" aria-checked="${dp.id === st.depId}"><span class="dd"><b>${fmtD(dp.start, { weekday: 'short', day: 'numeric', month: 'short' })}</b><div class="xs muted">${tr('العودة', 'Back')} ${fmtDS(dp.end)} · ${x.remaining ? `<span class="${x.remaining <= 5 ? 'seats low' : ''}">${tr(`${x.remaining} مقعد`, `${x.remaining} seats`)}</span>` : tr('مكتمل', 'Sold out')}</div></span><span class="num" style="font-weight:700;color:var(--navy);font-size:14px;text-align:end">${money(offerPrice(dp.price, camp))}${camp ? `<s class="was" style="display:block">${money(dp.price)}</s>` : ''}</span></button>`; }).join('')}</div>` : `<p class="muted small">${tr('لا توجد مواعيد متاحة حاليًا.', 'No dates available right now.')}</p>`}</div>
       ${dep ? `<div class="row between"><span class="lbl">${tr('عدد المسافرين', 'Travellers')}</span><div class="qty"><button data-a="bw-n" data-d="-1" aria-label="${tr('أقل', 'Fewer')}" ${st.n <= 1 ? 'disabled' : ''}>−</button><span class="num" aria-live="polite">${st.n}</span><button data-a="bw-n" data-d="1" aria-label="${tr('أكثر', 'More')}" ${st.n >= Math.min(10, si.remaining) ? 'disabled' : ''}>+</button></div></div>
-      <div class="calc"><div class="row"><span class="muted">${money(dep.price)} × ${st.n}</span><span class="num">${money(q.subtotal)}</span></div><div class="row"><span class="muted">${tr('رسوم الخدمة', 'Service fee')}</span><span>${tr('بدون', 'None')}</span></div><div class="row" style="border-top:1px solid var(--line-2);padding-top:8px;margin-top:4px"><b>${tr('الإجمالي', 'Total')}</b><span class="total num">${money(q.total)}</span></div></div>
+      <div class="calc"><div class="row"><span class="muted">${money(dep.price)} × ${st.n}</span><span class="num">${money(q.subtotal)}</span></div>${q.discount ? `<div class="row" style="color:var(--ok)"><span>${esc(L(q.campaign.title))}</span><span class="num">− ${money(q.discount)}</span></div>` : ''}<div class="row"><span class="muted">${tr('رسوم الخدمة', 'Service fee')}</span><span>${tr('بدون', 'None')}</span></div><div class="row" style="border-top:1px solid var(--line-2);padding-top:8px;margin-top:4px"><b>${tr('الإجمالي', 'Total')}</b><span class="total num">${money(q.total)}</span></div></div>
       <button class="btn btn-teal btn-lg btn-block" data-a="bw-book">${tr('احجز الآن', 'Book now')}</button>
       <p class="xs faint" style="text-align:center">${tr(`المقاعد بتتحجز لك ${db.settings.holdMinutes} دقيقة لحد ما تدفع`, `Seats are held for ${db.settings.holdMinutes} minutes while you pay`)}</p>` : ''}
     </div>`;
@@ -1967,7 +2054,7 @@ function viewCompany(id) {
   const trips = publicTrips().filter((t) => t.companyId === c.id), revs = companyReviews(c.id), cr = companyRating(c.id);
   const done = CLOUD ? ((CO_STATS[c.id] || {}).travellers || 0) : db.bookings.filter((b) => b.companyId === c.id && b.status === 'completed').reduce((a, b) => a + b.count, 0);
   return publicLayout(`<section style="position:relative;height:240px;overflow:hidden;background:var(--navy)"><img src="${imgSrc(c.cover)}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.85"></section>
-  <div class="wrap"><div class="card card-pad" style="margin-top:-70px;position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">${coLogo(c, 'lg')}<div class="grow"><h1 style="font-size:28px">${esc(L(c.name))}</h1><div class="row wrapx small muted" style="gap:14px;margin-top:4px"><span class="row" style="gap:5px">${ic('pin')}${esc(L(c.city))}</span><span class="row" style="gap:5px">${ic('shield')}${esc(c.license)}</span></div></div><div class="row" style="gap:28px"><div><small class="muted">${tr('التقييم', 'Rating')}</small><div>${starsHTML(cr.avg, cr.count)}</div></div><div><small class="muted">${tr('مسافرون', 'Travellers')}</small><div><b class="num" style="color:var(--navy)">${fmtN(done)}</b></div></div><div><small class="muted">${tr('منذ', 'Since')}</small><div><b style="color:var(--navy)">${c.founded}</b></div></div></div></div>
+  <div class="wrap"><div class="card card-pad" style="margin-top:-70px;position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">${coLogo(c, 'lg')}<div class="grow"><h1 style="font-size:28px">${esc(L(c.name))}</h1><div class="row wrapx small muted" style="gap:14px;margin-top:4px"><span class="row" style="gap:5px">${ic('pin')}${esc(L(c.city))}</span><span class="row" style="gap:5px">${ic('shield')}${esc(c.license)}</span></div></div><div class="row" style="gap:28px">${c.platformRating ? `<div><small class="muted">${tr('تقييم رحلاتي', 'Rehlati rating')}</small><div>${pStars(c.platformRating)}</div></div>` : ''}<div><small class="muted">${tr('تقييم العملاء', 'Customer rating')}</small><div>${starsHTML(cr.avg, cr.count)}</div></div><div><small class="muted">${tr('مسافرون', 'Travellers')}</small><div><b class="num" style="color:var(--navy)">${fmtN(done)}</b></div></div><div><small class="muted">${tr('منذ', 'Since')}</small><div><b style="color:var(--navy)">${c.founded}</b></div></div></div></div>
   <div class="detail-layout"><div>
     <section class="dsec" style="padding-top:0"><h2>${tr('عن الشركة', 'About')}</h2><p>${esc(L(c.desc))}</p></section>
     <section class="dsec"><h2>${tr(`رحلات ${L(c.name)}`, `Trips by ${L(c.name)}`)} <span class="faint" style="font-size:15px">(${trips.length})</span></h2>${trips.length ? `<div class="grid g2">${trips.map(tripCard).join('')}</div>` : `<p class="muted">${tr('لا توجد رحلات منشورة حاليًا.', 'No published trips right now.')}</p>`}</section>
@@ -2047,6 +2134,121 @@ function viewNotFound(title, text) {
   return publicLayout(`<div class="wrap sec">${empty('compass', title || tr('الصفحة غير موجودة', 'Page not found'), text || tr('الرابط ممكن يكون اتغير.', 'The link may have changed.'), `<a class="btn btn-primary" href="#/">${tr('للرئيسية', 'Go home')}</a>`)}</div>`);
 }
 
+/* ---------- 6b. Seasonal offers, platform rating, trip comparison ---------- */
+const seasonChip = (c) => { const s = SEASONS[c.season] || SEASONS.christmas; return `<span class="offer-chip" style="background:${s.c}">${ic(s.i)}${esc(L(s.l))}</span>`; };
+const starPath = '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>';
+/** Rehlaty's own rating of a company: n of 5 filled stars */
+const pStars = (n) => `<span class="pstars" role="img" aria-label="${tr(`${n} من ٥`, `${n} of 5`)}">${[1, 2, 3, 4, 5].map((i) => `<svg viewBox="0 0 24 24" class="${i <= n ? 'on' : ''}">${starPath}</svg>`).join('')}</span>`;
+const prate = (c) => (c && c.platformRating ? `<span class="prate" title="${tr('تقييم فريق رحلاتي للشركة', 'Rehlati team’s rating of this company')}">${pStars(c.platformRating)}${tr('تقييم رحلاتي', 'Rehlati rating')}</span>` : '');
+
+/* ---- homepage: live seasonal offers ---- */
+function campaignCard(c) {
+  const co = compById(c.companyId), trips = (c.tripIds || []).map(tripById).filter((t) => t && publicTrips().includes(t));
+  if (!co || !trips.length) return '';
+  const from = Math.min(...trips.map((t) => offerPrice(tripStats(t).minPrice, c)));
+  return `<a class="camp" href="#/trips?offer=${c.id}"><img src="${imgSrc(trips[0].images[0])}" alt=""><span class="top">${seasonChip(c)}</span><span class="pct">−${c.percent}٪<small>${tr('خصم', 'off')}</small></span>
+    <div class="cb"><h3>${esc(L(c.title))}</h3><p>${esc(L(c.note || {}))}</p><div class="row wrapx small" style="color:#D6E2EC;gap:10px">${coLogo(co)}<span>${esc(L(co.name))}</span><span>· ${tr(`${trips.length} رحلة`, `${trips.length} trips`)}</span><span>· ${tr('حتى', 'until')} ${fmtD(c.until)}</span></div>
+    <div class="row between" style="margin-top:6px"><span class="price num" style="color:#fff"><small style="color:#B9C7D4">${tr('يبدأ من / للفرد', 'From / person')}</small>${money(from)}</span><span class="btn btn-sand btn-sm">${tr('شوف الرحلات', 'See trips')}</span></div></div></a>`;
+}
+function homeOffers() {
+  const live = liveCampaigns().map(campaignCard).filter(Boolean);
+  if (!live.length) return '';
+  return `<section class="sec" style="padding-bottom:16px"><div class="wrap"><div class="sec-h"><div><h2>${tr('عروض الموسم', 'Seasonal offers')}</h2><p>${tr('خصومات متفق عليها مع شركات السياحة، والخصم بيتطبق تلقائيًا وقت الحجز.', 'Discounts agreed with tour operators — applied automatically when you book.')}</p></div><a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a></div>
+    <div class="grid ${live.length === 2 ? 'g2' : 'g3'}">${live.slice(0, 3).join('')}</div></div></section>`;
+}
+function viewOffers() {
+  const live = liveCampaigns(), soon = campaigns().filter((c) => campaignState(c) === 'upcoming' && (compById(c.companyId) || {}).status === 'approved');
+  const band = (c) => { const co = compById(c.companyId), trips = (c.tripIds || []).map(tripById).filter((t) => t && publicTrips().includes(t)); if (!trips.length) return ''; return `<section class="camp-band" style="margin-bottom:24px" id="${c.id}"><div class="bh">${seasonChip(c)}<div class="grow"><h2 style="font-size:20px">${esc(L(c.title))}</h2><p class="small muted">${esc(L(c.note || {}))} · ${esc(L(co.name))} · ${tr(`للحجز من ${fmtD(c.from)} حتى ${fmtD(c.until)}`, `Book ${fmtD(c.from)} – ${fmtD(c.until)}`)}</p></div><span class="price num" style="color:var(--ok)">−${c.percent}٪</span></div><div class="card-pad"><div class="grid g3">${trips.map(tripCard).join('')}</div></div></section>`; };
+  return publicLayout(`<section class="phead"><div class="wrap"><h1>${tr('عروض الموسم', 'Seasonal offers')}</h1><p>${tr('عروض الكريسماس ونصف العام والصيف والعيد، بالاتفاق مع شركات السياحة على رحلاتي.', 'Christmas, mid‑year, summer and Eid offers agreed with Rehlati’s tour operators.')}</p></div></section>
+  <div class="wrap sec" style="padding-top:28px">${live.length ? live.map(band).join('') : `<div class="card">${empty('tag', tr('مفيش عروض شغالة دلوقتي', 'No offers running right now'), tr('تابعنا، العروض الجاية هتظهر هنا.', 'Upcoming offers will appear here.'), `<a class="btn btn-primary" href="#/trips">${tr('تصفح كل الرحلات', 'Browse all trips')}</a>`)}</div>`}
+  ${soon.length ? `<h2 style="margin:12px 0 14px">${tr('عروض قادمة', 'Coming soon')}</h2><div class="grid g3">${soon.map((c) => `<div class="card card-pad stack">${seasonChip(c)}<h3>${esc(L(c.title))}</h3><p class="small muted">${esc(L((compById(c.companyId) || {}).name))} · ${tr(`تبدأ ${fmtD(c.from)}`, `Starts ${fmtD(c.from)}`)}</p><b style="color:var(--ok)">${tr(`خصم ${c.percent}٪`, `${c.percent}% off`)}</b></div>`).join('')}</div>` : ''}</div>`);
+}
+
+/* ---- comparison (kept per browser; up to 4 trips) ---- */
+const CMP_KEY = 'rehlati_compare', CMP_MAX = 4;
+function cmpList() { try { const a = JSON.parse(localStorage.getItem(CMP_KEY) || '[]'); return a.filter((id) => tripById(id) && publicTrips().includes(tripById(id))).slice(0, CMP_MAX); } catch (e) { return UI.cmp || []; } }
+function cmpSave(a) { UI.cmp = a; try { localStorage.setItem(CMP_KEY, JSON.stringify(a)); } catch (e) { } }
+const cmpBtn = (t) => { const on = cmpList().includes(t.id); return `<button class="cmp-btn ${on ? 'on' : ''}" data-a="cmp-toggle" data-id="${t.id}" aria-pressed="${on}" title="${tr('أضف للمقارنة', 'Add to compare')}"><span class="bx">${on ? ic('check') : ''}</span>${tr('قارن', 'Compare')}</button>`; };
+function cmpTray() {
+  const a = cmpList(); if (!a.length || (location.hash || '').startsWith('#/compare')) return '';
+  return `<div class="cmp-tray" role="region" aria-label="${tr('المقارنة', 'Comparison')}"><div class="th">${a.map((id) => `<img src="${imgSrc(tripById(id).images[0])}" alt="" title="${esc(L(tripById(id).title))}">`).join('')}${'<span class="slot"></span>'.repeat(CMP_MAX - a.length)}</div><span class="small">${tr(`${a.length} من ${CMP_MAX} رحلات`, `${a.length} of ${CMP_MAX} trips`)}</span><a class="btn btn-teal btn-sm" href="#/compare">${tr('قارن الآن', 'Compare now')}</a><button class="icon-btn" style="width:32px;height:32px;background:transparent;border-color:rgba(255,255,255,.25);color:#fff" data-a="cmp-clear" aria-label="${tr('مسح المقارنة', 'Clear comparison')}">${ic('x')}</button></div>`;
+}
+ACTIONS['cmp-toggle'] = (el) => {
+  const id = el.dataset.id, a = cmpList(), i = a.indexOf(id);
+  if (i >= 0) a.splice(i, 1);
+  else { if (a.length >= CMP_MAX) return toast(tr(`تقدر تقارن ${CMP_MAX} رحلات بحد أقصى. شيل رحلة الأول.`, `You can compare up to ${CMP_MAX} trips. Remove one first.`), 'info'); a.push(id); }
+  cmpSave(a);
+  if (i < 0 && a.length === 1) toast(tr('اتضافت للمقارنة. اختار رحلة تانية علشان تقارن.', 'Added. Pick another trip to compare.'), 'info');
+  const y = scrollY; render(); scrollTo(0, y);
+};
+ACTIONS['cmp-clear'] = () => { cmpSave([]); const y = scrollY; render(); scrollTo(0, y); };
+ACTIONS['cmp-remove'] = (el) => { cmpSave(cmpList().filter((x) => x !== el.dataset.id)); history.replaceState(null, '', '#/compare'); render(); };
+CHANGES['cmp-add'] = (el) => { if (!el.value) return; const a = cmpList(); if (a.length >= CMP_MAX) { el.value = ''; return toast(tr(`الحد الأقصى ${CMP_MAX} رحلات.`, `Maximum ${CMP_MAX} trips.`), 'info'); } if (!a.includes(el.value)) a.push(el.value); cmpSave(a); history.replaceState(null, '', '#/compare'); render(); };
+const pickBy = (filterFn) => publicTrips().filter(filterFn).sort((a, b) => tripStats(b).rating - tripStats(a).rating).slice(0, CMP_MAX).map((t) => t.id);
+CHANGES['cmp-dest'] = (el) => { if (!el.value) return; cmpSave(pickBy((t) => t.destId === el.value)); history.replaceState(null, '', '#/compare'); render(); };
+CHANGES['cmp-co'] = (el) => { if (!el.value) return; cmpSave(pickBy((t) => t.companyId === el.value)); history.replaceState(null, '', '#/compare'); render(); };
+CHANGES['cmp-sort'] = (el) => { UI.cmpSort = el.value; render(); };
+function viewCompare() {
+  const q = readQuery();
+  if (q.ids) cmpSave(q.ids.split(',').filter((id) => tripById(id)).slice(0, CMP_MAX));
+  else if (q.dest) cmpSave(pickBy((t) => t.destId === q.dest));
+  else if (q.co) cmpSave(pickBy((t) => t.companyId === q.co));
+  let ids = cmpList();
+  const rows = ids.map((id) => { const t = tripById(id), s = tripStats(t), c = compById(t.companyId), cr = companyRating(c.id), camp = tripCampaign(t), price = offerPrice(s.minPrice, camp); return { t, s, c, cr, camp, price, perDay: Math.round(price / t.days), seats: s.next ? s.remaining : 0 }; });
+  const sorts = { price: (a, b) => a.price - b.price, rating: (a, b) => b.s.rating - a.s.rating, company: (a, b) => ((b.c.platformRating || 0) - (a.c.platformRating || 0)) || (b.cr.avg - a.cr.avg), dest: (a, b) => L(destById(a.t.destId).name).localeCompare(L(destById(b.t.destId).name)) };
+  if (UI.cmpSort && sorts[UI.cmpSort]) rows.sort(sorts[UI.cmpSort]);
+  const best = (vals, dir) => { const v = vals.filter((x) => x > 0); if (rows.length < 2 || !v.length) return null; return dir === 'min' ? Math.min(...v) : Math.max(...v); };
+  const bPrice = best(rows.map((r) => r.price), 'min'), bDay = best(rows.map((r) => r.perDay), 'min'), bRate = best(rows.map((r) => r.s.rating), 'max'), bCo = best(rows.map((r) => r.cr.avg), 'max'), bPr = best(rows.map((r) => +r.c.platformRating || 0), 'max'), bSeats = best(rows.map((r) => r.seats), 'max');
+  const cell = (val, isBest, html) => `<td class="${isBest && val === isBest ? 'best' : ''}">${html}${isBest != null && val === isBest ? `<span class="best-tag">${tr('الأفضل', 'Best')}</span>` : ''}</td>`;
+  const tripOpts = db.destinations.map((d) => { const ts = publicTrips().filter((t) => t.destId === d.id && !ids.includes(t.id)); return ts.length ? `<optgroup label="${esc(L(d.name))}">${ts.map((t) => `<option value="${t.id}">${esc(L(t.title))} — ${esc(L(compById(t.companyId).name))}</option>`).join('')}</optgroup>` : ''; }).join('');
+  const tools = `<div class="card card-pad" style="margin-bottom:18px"><div class="grid g4" style="gap:14px;align-items:end">
+    <div class="field"><label for="cmp-add">${tr('أضف رحلة للمقارنة', 'Add a trip')}</label><select class="select" id="cmp-add" data-ch="cmp-add" ${ids.length >= CMP_MAX ? 'disabled' : ''}><option value="">${ids.length >= CMP_MAX ? tr('وصلت للحد الأقصى (٤)', 'Maximum reached (4)') : tr('اختر رحلة…', 'Choose a trip…')}</option>${tripOpts}</select></div>
+    <div class="field"><label for="cmp-dest">${tr('قارن رحلات وجهة', 'Compare a destination')}</label><select class="select" id="cmp-dest" data-ch="cmp-dest"><option value="">${tr('اختر الوجهة…', 'Choose destination…')}</option>${db.destinations.filter((d) => publicTrips().some((t) => t.destId === d.id)).map((d) => `<option value="${d.id}">${esc(L(d.name))} (${publicTrips().filter((t) => t.destId === d.id).length})</option>`).join('')}</select></div>
+    <div class="field"><label for="cmp-co">${tr('قارن رحلات شركة', 'Compare an operator')}</label><select class="select" id="cmp-co" data-ch="cmp-co"><option value="">${tr('اختر الشركة…', 'Choose operator…')}</option>${db.companies.filter((c) => c.status === 'approved' && publicTrips().some((t) => t.companyId === c.id)).map((c) => `<option value="${c.id}">${esc(L(c.name))}</option>`).join('')}</select></div>
+    <div class="field"><label for="cmp-sort">${tr('رتّب الأعمدة حسب', 'Order columns by')}</label><select class="select" id="cmp-sort" data-ch="cmp-sort"><option value="">${tr('ترتيب الإضافة', 'Order added')}</option>${[['price', tr('السعر: الأقل أولًا', 'Price: lowest first')], ['rating', tr('تقييم الرحلة', 'Trip rating')], ['company', tr('تقييم الشركة', 'Company rating')], ['dest', tr('الوجهة', 'Destination')]].map(([v, l]) => `<option value="${v}" ${UI.cmpSort === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+  </div></div>`;
+  const R = (label, fn) => `<tr><th scope="row">${label}</th>${rows.map(fn).join('')}</tr>`;
+  const table = rows.length ? `<div class="cmp-wrap"><table class="cmp"><thead><tr><th scope="row" style="vertical-align:bottom">${tr(`${rows.length} رحلات`, `${rows.length} trips`)}${rows.length > 1 ? `<div style="margin-top:8px"><button class="btn-link small" data-a="cmp-clear">${tr('مسح الكل', 'Clear all')}</button></div>` : ''}</th>${rows.map((r) => `<td class="tt"><img src="${imgSrc(r.t.images[0])}" alt=""><a href="#/trip/${r.t.id}"><b style="color:var(--navy)">${esc(L(r.t.title))}</b></a><div style="margin-top:8px"><button class="btn-link small" data-a="cmp-remove" data-id="${r.t.id}">${tr('إزالة', 'Remove')}</button></div></td>`).join('')}</tr></thead><tbody>
+    ${R(tr('الوجهة', 'Destination'), (r) => `<td><span class="row" style="gap:5px;color:var(--teal-700);font-weight:600">${ic('pin')}${esc(L(destById(r.t.destId).name))}</span><div class="xs muted">${esc(L(catById(r.t.catId).name))}</div></td>`)}
+    ${R(tr('الشركة', 'Operator'), (r) => `<td><a class="row" href="#/company/${r.c.id}" style="gap:8px">${coLogo(r.c)}<b style="color:var(--navy)">${esc(L(r.c.name))}</b></a></td>`)}
+    ${R(tr('تقييم رحلاتي للشركة', 'Rehlati rating'), (r) => cell(+r.c.platformRating || 0, bPr, r.c.platformRating ? pStars(r.c.platformRating) : `<span class="faint">${tr('لم تُقيَّم بعد', 'Not rated yet')}</span>`))}
+    ${R(tr('تقييم العملاء للشركة', 'Customer rating (company)'), (r) => cell(r.cr.avg, bCo, starsHTML(r.cr.avg, r.cr.count)))}
+    ${R(tr('تقييم الرحلة', 'Trip rating'), (r) => cell(r.s.rating, bRate, starsHTML(r.s.rating, r.s.reviews)))}
+    ${R(tr('السعر يبدأ من / للفرد', 'From / person'), (r) => cell(r.price, bPrice, `<b class="price num" style="font-size:18px">${money(r.price)}</b>${r.camp ? `<div><s class="was">${money(r.s.minPrice)}</s> ${seasonChip(r.camp)}</div>` : ''}`))}
+    ${R(tr('السعر لليوم الواحد', 'Price per day'), (r) => cell(r.perDay, bDay, `<span class="num">${money(r.perDay)}</span>`))}
+    ${R(tr('المدة', 'Duration'), (r) => `<td>${nightsLabel(r.t.days)}</td>`)}
+    ${R(tr('أقرب موعد', 'Next departure'), (r) => `<td>${r.s.next ? fmtD(r.s.next.start, { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}<div class="xs muted">${tr(`${r.s.deps.length} موعد متاح`, `${r.s.deps.length} dates`)}</div></td>`)}
+    ${R(tr('المقاعد المتاحة', 'Seats left'), (r) => cell(r.seats, bSeats, `<span class="num">${r.seats}</span>`))}
+    ${R(tr('الإقامة', 'Stay'), (r) => `<td class="small">${esc(L(r.t.accommodation))}</td>`)}
+    ${R(tr('الانتقالات', 'Transport'), (r) => `<td class="small">${esc(L(r.t.transport))}</td>`)}
+    ${R(tr('السعر يشمل', 'Included'), (r) => `<td><ul class="ticklist tick-ok small">${r.t.included.map((x) => `<li>${ic('check')}${esc(L(x))}</li>`).join('')}</ul></td>`)}
+    ${R('', (r) => `<td><a class="btn btn-teal btn-sm btn-block" href="#/trip/${r.t.id}">${tr('التفاصيل والحجز', 'Details & booking')}</a></td>`)}
+  </tbody></table></div>${rows.length === 1 ? `<div class="callout" style="margin-top:14px">${ic('info')}<div>${tr('أضف رحلة تانية على الأقل علشان تظهر أفضل قيمة في كل صف.', 'Add at least one more trip to see the best value in each row.')}</div></div>` : ''}`
+    : `<div class="card">${empty('layers', tr('لسه ما اخترتش رحلات للمقارنة', 'No trips to compare yet'), tr('اضغط "قارن" على أي رحلة، أو اختار وجهة أو شركة من فوق وهنجيبلك أعلى رحلاتها تقييمًا.', 'Tap “Compare” on any trip, or pick a destination or operator above and we’ll load its top‑rated trips.'), `<a class="btn btn-primary" href="#/trips">${tr('تصفح الرحلات', 'Browse trips')}</a>`)}</div>`;
+  return publicLayout(`<section class="phead"><div class="wrap"><h1>${tr('قارن بين الرحلات', 'Compare trips')}</h1><p>${tr('قارن لحد ٤ رحلات بالوجهة والشركة والسعر والتقييم. الخانة الخضرا هي الأفضل في كل صف.', 'Compare up to 4 trips by destination, operator, price and rating. Green cells are the best in each row.')}</p></div></section>
+  <div class="wrap sec" style="padding-top:24px">${tools}${table}</div>`);
+}
+
+/* ---- customer dashboard: top-rated companies & recommended trips ---- */
+function topCompaniesCard(limit) {
+  const list = rankedCompanies().slice(0, limit || 5);
+  if (!list.length) return '';
+  return `<div class="card"><div class="card-h"><h3>${tr('الشركات الأعلى تقييمًا', 'Top‑rated operators')}</h3><a class="btn-link small" href="#/companies">${tr('كل الشركات', 'All operators')}</a></div><div class="card-pad stack">
+    ${list.map((x, i) => `<a class="row" href="#/company/${x.c.id}" style="gap:12px;align-items:center"><span class="rank ${i === 0 ? 'r1' : ''}">${i + 1}</span>${coLogo(x.c, 'md')}<div class="grow" style="min-width:0"><b style="color:var(--navy)">${esc(L(x.c.name))}</b><div class="row wrapx xs muted" style="gap:10px;margin-top:2px">${x.pr ? `<span class="row" style="gap:4px">${pStars(x.pr)}${tr('رحلاتي', 'Rehlati')}</span>` : ''}<span>${starsHTML(x.cr.avg, x.cr.count)}</span><span>${tr(`${x.trips} رحلة`, `${x.trips} trips`)}</span></div></div>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</a>`).join('')}
+    <p class="xs faint">${tr('الترتيب حسب تقييم فريق رحلاتي للشركة، وبعده تقييمات العملاء اللي سافروا معاها.', 'Ranked by the Rehlati team’s rating, then by reviews from travellers who went with them.')}</p></div></div>`;
+}
+function recommendedTrips(n) {
+  const u = me(), mine = new Set(db.bookings.filter((b) => b.customerId === (u || {}).id).map((b) => b.tripId));
+  const rank = new Map(rankedCompanies().map((x, i) => [x.c.id, i]));
+  const pool = publicTrips().filter((t) => !mine.has(t.id) && tripStats(t).avail.length && rank.has(t.companyId))
+    .sort((a, b) => (rank.get(a.companyId) - rank.get(b.companyId)) || ((tripCampaign(b) ? 1 : 0) - (tripCampaign(a) ? 1 : 0)) || (tripStats(b).rating - tripStats(a).rating));
+  // one trip from each top company first, then fill
+  const out = [], seen = new Set(); n = n || 3;
+  pool.forEach((t) => { if (out.length < n && !seen.has(t.companyId)) { out.push(t); seen.add(t.companyId); } });
+  pool.forEach((t) => { if (out.length < n && !out.includes(t)) out.push(t); });
+  return out;
+}
+
 /* ---------- 7. Checkout ---------- */
 function viewCheckout(tripId) {
   const t = tripById(tripId); const q = readQuery();
@@ -2071,7 +2273,7 @@ function viewCheckout(tripId) {
     <aside class="card" style="position:sticky;top:88px;overflow:hidden"><img src="${imgSrc(t.images[0])}" alt="" style="aspect-ratio:16/8;object-fit:cover;width:100%"><div class="card-pad stack">
       <h3 style="font-size:16px">${esc(L(t.title))}</h3><div class="row small muted">${coLogo(c)}${esc(L(c.name))}</div>
       <dl class="dl" style="grid-template-columns:110px 1fr;font-size:14px"><dt>${tr('السفر', 'Departs')}</dt><dd>${fmtD(dep.start, { weekday: 'long', day: 'numeric', month: 'long' })}</dd><dt>${tr('العودة', 'Returns')}</dt><dd>${fmtD(dep.end, { day: 'numeric', month: 'long' })}</dd><dt>${tr('المسافرون', 'Travellers')}</dt><dd>${co.n}</dd></dl>
-      <div class="calc" style="border-top:1px dashed var(--line);padding-top:12px"><div class="row"><span class="muted">${money(dep.price)} × ${co.n}</span><span class="num">${money(b ? b.subtotal : q2.subtotal)}</span></div>${(b ? b.discount : q2.discount) ? `<div class="row" style="color:var(--ok)"><span>${tr('خصم', 'Discount')} ${esc(b ? b.promo : co.code.toUpperCase())}</span><span class="num">− ${money(b ? b.discount : q2.discount)}</span></div>` : ''}<div class="row"><b>${tr('الإجمالي', 'Total')}</b><span class="total num">${money(b ? b.total : q2.total)}</span></div></div>
+      <div class="calc" style="border-top:1px dashed var(--line);padding-top:12px"><div class="row"><span class="muted">${money(dep.price)} × ${co.n}</span><span class="num">${money(b ? b.subtotal : q2.subtotal)}</span></div>${(b ? b.discount : q2.discount) ? `<div class="row" style="color:var(--ok)"><span>${tr('خصم', 'Discount')} ${esc(b ? b.promo : (q2.campaign ? L(q2.campaign.title) : co.code.toUpperCase()))}</span><span class="num">− ${money(b ? b.discount : q2.discount)}</span></div>` : ''}<div class="row"><b>${tr('الإجمالي', 'Total')}</b><span class="total num">${money(b ? b.total : q2.total)}</span></div></div>
       ${b && b.status === 'pending_payment' ? `<div class="callout warn">${ic('clock')}<div>${tr('المقاعد محجوزة لك لمدة', 'Seats held for')} <span class="timer" id="hold-timer" data-until="${b.holdUntil}">--:--</span></div></div>` : ''}
     </div></aside></div></div></main>`;
 }
@@ -2099,7 +2301,7 @@ function coStep2(t, dep, q) {
   return `<form class="card card-pad stack" data-f="co-2" novalidate><h2 style="font-size:20px">${tr('راجع حجزك', 'Review your booking')}</h2>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th>${tr('الاسم', 'Name')}</th><th>${tr('السن', 'Age')}</th><th>${tr('الموبايل', 'Mobile')}</th></tr></thead><tbody>${co.travelers.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.name)}</td><td class="num">${esc(x.age)}</td><td dir="ltr" style="text-align:start">${esc(x.phone || '—')}</td></tr>`).join('')}</tbody></table></div>
     <button type="button" class="btn-link small" data-a="co-back" data-s="1" style="align-self:flex-start">${tr('تعديل البيانات', 'Edit details')}</button>
-    <div class="field" style="max-width:420px"><label for="f-code">${tr('كود خصم (اختياري)', 'Promo code (optional)')}</label><div class="row"><input class="input" id="f-code" name="code" value="${esc(co.code)}" dir="ltr" placeholder="NILE10"><button type="button" class="btn btn-soft" data-a="co-code">${tr('تطبيق', 'Apply')}</button></div><span class="hint">${co.code ? (q.offer ? tr(`تم تطبيق خصم ${q.offer.percent}٪`, `${q.offer.percent}% off applied`) : tr('الكود غير صالح لهذه الرحلة.', 'This code isn’t valid for this trip.')) : tr('جرّب NILE10 على رحلات الأقصر وأسوان، أو WELCOME5', 'Try NILE10 on Luxor & Aswan trips, or WELCOME5')}</span></div>
+    <div class="field" style="max-width:420px"><label for="f-code">${tr('كود خصم (اختياري)', 'Promo code (optional)')}</label><div class="row"><input class="input" id="f-code" name="code" value="${esc(co.code)}" dir="ltr" placeholder="NILE10"><button type="button" class="btn btn-soft" data-a="co-code">${tr('تطبيق', 'Apply')}</button></div><span class="hint">${q.campaign && co.code && q.codeOffer ? tr(`عرض "${L(q.campaign.title)}" (${q.campaign.percent}٪) أكبر من الكود، فطبقنا العرض. الخصومات مش بتتجمع.`, `The “${L(q.campaign.title)}” offer (${q.campaign.percent}%) beats the code, so we applied it. Discounts don’t stack.`) : q.campaign ? tr(`عرض "${L(q.campaign.title)}" متطبق تلقائيًا (${q.campaign.percent}٪). الكود هيتطبق بس لو خصمه أكبر.`, `“${L(q.campaign.title)}” is applied automatically (${q.campaign.percent}%). A code only applies if it’s bigger.`) : co.code ? (q.offer ? tr(`تم تطبيق خصم ${q.offer.percent}٪`, `${q.offer.percent}% off applied`) : tr('الكود غير صالح لهذه الرحلة.', 'This code isn’t valid for this trip.')) : tr('جرّب NILE10 على رحلات الأقصر وأسوان، أو WELCOME5', 'Try NILE10 on Luxor & Aswan trips, or WELCOME5')}</span></div>
     <div class="callout">${ic('info')}<div><b>${tr('سياسة الإلغاء:', 'Cancellation policy:')}</b> ${esc(L(t.policy))}</div></div>
     <label class="check field"><input type="checkbox" name="terms" value="1"><span>${tr('قرأت وأوافق على', 'I have read and accept the')} <a class="btn-link" href="#/page/terms" target="_blank">${tr('الشروط والأحكام', 'terms & conditions')}</a> ${tr('وسياسة الإلغاء الخاصة بالرحلة.', 'and this trip’s cancellation policy.')}</span><span class="err-msg"></span></label>
     <div class="row between wrapx"><button type="button" class="btn btn-ghost" data-a="co-back" data-s="1">${tr('رجوع', 'Back')}</button><button class="btn btn-primary btn-lg" type="submit">${tr('متابعة للدفع', 'Continue to payment')}</button></div></form>`;
@@ -2169,7 +2371,7 @@ function dashLayout(kind, title, content, actions) {
   const navs = {
     me: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['bookings', tr('حجوزاتي', 'My bookings'), 'ticket'], ['payments', tr('المدفوعات والفواتير', 'Payments & invoices'), 'card'], ['cancellations', tr('طلبات الإلغاء', 'Cancellations'), 'refund'], ['favorites', tr('المفضلة', 'Saved trips'), 'heart'], ['reviews', tr('تقييماتي', 'My reviews'), 'star'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['profile', tr('بياناتي', 'My details'), 'user']],
     co: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['trips', tr('الرحلات والمواعيد', 'Trips & departures'), 'map'], ['bookings', tr('الحجوزات', 'Bookings'), 'ticket', db.bookings.filter((b) => b.companyId === u.companyId && b.status === 'refund_pending').length], ['finance', tr('المستحقات', 'Earnings'), 'money'], ['reviews', tr('التقييمات', 'Reviews'), 'star'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['profile', tr('ملف الشركة', 'Company profile'), 'building']],
-    admin: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['grp', tr('التشغيل', 'Operations')], ['companies', tr('الشركات', 'Companies'), 'building', db.companies.filter((c) => c.status === 'pending').length], ['trips', tr('الرحلات', 'Trips'), 'map', db.trips.filter((t) => t.status === 'pending').length], ['customers', tr('العملاء', 'Customers'), 'users'], ['bookings', tr('الحجوزات والاسترداد', 'Bookings & refunds'), 'ticket', db.refunds.filter((r) => r.status === 'pending').length + db.disputes.filter((d) => d.status === 'open').length], ['grp', tr('المال', 'Money')], ['finance', tr('المالية والعمولات', 'Finance & commission'), 'money'], ['grp', tr('المنصة', 'Platform')], ['content', tr('المحتوى', 'Content'), 'layers'], ['taxonomy', tr('الوجهات والتصنيفات', 'Destinations & categories'), 'tag'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['settings', tr('الإعدادات', 'Settings'), 'cog']]
+    admin: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['grp', tr('التشغيل', 'Operations')], ['companies', tr('الشركات', 'Companies'), 'building', db.companies.filter((c) => c.status === 'pending').length], ['trips', tr('الرحلات', 'Trips'), 'map', db.trips.filter((t) => t.status === 'pending').length], ['customers', tr('العملاء', 'Customers'), 'users'], ['bookings', tr('الحجوزات والاسترداد', 'Bookings & refunds'), 'ticket', db.refunds.filter((r) => r.status === 'pending').length + db.disputes.filter((d) => d.status === 'open').length], ['grp', tr('المال', 'Money')], ['finance', tr('المالية والعمولات', 'Finance & commission'), 'money'], ['grp', tr('المنصة', 'Platform')], ['offers', tr('عروض المواسم', 'Seasonal offers'), 'tag', liveCampaigns().length], ['content', tr('المحتوى', 'Content'), 'layers'], ['taxonomy', tr('الوجهات والتصنيفات', 'Destinations & categories'), 'tag'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['settings', tr('الإعدادات', 'Settings'), 'cog']]
   }[kind];
   const base = { me: '#/me', co: '#/co', admin: '#/admin' }[kind];
   const c = kind === 'co' ? myCompany() : null;
@@ -2211,8 +2413,10 @@ function viewMe() {
       <div class="card"><div class="card-h"><h3>${tr('رحلتك الجاية', 'Your next trip')}</h3><a class="btn-link small" href="#/me/bookings">${tr('كل الحجوزات', 'All bookings')}</a></div>${next ? `<div class="card-pad"><div class="row wrapx" style="align-items:stretch;gap:18px"><img src="${imgSrc(nt.images[0])}" alt="" style="width:220px;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px"><div class="grow stack"><h3>${esc(L(nt.title))}</h3><div class="row wrapx small muted" style="gap:14px"><span>${ic('cal')} ${fmtD(nd.start, { weekday: 'long', day: 'numeric', month: 'long' })}</span><span>${ic('users')} ${next.count}</span></div><div class="callout ok">${ic('clock')}<div>${tr(`باقي ${daysBetween(TODAY, nd.start)} يوم على السفر`, `${daysBetween(TODAY, nd.start)} days to go`)}</div></div><div class="row wrapx"><a class="btn btn-primary btn-sm" href="#/me/booking/${next.ref}">${tr('تفاصيل الحجز', 'Booking details')}</a><button class="btn btn-ghost btn-sm" data-a="dl-confirm" data-id="${next.id}">${ic('download')}${tr('تأكيد الحجز', 'Confirmation')}</button></div></div></div></div>` : empty('compass', tr('مفيش رحلات قادمة', 'No upcoming trips'), tr('اختار وجهتك الجاية واحجز في دقايق.', 'Pick your next destination and book in minutes.'), `<a class="btn btn-primary" href="#/trips">${tr('تصفح الرحلات', 'Browse trips')}</a>`)}</div>
       <div class="card"><div class="card-h"><h3>${tr('آخر الإشعارات', 'Latest notifications')}</h3><a class="btn-link small" href="#/me/notifications">${tr('الكل', 'All')}</a></div>${myNotifs().slice(0, 4).map((n) => `<a class="notif ${n.read ? '' : 'unread'}" href="${n.link}" data-a="notif-open" data-id="${n.id}"><span class="n-ic">${ic('bell')}</span><div class="grow"><b class="small" style="color:var(--navy)">${esc(L(n.title))}</b><p class="xs muted">${esc(L(n.body))}</p></div></a>`).join('') || `<p class="card-pad muted">${tr('لا يوجد جديد.', 'Nothing new.')}</p>`}</div>
     </div>
+    <div class="grid" style="grid-template-columns:1fr 1.6fr;margin-top:20px;align-items:start" id="me-grid2">${topCompaniesCard(5)}
+      <div class="card"><div class="card-h"><h3>${tr('رحلات نرشحها لك', 'Recommended for you')}</h3><a class="btn-link small" href="#/compare?ids=${recommendedTrips(3).map((t) => t.id).join(',')}">${tr('قارن بينهم', 'Compare them')}</a></div><div class="card-pad"><p class="small muted" style="margin-bottom:12px">${tr('من الشركات الأعلى تقييمًا، والأولوية للرحلات اللي عليها عروض.', 'From the top‑rated operators, with seasonal offers first.')}</p><div class="grid g2">${recommendedTrips(2).map(tripCard).join('') || `<p class="muted">${tr('مفيش ترشيحات حاليًا.', 'No recommendations right now.')}</p>`}</div></div></div></div>
     <div class="card" style="margin-top:20px"><div class="card-h"><h3>${tr('آخر الحجوزات', 'Recent bookings')}</h3></div><div class="card-pad stack">${bs.slice(0, 3).map(bookingRow).join('') || `<p class="muted">${tr('لا توجد حجوزات بعد.', 'No bookings yet.')}</p>`}</div></div>
-    <style>@media(max-width:1000px){#me-grid{grid-template-columns:1fr!important}}</style>`);
+    <style>@media(max-width:1000px){#me-grid,#me-grid2{grid-template-columns:1fr!important}}</style>`);
 }
 ACTIONS.resume = (el) => resumeCheckout(byId(db.bookings, el.dataset.id));
 function viewMyBookings() {
@@ -2342,7 +2546,9 @@ function viewCo() {
   const seatsLeft = sum(upDeps, (d) => seatInfo(d).remaining);
   const m = monthly(paid, 6, retained), mNet = monthly(paid, 6, (b) => retained(b) - b.commission), mCount = monthly(bs.filter((b) => b.status !== 'cancelled'), 6, (b) => b.count);
   const rec = bs.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
+  const myCamps = campaigns().filter((x) => x.companyId === c.id && ['live', 'upcoming'].includes(campaignState(x)));
   return dashLayout('co', tr('نظرة عامة', 'Overview'), `
+    ${c.platformRating || myCamps.length ? `<div class="card card-pad row wrapx" style="margin-bottom:16px;gap:18px">${c.platformRating ? `<div><small class="muted">${tr('تقييم رحلاتي لشركتك', 'Your Rehlati rating')}</small><div>${pStars(c.platformRating)} <b class="num">${c.platformRating}/5</b></div></div>` : ''}${myCamps.map((x) => `<div class="row" style="gap:8px">${seasonChip(x)}<span class="small"><b style="color:var(--navy)">${esc(L(x.title))}</b> · ${tr(`خصم ${x.percent}٪ على ${x.tripIds.length} رحلة`, `${x.percent}% off ${x.tripIds.length} trips`)} · ${badge(CSTATE, campaignState(x))}</span></div>`).join('')}</div>` : ''}
     <div class="kpis">${kpi(tr('إيراد الحجوزات', 'Booking revenue'), money(fin.gross), tr(`صافي لك ${money(fin.net)} بعد عمولة ${effectiveRate(c)}٪`, `Net ${money(fin.net)} after ${effectiveRate(c)}% commission`), 'money', true)}${kpi(tr('إجمالي الحجوزات', 'Total bookings'), bs.filter((b) => b.status !== 'cancelled').length, tr(`${bs.filter((b) => b.status === 'completed').length} مكتمل · ${bs.filter((b) => b.status === 'confirmed').length} مؤكد`, `${bs.filter((b) => b.status === 'completed').length} completed · ${bs.filter((b) => b.status === 'confirmed').length} confirmed`), 'ticket')}${kpi(tr('بانتظار إجراء', 'Pending'), bs.filter((b) => ['pending_payment', 'refund_pending'].includes(b.status)).length, tr('دفع معلق أو طلب استرداد', 'Unpaid or refund requested'), 'clock')}${kpi(tr('الرحلات', 'Trips'), `${trips.filter((t) => t.status === 'active').length} / ${trips.length}`, tr(`نشطة من الإجمالي · ${fmtN(seatsLeft)} مقعد متاح`, `active of total · ${fmtN(seatsLeft)} seats available`), 'map')}</div>
     <div class="grid" style="grid-template-columns:1.6fr 1fr;margin-top:20px;align-items:start" id="co-grid">
       <div class="card"><div class="card-h"><h3>${tr('الإيراد آخر ٦ شهور', 'Revenue, last 6 months')}</h3><span class="small muted">${tr('ج.م', 'EGP')}</span></div><div class="card-pad">${barChart({ labels: m.map((x) => x.label), series: [{ name: tr('إجمالي الحجوزات', 'Gross'), color: '#16324F', values: m.map((x) => x.v) }, { name: tr('صافي بعد العمولة', 'Net after commission'), color: '#20A6A6', values: mNet.map((x) => x.v) }] })}</div></div>
@@ -2594,7 +2800,7 @@ function viewAdCompanies() {
   UI.tableState.adco = UI.tableState.adco || { q: '', sort: 'createdAt', dir: 'desc', page: 0, f: db.companies.some((c) => c.status === 'pending') ? { status: 'pending' } : {} };
   return dashLayout('admin', tr('الشركات', 'Companies'), dataTable({ id: 'adco', rows, searchText: (r) => r._n + ' ' + r.email + ' ' + r.license, emptyIcon: 'building',
     filters: [{ key: 'status', label: tr('كل الحالات', 'All statuses'), options: Object.entries(CSTAT).map(([k, v]) => [k, L(v.l)]), test: (r, v) => r.status === v }],
-    cols: [{ key: '_n', label: tr('الشركة', 'Company'), render: (r) => `<div class="row">${coLogo(r, 'md')}<div><b style="color:var(--navy)">${esc(r._n)}</b><div class="xs muted">${esc(L(r.city))} · ${esc(r.email)}</div></div></div>` }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(CSTAT, r.status) }, { key: 'trips', label: tr('الرحلات', 'Trips'), render: (r) => `<span class="num">${r.trips}</span>` }, { key: 'gross', label: tr('قيمة الحجوزات', 'Booking value'), sortVal: (r) => r.fin.gross, render: (r) => `<span class="num">${money(r.fin.gross)}</span>` }, { key: 'commission', label: tr('العمولة', 'Rate'), sortVal: (r) => effectiveRate(r), render: (r) => `${effectiveRate(r)}٪${r.commission != null ? ` <span class="badge b-teal" style="padding:0 6px">${tr('خاصة', 'custom')}</span>` : ''}` }, { key: 'createdAt', label: tr('التسجيل', 'Joined'), render: (r) => `<span class="small">${fmtD(r.createdAt)}</span>` },
+    cols: [{ key: '_n', label: tr('الشركة', 'Company'), render: (r) => `<div class="row">${coLogo(r, 'md')}<div><b style="color:var(--navy)">${esc(r._n)}</b><div class="xs muted">${esc(L(r.city))} · ${esc(r.email)}</div></div></div>` }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(CSTAT, r.status) }, { key: 'platformRating', label: tr('تقييم رحلاتي (١–٥)', 'Rehlati rating (1–5)'), sortVal: (r) => +r.platformRating || 0, render: (r) => r.status === 'approved' || r.status === 'suspended' ? rateInput(r) : `<span class="faint small">${tr('بعد الاعتماد', 'After approval')}</span>` }, { key: 'trips', label: tr('الرحلات', 'Trips'), render: (r) => `<span class="num">${r.trips}</span>` }, { key: 'gross', label: tr('قيمة الحجوزات', 'Booking value'), sortVal: (r) => r.fin.gross, render: (r) => `<span class="num">${money(r.fin.gross)}</span>` }, { key: 'commission', label: tr('العمولة', 'Rate'), sortVal: (r) => effectiveRate(r), render: (r) => `${effectiveRate(r)}٪${r.commission != null ? ` <span class="badge b-teal" style="padding:0 6px">${tr('خاصة', 'custom')}</span>` : ''}` }, { key: 'createdAt', label: tr('التسجيل', 'Joined'), render: (r) => `<span class="small">${fmtD(r.createdAt)}</span>` },
       { key: '', label: '', sort: false, render: (r) => `<div class="row" style="gap:6px;justify-content:flex-end">${r.status === 'pending' ? `<button class="btn btn-ok-soft btn-sm" data-a="co-approve" data-id="${r.id}">${ic('check')}${tr('اعتماد', 'Approve')}</button><button class="btn btn-danger-soft btn-sm" data-a="co-reject" data-id="${r.id}">${tr('رفض', 'Reject')}</button>` : ''}<button class="btn btn-ghost btn-sm" data-a="co-view" data-id="${r.id}">${tr('عرض', 'View')}</button>${r.status === 'approved' ? `<button class="icon-btn" data-a="co-suspend" data-id="${r.id}" title="${tr('إيقاف', 'Suspend')}" aria-label="${tr('إيقاف', 'Suspend')}">${ic('ban')}</button>` : r.status === 'suspended' ? `<button class="btn btn-soft btn-sm" data-a="co-activate" data-id="${r.id}">${tr('تفعيل', 'Activate')}</button>` : ''}</div>` }] }));
 }
 ACTIONS['co-approve'] = async (el) => {
@@ -2622,6 +2828,78 @@ ACTIONS['co-view'] = (el) => {
 };
 ACTIONS['adco-save'] = () => $('#adco-form').requestSubmit();
 FORMS['ad-co-edit'] = (f) => { const d = validate(f, { name_ar: ['req'], phone: ['req', 'phone'], email: ['req', 'email'], commission: ['pct'] }); if (!d) return; tx((x) => { const c = byId(x.companies, f.dataset.id); Object.assign(c, { name: { ar: d.name_ar, en: d.name_en || d.name_ar }, phone: d.phone, email: d.email, license: d.license, commission: d.commission === '' ? null : +d.commission }); }); closeModal(); toast(tr('تم حفظ بيانات الشركة.', 'Company saved.')); render(); };
+
+/* Rehlaty's own 1–5 rating of a company — shown to customers in recommendations */
+const rateInput = (c) => `<div class="row" style="gap:6px;flex-wrap:nowrap"><span class="rate-in" role="radiogroup" aria-label="${tr('تقييم رحلاتي لـ ', 'Rehlati rating for ')}${esc(L(c.name))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n <= (+c.platformRating || 0) ? 'on' : ''}" data-a="co-rate" data-id="${c.id}" data-v="${n}" role="radio" aria-checked="${n === +c.platformRating}" title="${n} ${tr('من ٥', 'of 5')}"><svg viewBox="0 0 24 24">${starPath}</svg></button>`).join('')}</span>${c.platformRating ? `<b class="num small" style="color:var(--navy)">${c.platformRating}</b><button class="btn-link xs" data-a="co-rate" data-id="${c.id}" data-v="0">${tr('مسح', 'Clear')}</button>` : `<span class="xs faint">${tr('غير مقيّمة', 'Unrated')}</span>`}</div>`;
+ACTIONS['co-rate'] = (el) => {
+  const v = +el.dataset.v || null, c = compById(el.dataset.id);
+  tx((d) => { const x = byId(d.companies, c.id); x.platformRating = v; if (v) notify(d, 'company:' + c.id, { ar: 'تقييم رحلاتي لشركتك', en: 'Your Rehlati rating' }, { ar: `قيّم فريق رحلاتي شركتك بـ ${v} من ٥. التقييم بيظهر للعملاء في الترشيحات.`, en: `The Rehlati team rated your company ${v} of 5. It appears in customer recommendations.` }, '#/co'); logAct(d, `تقييم رحلاتي لـ ${x.name.ar}: ${v || 'بدون'}`, `Rehlati rating for ${x.name.en}: ${v || 'cleared'}`); });
+  toast(v ? tr(`تم تقييم ${L(c.name)} بـ ${v} من ٥.`, `${L(c.name)} rated ${v} of 5.`) : tr('تم مسح التقييم.', 'Rating cleared.'));
+  const y = scrollY; render(); scrollTo(0, y);
+};
+
+/* ---- seasonal offers (agreements with companies) ---- */
+const CSTATE = { live: { c: 'b-ok', l: { ar: 'شغال الآن', en: 'Live' } }, upcoming: { c: 'b-info', l: { ar: 'قادم', en: 'Scheduled' } }, ended: { c: 'b-mute', l: { ar: 'انتهى', en: 'Ended' } }, off: { c: 'b-warn', l: { ar: 'موقوف', en: 'Paused' } } };
+function viewAdOffers() {
+  const list = campaigns(), used = (c) => db.bookings.filter((b) => b.campaignId === c.id && ['confirmed', 'completed', 'refund_pending'].includes(b.status));
+  const rows = list.map((c) => ({ ...c, _state: campaignState(c), _co: L((compById(c.companyId) || { name: '' }).name), _used: used(c) }));
+  return dashLayout('admin', tr('عروض المواسم', 'Seasonal offers'), `
+  <div class="kpis">${kpi(tr('عروض شغالة الآن', 'Live now'), rows.filter((r) => r._state === 'live').length, tr('ظاهرة في الصفحة الرئيسية', 'Shown on the homepage'), 'tag', true)}${kpi(tr('عروض قادمة', 'Scheduled'), rows.filter((r) => r._state === 'upcoming').length, '', 'cal')}${kpi(tr('حجوزات بالعروض', 'Bookings with offers'), sum(rows, (r) => r._used.length), '', 'ticket')}${kpi(tr('إجمالي الخصومات', 'Total discounts'), money(sum(rows, (r) => sum(r._used, (b) => b.discount || 0))), '', 'money')}</div>
+  <div class="callout" style="margin:20px 0">${ic('info')}<div>${tr('العرض بيتعمل بناءً على اتفاق مسبق مع الشركة. الخصم بيتطبق تلقائيًا على رحلات العرض للحجوزات اللي بتتعمل خلال فترة العرض، ومش بيتجمع مع أكواد الخصم (بيتطبق الأكبر). العروض الشغالة بتظهر في الصفحة الرئيسية وصفحة العروض.', 'Offers come from an agreement with the company. The discount applies automatically to the offer’s trips for bookings made during the offer period, and doesn’t stack with promo codes (the bigger one wins). Live offers show on the homepage and the offers page.')}</div></div>
+  ${dataTable({ id: 'adcp', rows, defaultSort: 'from', defaultDir: 'asc', searchText: (r) => L(r.title) + ' ' + r._co + ' ' + (r.agreement || ''), emptyIcon: 'tag', emptyTitle: tr('مفيش عروض لسه', 'No offers yet'), emptyText: tr('أضف أول عرض موسمي بعد الاتفاق مع شركة.', 'Add your first seasonal offer after agreeing it with a company.'),
+    toolsExtra: `<button class="btn btn-primary btn-sm" style="height:38px" data-a="cp-open">${ic('plus')}${tr('عرض جديد', 'New offer')}</button>`,
+    filters: [{ key: 'season', label: tr('كل المواسم', 'All seasons'), options: Object.entries(SEASONS).map(([k, v]) => [k, L(v.l)]), test: (r, v) => r.season === v }, { key: 'st', label: tr('كل الحالات', 'All states'), options: Object.entries(CSTATE).map(([k, v]) => [k, L(v.l)]), test: (r, v) => r._state === v }],
+    cols: [{ key: 'title', label: tr('العرض', 'Offer'), sortVal: (r) => L(r.title), render: (r) => `<div>${seasonChip(r)}</div><b style="color:var(--navy);display:block;margin-top:4px">${esc(L(r.title))}</b>${r.agreement ? `<div class="xs muted">${ic('doc')} ${esc(r.agreement)}</div>` : ''}` },
+      { key: '_co', label: tr('الشركة', 'Company'), render: (r) => `<span class="small">${esc(r._co)}</span><div class="xs muted">${tr(`${(r.tripIds || []).length} رحلة`, `${(r.tripIds || []).length} trips`)}</div>` },
+      { key: 'percent', label: tr('الخصم', 'Discount'), render: (r) => `<b class="num" style="color:var(--ok)">${r.percent}٪</b>` },
+      { key: 'from', label: tr('الفترة', 'Period'), render: (r) => `<span class="small">${tr('من', 'From')} ${fmtD(r.from)}<br>${tr('إلى', 'to')} ${fmtD(r.until)}</span>` },
+      { key: '_state', label: tr('الحالة', 'State'), render: (r) => badge(CSTATE, r._state) },
+      { key: 'usedN', label: tr('حجوزات', 'Bookings'), sortVal: (r) => r._used.length, render: (r) => `<span class="num">${r._used.length}</span>` },
+      { key: '', label: '', sort: false, render: (r) => `<div class="row" style="gap:6px;justify-content:flex-end"><button class="icon-btn" data-a="cp-open" data-id="${r.id}" aria-label="${tr('تعديل', 'Edit')}" title="${tr('تعديل', 'Edit')}">${ic('edit')}</button><button class="icon-btn" data-a="cp-toggle" data-id="${r.id}" title="${r.active ? tr('إيقاف', 'Pause') : tr('تفعيل', 'Activate')}" aria-label="${r.active ? tr('إيقاف', 'Pause') : tr('تفعيل', 'Activate')}">${ic(r.active ? 'eyeoff' : 'play')}</button><button class="icon-btn" style="color:var(--bad)" data-a="cp-del" data-id="${r.id}" aria-label="${tr('حذف', 'Delete')}" title="${tr('حذف', 'Delete')}">${ic('trash')}</button></div>` }] })}`,
+  `<a class="btn btn-ghost btn-sm" href="#/offers">${ic('eye')}${tr('صفحة العروض', 'Offers page')}</a>`);
+}
+const cpTripBoxes = (coId, sel) => { const ts = db.trips.filter((t) => t.companyId === coId && ['active', 'pending', 'inactive'].includes(t.status)); return ts.length ? `<div class="grid g2" style="gap:4px">${ts.map((t) => `<label class="opt"><input type="checkbox" name="tripIds" value="${t.id}" ${(sel || []).includes(t.id) ? 'checked' : ''}>${esc(L(t.title))}${t.status !== 'active' ? ` <span class="badge b-mute">${L(TSTAT[t.status].l)}</span>` : ''}</label>`).join('')}</div>` : `<p class="small muted">${tr('الشركة دي مالهاش رحلات لسه.', 'This company has no trips yet.')}</p>`; };
+ACTIONS['cp-open'] = (el) => {
+  const c = el.dataset.id ? campaigns().find((x) => x.id === el.dataset.id) : null;
+  const cos = db.companies.filter((x) => x.status === 'approved'); const coId = c ? c.companyId : (cos[0] || {}).id;
+  modal({ wide: true, title: c ? tr('تعديل العرض', 'Edit offer') : tr('عرض موسمي جديد', 'New seasonal offer'), body: `<form data-f="cp" id="cp-form" data-id="${c ? c.id : ''}" class="form-grid" novalidate>
+    ${sel('season', tr('الموسم', 'Season'), Object.entries(SEASONS).map(([k, v]) => [k, L(v.l)]), c ? c.season : 'christmas')}
+    ${sel('companyId', tr('الشركة المتفق معها', 'Partner company'), cos.map((x) => [x.id, L(x.name)]), coId, { attrs: 'data-ch="cp-co"' })}
+    ${inp('title_ar', tr('عنوان العرض (عربي)', 'Offer title (Arabic)'), c ? c.title.ar : '', { full: true, ph: tr('مثال: عروض الكريسماس على البحر الأحمر', 'e.g. Christmas on the Red Sea') })}
+    ${inp('title_en', tr('عنوان العرض (إنجليزي – اختياري)', 'Offer title (English – optional)'), c ? c.title.en : '', { full: true, attrs: 'dir="ltr"' })}
+    ${inp('note', tr('وصف قصير يظهر للعملاء', 'Short description for customers'), c ? L(c.note || {}) : '', { full: true })}
+    ${inp('percent', tr('نسبة الخصم ٪', 'Discount %'), c ? c.percent : 10, { type: 'number', attrs: 'min="1" max="50"' })}
+    ${inp('agreement', tr('مرجع الاتفاق مع الشركة', 'Agreement reference'), c ? c.agreement : '', { ph: tr('مثال: عقد رقم 12 بتاريخ…', 'e.g. Contract #12 dated…') })}
+    ${inp('from', tr('يبدأ من', 'Starts'), c ? c.from : iso(TODAY), { type: 'date' })}${inp('until', tr('ينتهي في', 'Ends'), c ? c.until : iso(addDays(TODAY, 30)), { type: 'date' })}
+    <div class="field full"><span class="lbl">${tr('رحلات العرض', 'Trips in this offer')}</span><div id="cp-trips">${cpTripBoxes(coId, c ? c.tripIds : null)}</div><span class="err-msg"></span></div>
+    <label class="check full"><input type="checkbox" name="active" value="1" ${!c || c.active ? 'checked' : ''}>${tr('مفعّل (يظهر للعملاء خلال الفترة)', 'Active (shown to customers during the period)')}</label>
+  </form>`, foot: `<button class="btn btn-ghost" data-a="close-modal">${tr('إلغاء', 'Cancel')}</button><button class="btn btn-primary" data-a="cp-save">${c ? tr('حفظ التعديلات', 'Save changes') : tr('إنشاء العرض', 'Create offer')}</button>` });
+};
+CHANGES['cp-co'] = (el) => { $('#cp-trips').innerHTML = cpTripBoxes(el.value, []); };
+ACTIONS['cp-save'] = () => $('#cp-form').requestSubmit();
+FORMS.cp = (f) => {
+  const d = validate(f, { title_ar: ['req', (v) => v.length >= 6 || tr('العنوان قصير جدًا.', 'Title is too short.')], percent: ['req', 'int', (v) => (+v >= 1 && +v <= 50) || tr('من ١ إلى ٥٠٪.', '1 to 50%.')], from: ['req'], until: ['req', (v, a) => v >= a.from || tr('تاريخ النهاية لازم يكون بعد البداية.', 'End must be after start.'), (v) => v >= iso(TODAY) || tr('تاريخ النهاية فات.', 'End date is in the past.')], companyId: ['req'] }); if (!d) return;
+  const tripIds = [].concat(d.tripIds || []);
+  if (!tripIds.length) { const fe = $('#cp-trips').closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = tr('اختر رحلة واحدة على الأقل.', 'Pick at least one trip.'); return; }
+  const id = f.dataset.id, co = compById(d.companyId);
+  const data = { season: d.season, companyId: d.companyId, tripIds, percent: +d.percent, from: d.from, until: d.until, active: !!d.active, agreement: d.agreement || '', title: { ar: d.title_ar, en: d.title_en || '' }, note: { ar: LANG === 'ar' ? d.note : '', en: LANG === 'en' ? d.note : '' } };
+  tx((x) => {
+    x.settings.campaigns = x.settings.campaigns || [];
+    const old = x.settings.campaigns.find((c) => c.id === id);
+    if (old) { if (LANG === 'en') data.note.ar = (old.note || {}).ar || ''; else data.note.en = (old.note || {}).en || ''; Object.assign(old, data); }
+    else x.settings.campaigns.push({ id: uid('cp'), ...data });
+    notify(x, 'company:' + co.id, { ar: old ? 'تعديل عرض موسمي' : 'رحلاتك ضمن عرض موسمي', en: old ? 'Seasonal offer updated' : 'Your trips are in a seasonal offer' }, { ar: `${d.title_ar}: خصم ${d.percent}٪ على ${tripIds.length} رحلة من ${d.from} إلى ${d.until}.`, en: `${d.title_en || d.title_ar}: ${d.percent}% off ${tripIds.length} trip(s), ${d.from} to ${d.until}.` }, '#/co');
+    logAct(x, `${old ? 'تعديل' : 'إضافة'} عرض: ${d.title_ar}`, `${old ? 'Updated' : 'Added'} offer: ${d.title_en || d.title_ar}`);
+  });
+  closeModal(); toast(id ? tr('تم حفظ العرض.', 'Offer saved.') : tr('تم إنشاء العرض وإبلاغ الشركة.', 'Offer created and the company notified.')); render();
+};
+ACTIONS['cp-toggle'] = (el) => { tx((x) => { const c = x.settings.campaigns.find((y) => y.id === el.dataset.id); c.active = !c.active; }); const c = campaigns().find((y) => y.id === el.dataset.id); toast(c.active ? tr('تم تفعيل العرض.', 'Offer activated.') : tr('تم إيقاف العرض. مش هيظهر للعملاء.', 'Offer paused and hidden from customers.')); render(); };
+ACTIONS['cp-del'] = async (el) => {
+  const c = campaigns().find((y) => y.id === el.dataset.id);
+  if (!(await confirmDialog({ title: tr('حذف العرض؟', 'Delete offer?'), text: tr(`"${L(c.title)}" هيختفي فورًا. الحجوزات اللي اتعملت بالعرض هتحتفظ بخصمها.`, `“${L(c.title)}” disappears immediately. Bookings already made keep their discount.`), ok: tr('حذف', 'Delete'), danger: true }))) return;
+  tx((x) => { x.settings.campaigns = x.settings.campaigns.filter((y) => y.id !== c.id); });
+  toast(tr('تم حذف العرض.', 'Offer deleted.')); render();
+};
 
 /* trips */
 function viewAdTrips() {
@@ -2761,6 +3039,8 @@ const ROUTES = [
   ['/trips', () => viewTrips()],
   ['/destinations', () => viewDestinations()],
   ['/companies', () => viewCompanies()],
+  ['/offers', () => viewOffers()],
+  ['/compare', () => viewCompare()],
   ['/trip/:id', (p) => viewTrip(p.id)],
   ['/company/:id', (p) => viewCompany(p.id)],
   ['/login', () => viewLogin(), 'guest'],
@@ -2793,6 +3073,7 @@ const ROUTES = [
   ['/admin/customers', () => viewAdCustomers(), 'admin'],
   ['/admin/bookings', () => viewAdBookings(), 'admin'],
   ['/admin/finance', () => viewAdFinance(), 'admin'],
+  ['/admin/offers', () => viewAdOffers(), 'admin'],
   ['/admin/content', () => viewAdContent(), 'admin'],
   ['/admin/taxonomy', () => viewAdTaxonomy(), 'admin'],
   ['/admin/notifications', () => dashLayout('admin', tr('الإشعارات', 'Notifications'), notifList(myNotifs())), 'admin'],

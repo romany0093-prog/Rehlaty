@@ -1,7 +1,7 @@
 
 /* ---------- 3. Seed data (Egyptian demo content) ---------- */
 const DB_KEY = 'rehlati_db_v1';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 function seedDB() {
   const R = rng(42);
@@ -41,6 +41,8 @@ function seedDB() {
     { id: 'c5', name: { ar: 'مرسى للسياحة', en: 'Marsa Tourism' }, color: '#5E7A3A', city: { ar: 'مرسى علم', en: 'Marsa Alam' }, phone: '01098765432', email: 'info@marsa-tours.eg', website: '', license: 'ترخيص وزارة السياحة فئة (ب) رقم 5520', founded: 2021, status: 'pending', commission: null, desc: { ar: 'رحلات غوص وسفاري في مرسى علم وحماطة.', en: 'Diving and safari trips in Marsa Alam and Hamata.' }, createdAt: T(-2), logo: null, cover: 'art:sea:1', docs: [{ name: 'السجل التجاري.pdf' }, { name: 'ترخيص وزارة السياحة.pdf' }, { name: 'البطاقة الضريبية.pdf' }] },
     { id: 'c6', name: { ar: 'واحة الأحلام للسفر', en: 'Dream Oasis Travel' }, color: '#7A4D8C', city: { ar: 'المنصورة', en: 'Mansoura' }, phone: '01276543210', email: 'dream.oasis@mail.eg', website: '', license: 'ترخيص وزارة السياحة فئة (ج) رقم 6011', founded: 2023, status: 'pending', commission: null, desc: { ar: 'رحلات اقتصادية للأقصر وأسوان والغردقة.', en: 'Budget trips to Luxor, Aswan and Hurghada.' }, createdAt: T(-1), logo: null, cover: 'art:temple:0', docs: [{ name: 'السجل التجاري.pdf' }, { name: 'ترخيص وزارة السياحة.pdf' }] }
   ];
+  const PR = { c1: 5, c2: 4, c3: 5, c4: 3 };
+  companies.forEach((c) => { c.platformRating = PR[c.id] || null; });
   companies.forEach((c) => { c.docs = c.docs || [{ name: 'السجل التجاري.pdf' }, { name: 'ترخيص وزارة السياحة.pdf' }, { name: 'البطاقة الضريبية.pdf' }]; });
 
   const users = [
@@ -292,6 +294,12 @@ function seedDB() {
     banners: [{ id: 'bn1', title: P('الشتاء في أسوان أحلى', 'Winter is better in Aswan'), text: P('خصم ١٠٪ على رحلات الصعيد حتى نهاية ديسمبر بكود الخصم', '10% off Upper Egypt trips until the end of December with the code'), code: 'NILE10', art: 'art:nile:1', link: '#/trips?dest=aswan', active: true }],
     offers: [{ id: 'of1', code: 'NILE10', percent: 10, dests: ['luxor', 'aswan'], until: D(50), active: true }, { id: 'of2', code: 'WELCOME5', percent: 5, dests: [], until: D(120), active: true }],
     featuredTrips: ['t4', 't7', 't1', 't3'],
+    campaigns: [
+      { id: 'cp_xmas', season: 'christmas', title: P('عروض الكريسماس ورأس السنة على البحر الأحمر', 'Christmas & New Year on the Red Sea'), note: P('خصم على الإقامة الشاملة لحجوزات موسم الأعياد', 'Discount on all‑inclusive stays for the holiday season'), companyId: 'c2', tripIds: ['t1', 't13'], percent: 15, from: D(-3), until: D(50), active: true, agreement: 'اتفاق مع بحر وصحرا' },
+      { id: 'cp_mid', season: 'midyear', title: P('إجازة نصف العام في الصعيد', 'Mid‑year break in Upper Egypt'), note: P('خصم للعائلات والطلبة على رحلات الأقصر وأسوان', 'Family and student discount on Luxor and Aswan trips'), companyId: 'c1', tripIds: ['t4', 't5', 't6'], percent: 12, from: D(-3), until: D(85), active: true, agreement: 'اتفاق مع نيل ستار' },
+      { id: 'cp_eid', season: 'eid', title: P('عروض العيد في سيوة', 'Eid offers in Siwa'), note: P('خصم على رحلة سيوة طوال أيام عيد الفطر', 'Siwa trip discount through Eid al‑Fitr'), companyId: 'c3', tripIds: ['t7'], percent: 10, from: D(95), until: D(125), active: true, agreement: 'اتفاق مع دروب سيوة' },
+      { id: 'cp_summer', season: 'summer', title: P('صيف الساحل الشمالي', 'North Coast summer'), note: P('خصم الحجز المبكر لشقق العلمين', 'Early‑booking discount on Alamein apartments'), companyId: 'c4', tripIds: ['t10'], percent: 20, from: D(135), until: D(290), active: true, agreement: 'اتفاق مع أفق للرحلات' }
+    ],
     faq: [
       { q: P('هل الدفع على المنصة آمن؟', 'Is paying on the platform safe?'), a: P('الدفع يتم عبر بوابات دفع معتمدة، والمنصة تحتفظ بالمبلغ حتى موعد الرحلة ثم تحوله للشركة. في هذه النسخة التجريبية الدفع محاكاة فقط.', 'Payments go through licensed gateways and the platform holds the money until the trip, then pays the company. In this prototype payments are simulated.') },
       { q: P('إزاي ألغي حجزي؟', 'How do I cancel?'), a: P('من لوحة حسابك > حجوزاتي > تفاصيل الحجز > طلب إلغاء. قيمة الاسترداد تُحسب تلقائيًا حسب سياسة الرحلة.', 'Go to your account > My bookings > booking details > Request cancellation. The refund is calculated from the trip’s policy.') },

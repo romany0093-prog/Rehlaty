@@ -29,7 +29,7 @@ function viewAdCompanies() {
   UI.tableState.adco = UI.tableState.adco || { q: '', sort: 'createdAt', dir: 'desc', page: 0, f: db.companies.some((c) => c.status === 'pending') ? { status: 'pending' } : {} };
   return dashLayout('admin', tr('الشركات', 'Companies'), dataTable({ id: 'adco', rows, searchText: (r) => r._n + ' ' + r.email + ' ' + r.license, emptyIcon: 'building',
     filters: [{ key: 'status', label: tr('كل الحالات', 'All statuses'), options: Object.entries(CSTAT).map(([k, v]) => [k, L(v.l)]), test: (r, v) => r.status === v }],
-    cols: [{ key: '_n', label: tr('الشركة', 'Company'), render: (r) => `<div class="row">${coLogo(r, 'md')}<div><b style="color:var(--navy)">${esc(r._n)}</b><div class="xs muted">${esc(L(r.city))} · ${esc(r.email)}</div></div></div>` }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(CSTAT, r.status) }, { key: 'trips', label: tr('الرحلات', 'Trips'), render: (r) => `<span class="num">${r.trips}</span>` }, { key: 'gross', label: tr('قيمة الحجوزات', 'Booking value'), sortVal: (r) => r.fin.gross, render: (r) => `<span class="num">${money(r.fin.gross)}</span>` }, { key: 'commission', label: tr('العمولة', 'Rate'), sortVal: (r) => effectiveRate(r), render: (r) => `${effectiveRate(r)}٪${r.commission != null ? ` <span class="badge b-teal" style="padding:0 6px">${tr('خاصة', 'custom')}</span>` : ''}` }, { key: 'createdAt', label: tr('التسجيل', 'Joined'), render: (r) => `<span class="small">${fmtD(r.createdAt)}</span>` },
+    cols: [{ key: '_n', label: tr('الشركة', 'Company'), render: (r) => `<div class="row">${coLogo(r, 'md')}<div><b style="color:var(--navy)">${esc(r._n)}</b><div class="xs muted">${esc(L(r.city))} · ${esc(r.email)}</div></div></div>` }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(CSTAT, r.status) }, { key: 'platformRating', label: tr('تقييم رحلاتي (١–٥)', 'Rehlati rating (1–5)'), sortVal: (r) => +r.platformRating || 0, render: (r) => r.status === 'approved' || r.status === 'suspended' ? rateInput(r) : `<span class="faint small">${tr('بعد الاعتماد', 'After approval')}</span>` }, { key: 'trips', label: tr('الرحلات', 'Trips'), render: (r) => `<span class="num">${r.trips}</span>` }, { key: 'gross', label: tr('قيمة الحجوزات', 'Booking value'), sortVal: (r) => r.fin.gross, render: (r) => `<span class="num">${money(r.fin.gross)}</span>` }, { key: 'commission', label: tr('العمولة', 'Rate'), sortVal: (r) => effectiveRate(r), render: (r) => `${effectiveRate(r)}٪${r.commission != null ? ` <span class="badge b-teal" style="padding:0 6px">${tr('خاصة', 'custom')}</span>` : ''}` }, { key: 'createdAt', label: tr('التسجيل', 'Joined'), render: (r) => `<span class="small">${fmtD(r.createdAt)}</span>` },
       { key: '', label: '', sort: false, render: (r) => `<div class="row" style="gap:6px;justify-content:flex-end">${r.status === 'pending' ? `<button class="btn btn-ok-soft btn-sm" data-a="co-approve" data-id="${r.id}">${ic('check')}${tr('اعتماد', 'Approve')}</button><button class="btn btn-danger-soft btn-sm" data-a="co-reject" data-id="${r.id}">${tr('رفض', 'Reject')}</button>` : ''}<button class="btn btn-ghost btn-sm" data-a="co-view" data-id="${r.id}">${tr('عرض', 'View')}</button>${r.status === 'approved' ? `<button class="icon-btn" data-a="co-suspend" data-id="${r.id}" title="${tr('إيقاف', 'Suspend')}" aria-label="${tr('إيقاف', 'Suspend')}">${ic('ban')}</button>` : r.status === 'suspended' ? `<button class="btn btn-soft btn-sm" data-a="co-activate" data-id="${r.id}">${tr('تفعيل', 'Activate')}</button>` : ''}</div>` }] }));
 }
 ACTIONS['co-approve'] = async (el) => {
@@ -57,6 +57,78 @@ ACTIONS['co-view'] = (el) => {
 };
 ACTIONS['adco-save'] = () => $('#adco-form').requestSubmit();
 FORMS['ad-co-edit'] = (f) => { const d = validate(f, { name_ar: ['req'], phone: ['req', 'phone'], email: ['req', 'email'], commission: ['pct'] }); if (!d) return; tx((x) => { const c = byId(x.companies, f.dataset.id); Object.assign(c, { name: { ar: d.name_ar, en: d.name_en || d.name_ar }, phone: d.phone, email: d.email, license: d.license, commission: d.commission === '' ? null : +d.commission }); }); closeModal(); toast(tr('تم حفظ بيانات الشركة.', 'Company saved.')); render(); };
+
+/* Rehlaty's own 1–5 rating of a company — shown to customers in recommendations */
+const rateInput = (c) => `<div class="row" style="gap:6px;flex-wrap:nowrap"><span class="rate-in" role="radiogroup" aria-label="${tr('تقييم رحلاتي لـ ', 'Rehlati rating for ')}${esc(L(c.name))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n <= (+c.platformRating || 0) ? 'on' : ''}" data-a="co-rate" data-id="${c.id}" data-v="${n}" role="radio" aria-checked="${n === +c.platformRating}" title="${n} ${tr('من ٥', 'of 5')}"><svg viewBox="0 0 24 24">${starPath}</svg></button>`).join('')}</span>${c.platformRating ? `<b class="num small" style="color:var(--navy)">${c.platformRating}</b><button class="btn-link xs" data-a="co-rate" data-id="${c.id}" data-v="0">${tr('مسح', 'Clear')}</button>` : `<span class="xs faint">${tr('غير مقيّمة', 'Unrated')}</span>`}</div>`;
+ACTIONS['co-rate'] = (el) => {
+  const v = +el.dataset.v || null, c = compById(el.dataset.id);
+  tx((d) => { const x = byId(d.companies, c.id); x.platformRating = v; if (v) notify(d, 'company:' + c.id, { ar: 'تقييم رحلاتي لشركتك', en: 'Your Rehlati rating' }, { ar: `قيّم فريق رحلاتي شركتك بـ ${v} من ٥. التقييم بيظهر للعملاء في الترشيحات.`, en: `The Rehlati team rated your company ${v} of 5. It appears in customer recommendations.` }, '#/co'); logAct(d, `تقييم رحلاتي لـ ${x.name.ar}: ${v || 'بدون'}`, `Rehlati rating for ${x.name.en}: ${v || 'cleared'}`); });
+  toast(v ? tr(`تم تقييم ${L(c.name)} بـ ${v} من ٥.`, `${L(c.name)} rated ${v} of 5.`) : tr('تم مسح التقييم.', 'Rating cleared.'));
+  const y = scrollY; render(); scrollTo(0, y);
+};
+
+/* ---- seasonal offers (agreements with companies) ---- */
+const CSTATE = { live: { c: 'b-ok', l: { ar: 'شغال الآن', en: 'Live' } }, upcoming: { c: 'b-info', l: { ar: 'قادم', en: 'Scheduled' } }, ended: { c: 'b-mute', l: { ar: 'انتهى', en: 'Ended' } }, off: { c: 'b-warn', l: { ar: 'موقوف', en: 'Paused' } } };
+function viewAdOffers() {
+  const list = campaigns(), used = (c) => db.bookings.filter((b) => b.campaignId === c.id && ['confirmed', 'completed', 'refund_pending'].includes(b.status));
+  const rows = list.map((c) => ({ ...c, _state: campaignState(c), _co: L((compById(c.companyId) || { name: '' }).name), _used: used(c) }));
+  return dashLayout('admin', tr('عروض المواسم', 'Seasonal offers'), `
+  <div class="kpis">${kpi(tr('عروض شغالة الآن', 'Live now'), rows.filter((r) => r._state === 'live').length, tr('ظاهرة في الصفحة الرئيسية', 'Shown on the homepage'), 'tag', true)}${kpi(tr('عروض قادمة', 'Scheduled'), rows.filter((r) => r._state === 'upcoming').length, '', 'cal')}${kpi(tr('حجوزات بالعروض', 'Bookings with offers'), sum(rows, (r) => r._used.length), '', 'ticket')}${kpi(tr('إجمالي الخصومات', 'Total discounts'), money(sum(rows, (r) => sum(r._used, (b) => b.discount || 0))), '', 'money')}</div>
+  <div class="callout" style="margin:20px 0">${ic('info')}<div>${tr('العرض بيتعمل بناءً على اتفاق مسبق مع الشركة. الخصم بيتطبق تلقائيًا على رحلات العرض للحجوزات اللي بتتعمل خلال فترة العرض، ومش بيتجمع مع أكواد الخصم (بيتطبق الأكبر). العروض الشغالة بتظهر في الصفحة الرئيسية وصفحة العروض.', 'Offers come from an agreement with the company. The discount applies automatically to the offer’s trips for bookings made during the offer period, and doesn’t stack with promo codes (the bigger one wins). Live offers show on the homepage and the offers page.')}</div></div>
+  ${dataTable({ id: 'adcp', rows, defaultSort: 'from', defaultDir: 'asc', searchText: (r) => L(r.title) + ' ' + r._co + ' ' + (r.agreement || ''), emptyIcon: 'tag', emptyTitle: tr('مفيش عروض لسه', 'No offers yet'), emptyText: tr('أضف أول عرض موسمي بعد الاتفاق مع شركة.', 'Add your first seasonal offer after agreeing it with a company.'),
+    toolsExtra: `<button class="btn btn-primary btn-sm" style="height:38px" data-a="cp-open">${ic('plus')}${tr('عرض جديد', 'New offer')}</button>`,
+    filters: [{ key: 'season', label: tr('كل المواسم', 'All seasons'), options: Object.entries(SEASONS).map(([k, v]) => [k, L(v.l)]), test: (r, v) => r.season === v }, { key: 'st', label: tr('كل الحالات', 'All states'), options: Object.entries(CSTATE).map(([k, v]) => [k, L(v.l)]), test: (r, v) => r._state === v }],
+    cols: [{ key: 'title', label: tr('العرض', 'Offer'), sortVal: (r) => L(r.title), render: (r) => `<div>${seasonChip(r)}</div><b style="color:var(--navy);display:block;margin-top:4px">${esc(L(r.title))}</b>${r.agreement ? `<div class="xs muted">${ic('doc')} ${esc(r.agreement)}</div>` : ''}` },
+      { key: '_co', label: tr('الشركة', 'Company'), render: (r) => `<span class="small">${esc(r._co)}</span><div class="xs muted">${tr(`${(r.tripIds || []).length} رحلة`, `${(r.tripIds || []).length} trips`)}</div>` },
+      { key: 'percent', label: tr('الخصم', 'Discount'), render: (r) => `<b class="num" style="color:var(--ok)">${r.percent}٪</b>` },
+      { key: 'from', label: tr('الفترة', 'Period'), render: (r) => `<span class="small">${tr('من', 'From')} ${fmtD(r.from)}<br>${tr('إلى', 'to')} ${fmtD(r.until)}</span>` },
+      { key: '_state', label: tr('الحالة', 'State'), render: (r) => badge(CSTATE, r._state) },
+      { key: 'usedN', label: tr('حجوزات', 'Bookings'), sortVal: (r) => r._used.length, render: (r) => `<span class="num">${r._used.length}</span>` },
+      { key: '', label: '', sort: false, render: (r) => `<div class="row" style="gap:6px;justify-content:flex-end"><button class="icon-btn" data-a="cp-open" data-id="${r.id}" aria-label="${tr('تعديل', 'Edit')}" title="${tr('تعديل', 'Edit')}">${ic('edit')}</button><button class="icon-btn" data-a="cp-toggle" data-id="${r.id}" title="${r.active ? tr('إيقاف', 'Pause') : tr('تفعيل', 'Activate')}" aria-label="${r.active ? tr('إيقاف', 'Pause') : tr('تفعيل', 'Activate')}">${ic(r.active ? 'eyeoff' : 'play')}</button><button class="icon-btn" style="color:var(--bad)" data-a="cp-del" data-id="${r.id}" aria-label="${tr('حذف', 'Delete')}" title="${tr('حذف', 'Delete')}">${ic('trash')}</button></div>` }] })}`,
+  `<a class="btn btn-ghost btn-sm" href="#/offers">${ic('eye')}${tr('صفحة العروض', 'Offers page')}</a>`);
+}
+const cpTripBoxes = (coId, sel) => { const ts = db.trips.filter((t) => t.companyId === coId && ['active', 'pending', 'inactive'].includes(t.status)); return ts.length ? `<div class="grid g2" style="gap:4px">${ts.map((t) => `<label class="opt"><input type="checkbox" name="tripIds" value="${t.id}" ${(sel || []).includes(t.id) ? 'checked' : ''}>${esc(L(t.title))}${t.status !== 'active' ? ` <span class="badge b-mute">${L(TSTAT[t.status].l)}</span>` : ''}</label>`).join('')}</div>` : `<p class="small muted">${tr('الشركة دي مالهاش رحلات لسه.', 'This company has no trips yet.')}</p>`; };
+ACTIONS['cp-open'] = (el) => {
+  const c = el.dataset.id ? campaigns().find((x) => x.id === el.dataset.id) : null;
+  const cos = db.companies.filter((x) => x.status === 'approved'); const coId = c ? c.companyId : (cos[0] || {}).id;
+  modal({ wide: true, title: c ? tr('تعديل العرض', 'Edit offer') : tr('عرض موسمي جديد', 'New seasonal offer'), body: `<form data-f="cp" id="cp-form" data-id="${c ? c.id : ''}" class="form-grid" novalidate>
+    ${sel('season', tr('الموسم', 'Season'), Object.entries(SEASONS).map(([k, v]) => [k, L(v.l)]), c ? c.season : 'christmas')}
+    ${sel('companyId', tr('الشركة المتفق معها', 'Partner company'), cos.map((x) => [x.id, L(x.name)]), coId, { attrs: 'data-ch="cp-co"' })}
+    ${inp('title_ar', tr('عنوان العرض (عربي)', 'Offer title (Arabic)'), c ? c.title.ar : '', { full: true, ph: tr('مثال: عروض الكريسماس على البحر الأحمر', 'e.g. Christmas on the Red Sea') })}
+    ${inp('title_en', tr('عنوان العرض (إنجليزي – اختياري)', 'Offer title (English – optional)'), c ? c.title.en : '', { full: true, attrs: 'dir="ltr"' })}
+    ${inp('note', tr('وصف قصير يظهر للعملاء', 'Short description for customers'), c ? L(c.note || {}) : '', { full: true })}
+    ${inp('percent', tr('نسبة الخصم ٪', 'Discount %'), c ? c.percent : 10, { type: 'number', attrs: 'min="1" max="50"' })}
+    ${inp('agreement', tr('مرجع الاتفاق مع الشركة', 'Agreement reference'), c ? c.agreement : '', { ph: tr('مثال: عقد رقم 12 بتاريخ…', 'e.g. Contract #12 dated…') })}
+    ${inp('from', tr('يبدأ من', 'Starts'), c ? c.from : iso(TODAY), { type: 'date' })}${inp('until', tr('ينتهي في', 'Ends'), c ? c.until : iso(addDays(TODAY, 30)), { type: 'date' })}
+    <div class="field full"><span class="lbl">${tr('رحلات العرض', 'Trips in this offer')}</span><div id="cp-trips">${cpTripBoxes(coId, c ? c.tripIds : null)}</div><span class="err-msg"></span></div>
+    <label class="check full"><input type="checkbox" name="active" value="1" ${!c || c.active ? 'checked' : ''}>${tr('مفعّل (يظهر للعملاء خلال الفترة)', 'Active (shown to customers during the period)')}</label>
+  </form>`, foot: `<button class="btn btn-ghost" data-a="close-modal">${tr('إلغاء', 'Cancel')}</button><button class="btn btn-primary" data-a="cp-save">${c ? tr('حفظ التعديلات', 'Save changes') : tr('إنشاء العرض', 'Create offer')}</button>` });
+};
+CHANGES['cp-co'] = (el) => { $('#cp-trips').innerHTML = cpTripBoxes(el.value, []); };
+ACTIONS['cp-save'] = () => $('#cp-form').requestSubmit();
+FORMS.cp = (f) => {
+  const d = validate(f, { title_ar: ['req', (v) => v.length >= 6 || tr('العنوان قصير جدًا.', 'Title is too short.')], percent: ['req', 'int', (v) => (+v >= 1 && +v <= 50) || tr('من ١ إلى ٥٠٪.', '1 to 50%.')], from: ['req'], until: ['req', (v, a) => v >= a.from || tr('تاريخ النهاية لازم يكون بعد البداية.', 'End must be after start.'), (v) => v >= iso(TODAY) || tr('تاريخ النهاية فات.', 'End date is in the past.')], companyId: ['req'] }); if (!d) return;
+  const tripIds = [].concat(d.tripIds || []);
+  if (!tripIds.length) { const fe = $('#cp-trips').closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = tr('اختر رحلة واحدة على الأقل.', 'Pick at least one trip.'); return; }
+  const id = f.dataset.id, co = compById(d.companyId);
+  const data = { season: d.season, companyId: d.companyId, tripIds, percent: +d.percent, from: d.from, until: d.until, active: !!d.active, agreement: d.agreement || '', title: { ar: d.title_ar, en: d.title_en || '' }, note: { ar: LANG === 'ar' ? d.note : '', en: LANG === 'en' ? d.note : '' } };
+  tx((x) => {
+    x.settings.campaigns = x.settings.campaigns || [];
+    const old = x.settings.campaigns.find((c) => c.id === id);
+    if (old) { if (LANG === 'en') data.note.ar = (old.note || {}).ar || ''; else data.note.en = (old.note || {}).en || ''; Object.assign(old, data); }
+    else x.settings.campaigns.push({ id: uid('cp'), ...data });
+    notify(x, 'company:' + co.id, { ar: old ? 'تعديل عرض موسمي' : 'رحلاتك ضمن عرض موسمي', en: old ? 'Seasonal offer updated' : 'Your trips are in a seasonal offer' }, { ar: `${d.title_ar}: خصم ${d.percent}٪ على ${tripIds.length} رحلة من ${d.from} إلى ${d.until}.`, en: `${d.title_en || d.title_ar}: ${d.percent}% off ${tripIds.length} trip(s), ${d.from} to ${d.until}.` }, '#/co');
+    logAct(x, `${old ? 'تعديل' : 'إضافة'} عرض: ${d.title_ar}`, `${old ? 'Updated' : 'Added'} offer: ${d.title_en || d.title_ar}`);
+  });
+  closeModal(); toast(id ? tr('تم حفظ العرض.', 'Offer saved.') : tr('تم إنشاء العرض وإبلاغ الشركة.', 'Offer created and the company notified.')); render();
+};
+ACTIONS['cp-toggle'] = (el) => { tx((x) => { const c = x.settings.campaigns.find((y) => y.id === el.dataset.id); c.active = !c.active; }); const c = campaigns().find((y) => y.id === el.dataset.id); toast(c.active ? tr('تم تفعيل العرض.', 'Offer activated.') : tr('تم إيقاف العرض. مش هيظهر للعملاء.', 'Offer paused and hidden from customers.')); render(); };
+ACTIONS['cp-del'] = async (el) => {
+  const c = campaigns().find((y) => y.id === el.dataset.id);
+  if (!(await confirmDialog({ title: tr('حذف العرض؟', 'Delete offer?'), text: tr(`"${L(c.title)}" هيختفي فورًا. الحجوزات اللي اتعملت بالعرض هتحتفظ بخصمها.`, `“${L(c.title)}” disappears immediately. Bookings already made keep their discount.`), ok: tr('حذف', 'Delete'), danger: true }))) return;
+  tx((x) => { x.settings.campaigns = x.settings.campaigns.filter((y) => y.id !== c.id); });
+  toast(tr('تم حذف العرض.', 'Offer deleted.')); render();
+};
 
 /* trips */
 function viewAdTrips() {

@@ -14,7 +14,7 @@ function toast(msg, kind) {
 }
 function closeModal() { $('#layer').innerHTML = ''; document.body.style.overflow = ''; }
 function modal({ title, body, foot, wide, onOpen }) {
-  $('#layer').innerHTML = `<div class="modal-bg" data-a="modal-bg"><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h3>${title}</h3><button class="icon-btn" data-a="close-modal" aria-label="${tr('إغلاق', 'Close')}">${ic('x')}</button></div><div class="modal-b">${body}</div>${foot ? `<div class="modal-f">${foot}</div>` : ''}</div></div>`;
+  $('#layer').innerHTML = `<div class="modal-bg"><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h3>${title}</h3><button class="icon-btn" data-a="close-modal" aria-label="${tr('إغلاق', 'Close')}">${ic('x')}</button></div><div class="modal-b">${body}</div>${foot ? `<div class="modal-f">${foot}</div>` : ''}</div></div>`;
   document.body.style.overflow = 'hidden';
   const f = $('#layer input, #layer select, #layer textarea, #layer .modal-f .btn'); if (f) setTimeout(() => f.focus(), 30);
   if (onOpen) onOpen($('#layer .modal'));
@@ -29,7 +29,8 @@ function confirmDialog({ title, text, ok, danger, input }) {
   });
 }
 ACTIONS['close-modal'] = closeModal;
-ACTIONS['modal-bg'] = (el, e) => { if (e.target === el) closeModal(); };
+// clicking the dimmed backdrop (not the dialog) closes it
+document.addEventListener('click', (e) => { if (e.target.classList && e.target.classList.contains('modal-bg')) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if ($('#layer').innerHTML) closeModal(); if (UI.menu) { UI.menu = null; render(); } } });
 
 /* event delegation */

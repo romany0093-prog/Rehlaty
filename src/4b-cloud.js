@@ -13,7 +13,7 @@ let AUTH_UID = null, SEATS = null, CO_STATS = {};
 
 /* object <-> row mapping: listed fields are real columns, everything else lives in `data` */
 const MAP = {
-  companies: { t: 'companies', c: { id: 'id', status: 'status', commission: 'commission', owner: 'owner', createdAt: 'created_at' } },
+  companies: { t: 'companies', c: { id: 'id', status: 'status', commission: 'commission', platformRating: 'platform_rating', owner: 'owner', createdAt: 'created_at' } },
   users: { t: 'profiles', c: { id: 'id', username: 'username', email: 'email', role: 'role', name: 'name', phone: 'phone', city: 'city', status: 'status', companyId: 'company_id', favorites: 'favorites', createdAt: 'created_at' } },
   destinations: { t: 'destinations', c: { id: 'id' } },
   categories: { t: 'categories', c: { id: 'id' } },
