@@ -14,7 +14,7 @@ function header() {
       : `<a class="btn btn-ghost btn-sm hide-m" href="#/login">${tr('تسجيل الدخول', 'Log in')}</a><a class="btn btn-primary btn-sm" href="#/register">${tr('إنشاء حساب', 'Sign up')}</a>`}
       <button class="icon-btn burger" data-a="mnav" aria-label="${tr('القائمة', 'Menu')}">${ic(UI.mnav ? 'x' : 'menu')}</button>
     </div></div></header>
-    ${UI.mnav ? `<div class="m-nav">${navs.map(([p, l]) => `<a href="${p}">${l}</a>`).join('')}${u ? `<a href="${homeFor(u)}">${tr('لوحة التحكم', 'Dashboard')}</a>` : `<a href="#/login">${tr('تسجيل الدخول', 'Log in')}</a>`}<a href="#/register/company">${tr('سجّل شركتك', 'List your company')}</a></div>` : ''}`;
+    ${UI.mnav ? `<div class="m-nav">${navs.map(([p, l]) => `<a href="${p}">${l}</a>`).join('')}${u ? `<a href="${homeFor(u)}">${tr('لوحة التحكم', 'Dashboard')}</a>` : `<a href="#/login">${tr('تسجيل الدخول', 'Log in')}</a>`}<a href="#/register/company">${tr('سجّل شركتك', 'List your company')}</a>${installLink('btn btn-soft btn-block')}</div>` : ''}`;
 }
 const logoMark = () => `<span class="logo-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 64 64"><path d="M14 44 L32 14 L50 44 Z" fill="#E9B872"/><path d="M8 47 Q32 34 56 47" stroke="#20A6A6" stroke-width="6" fill="none" stroke-linecap="round"/></svg></span>`;
 const notifLink = () => (role() === 'admin' ? '#/admin/notifications' : role() === 'company' ? '#/co/notifications' : '#/me/notifications');
@@ -23,7 +23,7 @@ function userMenu(u) {
     <a href="${homeFor(u)}" role="menuitem">${ic('grid')}${tr('لوحة التحكم', 'Dashboard')}</a>
     ${u.role === 'customer' ? `<a href="#/me/bookings" role="menuitem">${ic('ticket')}${tr('حجوزاتي', 'My bookings')}</a><a href="#/me/favorites" role="menuitem">${ic('heart')}${tr('المفضلة', 'Saved trips')}</a>` : ''}
     <a href="${notifLink()}" role="menuitem">${ic('bell')}${tr('الإشعارات', 'Notifications')}</a>
-    <button data-a="logout" role="menuitem">${ic('logout')}${tr('تسجيل الخروج', 'Log out')}</button></div>`;
+    ${installLink('')}<button data-a="logout" role="menuitem">${ic('logout')}${tr('تسجيل الخروج', 'Log out')}</button></div>`;
 }
 ACTIONS.umenu = () => { UI.menu = !UI.menu; render(); };
 ACTIONS.mnav = () => { UI.mnav = !UI.mnav; render(); };
@@ -34,7 +34,7 @@ function footer() {
     <div><a href="#/" class="logo" style="color:#fff">${logoMark()}<span>${tr('رحلاتي', 'Rehlati')}</span></a><p style="margin-top:12px;font-size:14.5px;max-width:320px">${tr('منصة تجمع شركات السياحة المرخصة في مصر. قارن واحجز وادفع في مكان واحد.', 'Licensed Egyptian tour operators in one place. Compare, book and pay securely.')}</p></div>
     <div><h4>${tr('اكتشف', 'Explore')}</h4><a href="#/trips">${tr('كل الرحلات', 'All trips')}</a><a href="#/destinations">${tr('الوجهات', 'Destinations')}</a><a href="#/companies">${tr('شركات السياحة', 'Tour operators')}</a><a href="#/trips?cat=day">${tr('رحلات اليوم الواحد', 'Day trips')}</a></div>
     <div><h4>${tr('رحلاتي', 'Rehlati')}</h4><a href="#/page/about">${tr('من نحن', 'About')}</a><a href="#/page/faq">${tr('الأسئلة الشائعة', 'FAQ')}</a><a href="#/page/terms">${tr('الشروط والأحكام', 'Terms')}</a><a href="#/page/privacy">${tr('الخصوصية', 'Privacy')}</a><a href="#/register/company">${tr('سجّل شركتك معنا', 'List your company')}</a></div>
-    <div><h4>${tr('تواصل معنا', 'Contact')}</h4><a href="#/page/contact" class="row" style="gap:8px">${ic('phone')}<span dir="ltr">16xxx</span></a><a href="#/page/contact" class="row" style="gap:8px">${ic('mail')}support@rehlati.eg</a><p style="font-size:14px;margin-top:6px">${tr('التجمع الخامس، القاهرة الجديدة', 'Fifth Settlement, New Cairo')}</p></div>
+    <div><h4>${tr('تواصل معنا', 'Contact')}</h4><a href="#/page/contact" class="row" style="gap:8px">${ic('phone')}<span dir="ltr">16xxx</span></a><a href="#/page/contact" class="row" style="gap:8px">${ic('mail')}support@rehlati.eg</a><p style="font-size:14px;margin-top:6px">${tr('التجمع الخامس، القاهرة الجديدة', 'Fifth Settlement, New Cairo')}</p>${installLink('btn btn-sand btn-sm')}</div>
   </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('رحلاتي', 'Rehlati')}${CLOUD ? '' : ' · ' + tr('وضع العرض التجريبي (البيانات في متصفحك فقط)', 'Demo mode (data stays in your browser)')}</span>${CLOUD ? '' : `<button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button>`}</div></div></footer>`;
 }
 ACTIONS['reset-demo'] = async () => { if (await confirmDialog({ title: tr('إعادة ضبط البيانات؟', 'Reset demo data?'), text: tr('ستُحذف كل التعديلات والحجوزات التي أضفتها وتعود البيانات التجريبية الأصلية.', 'All your changes and bookings will be removed and the original demo data restored.'), ok: tr('إعادة الضبط', 'Reset'), danger: true })) { resetDB(); setSession(null); toast(tr('تمت إعادة ضبط البيانات.', 'Demo data reset.')); go('#/'); } };

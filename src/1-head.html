@@ -2,10 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>رحلاتي | احجز رحلتك في مصر من أفضل شركات السياحة</title>
 <meta name="description" content="رحلاتي: منصة تجمع شركات السياحة المصرية في مكان واحد. قارن الرحلات واحجز مقعدك وادفع أونلاين.">
 <meta name="theme-color" content="#16324F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="رحلاتي">
+<meta name="application-name" content="رحلاتي">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -551,6 +558,21 @@ table.cmp{border-collapse:separate;border-spacing:0;width:100%;min-width:720px;f
 .best-tag{display:inline-block;margin-inline-start:6px;font-size:11px;font-weight:700;color:var(--teal-700);background:#fff;border:1px solid #BFE6E6;border-radius:6px;padding:0 6px;vertical-align:middle}
 .cmp .tt img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-bottom:8px}
 
+/* installable app */
+#install-layer{position:fixed;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:90;display:flex;flex-direction:column;gap:10px;align-items:flex-start;pointer-events:none}
+.install-bar{pointer-events:auto;width:100%;max-width:440px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh-3);padding:12px 12px 12px 14px;display:flex;gap:12px;align-items:center;animation:pop .25s ease-out}
+.install-bar b{color:var(--navy);font-size:14.5px;display:block}
+.install-bar p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.install-bar .ib-logo{width:44px;height:44px;border-radius:12px;flex:none}
+.ib-ic{width:36px;height:36px;border-radius:10px;background:var(--teal-50);color:var(--teal-700);display:grid;place-items:center;flex:none}
+.install-bar.upd{background:var(--navy-950);border-color:var(--navy-950)}
+.install-bar.upd b{color:#fff}.install-bar.upd p{color:#B9C7D4}
+body.install-open .cmp-tray{bottom:calc(110px + env(safe-area-inset-bottom))}
+body.install-open .toasts{bottom:110px}
+.install-steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:st}
+.install-steps li{display:flex;gap:12px;align-items:center;font-size:14.5px}
+@media (display-mode: standalone){.site-h{padding-top:env(safe-area-inset-top)}.topbar{padding-top:env(safe-area-inset-top);height:calc(64px + env(safe-area-inset-top))}}
+
 @media print{
   .site-h,.site-f,.side,.topbar,.no-print,.toasts{display:none!important}
   body{background:#fff}
@@ -563,6 +585,7 @@ table.cmp{border-collapse:separate;border-spacing:0;width:100%;min-width:720px;f
 <div id="app" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
 <div id="layer"></div>
+<div id="install-layer"></div>
 <div class="toasts" id="toasts" role="status"></div>
 <noscript><p style="padding:40px;text-align:center">رحلاتي يحتاج تفعيل JavaScript في المتصفح.</p></noscript>
 <script>
