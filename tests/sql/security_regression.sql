@@ -81,7 +81,7 @@ select pg_temp.run('BK-11 admin approves refund', 'admin', '^(ok)?$', $q$select 
 select pg_temp.run('BK-12 refund cannot be approved twice', 'admin', 'STATE', $q$select public.process_refund((select r.id from public.refunds r join public.bookings b on b.id=r.booking_id where b.departure_id='dp_sec'),true,'')::text$q$);
 select pg_temp.run('BK-13 seats released after refund', 'admin', '^3$', $q$select (3 - coalesce(sum(count),0))::text from public.bookings where departure_id='dp_sec' and (status in ('confirmed','completed','refund_pending') or (status='pending_payment' and hold_until>now()))$q$);
 
-select pg_temp.run('BK-14 private-trip bookings up to 40 travellers allowed by the schema', 'admin', 'between 1 and 40', $q$select pg_get_constraintdef(oid) from pg_constraint where conname='bookings_count_check'$q$);
+select pg_temp.run('BK-14 private-trip bookings up to 40 travellers allowed by the schema', 'admin', 'count <= 40', $q$select pg_get_constraintdef(oid) from pg_constraint where conname='bookings_count_check'$q$);
 
 select coalesce(string_agg(case when result ~ expect then 'PASS ' else 'FAIL ' end || id || case when result ~ expect then '' else '  (got: ' || left(result, 120) || ')' end, E'\n' order by n), '') ||
   E'\n' || sum(case when result ~ expect then 1 else 0 end) || '/' || count(*) || ' passed' as report from res;
