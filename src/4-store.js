@@ -36,6 +36,7 @@ function sweep() {
     if (b.status === 'confirmed') { const d = depById(b.departureId); if (d && new Date(d.end) < TODAY) { b.status = 'completed'; changed = true; } }
   });
   db.departures.forEach((d) => { if (d.status === 'open' && new Date(d.start) <= TODAY) { d.status = 'closed'; changed = true; } });
+  if (requestSweep(db)) changed = true;
   if (changed) { try { writeDB(db); } catch (e) { } }
 }
 
@@ -174,18 +175,19 @@ function createBooking({ depId, travelers, code }) {
   return tx((d) => {
     const dep = byId(d.departures, depId); const trip = dep && byId(d.trips, dep.tripId); const comp = trip && byId(d.companies, trip.companyId);
     const cust = byId(d.users, u.id);
-    if (!dep || !trip || trip.status !== 'active' || comp.status !== 'approved') throw new AppError('UNAVAILABLE', tr('هذه الرحلة غير متاحة للحجز حاليًا.', 'This trip is not available right now.'));
+    const priv = trip && trip.status === 'private' && trip.requestCustomer === u.id;
+    if (!dep || !trip || (trip.status !== 'active' && !priv) || comp.status !== 'approved') throw new AppError('UNAVAILABLE', tr('هذه الرحلة غير متاحة للحجز حاليًا.', 'This trip is not available right now.'));
     if (cust.status !== 'active') throw new AppError('SUSPENDED', tr('حسابك موقوف.', 'Your account is suspended.'));
     if (!(dep.status === 'open' && new Date(dep.start) > TODAY)) throw new AppError('DEP_CLOSED', tr('هذا الموعد لم يعد متاحًا. اختر موعدًا آخر.', 'This date is no longer available. Pick another date.'));
     const n = travelers.length;
-    if (n < 1 || n > 10) throw new AppError('COUNT', tr('عدد المسافرين من ١ إلى ١٠.', 'Travellers must be between 1 and 10.'));
+    if (n < 1 || n > (priv ? 40 : 10)) throw new AppError('COUNT', tr('عدد المسافرين من ١ إلى ١٠.', 'Travellers must be between 1 and 10.'));
     const dup = d.bookings.find((b) => b.customerId === u.id && b.departureId === dep.id && (b.status === 'confirmed' || (b.status === 'pending_payment' && new Date(b.holdUntil) > new Date())));
     if (dup) throw new AppError('DUPLICATE', tr(`لديك حجز على نفس الموعد بالفعل (${dup.ref}).`, `You already have a booking on this date (${dup.ref}).`), dup);
     const si = seatInfo(dep, d);
     if (si.remaining < n) throw new AppError('NO_SEATS', si.remaining ? tr(`المتاح الآن ${si.remaining} مقاعد فقط.`, `Only ${si.remaining} seats are left.`) : tr('اكتملت المقاعد في هذا الموعد.', 'This date is fully booked.'));
     const q = priceQuote(dep, n, code, trip);
     const rate = comp.commission != null && comp.commission !== '' ? +comp.commission : +d.settings.commission;
-    const b = { id: uid('b'), ref: 'RH-' + dep.start.slice(2, 4) + dep.start.slice(5, 7) + '-' + (1000 + d.bookings.length + Math.floor(Math.random() * 900)), customerId: u.id, companyId: trip.companyId, tripId: trip.id, departureId: dep.id, count: n, travelers, unitPrice: dep.price, subtotal: q.subtotal, discount: q.discount, promo: q.promo, campaignId: q.campaign ? q.campaign.id : null, total: q.total, commissionRate: rate, commission: Math.round(q.total * rate / 100), status: 'pending_payment', paymentStatus: 'pending', createdAt: new Date().toISOString(), holdUntil: new Date(Date.now() + d.settings.holdMinutes * 6e4).toISOString() };
+    const b = { id: uid('b'), ref: 'RH-' + dep.start.slice(2, 4) + dep.start.slice(5, 7) + '-' + (1000 + d.bookings.length + Math.floor(Math.random() * 900)), customerId: u.id, companyId: trip.companyId, tripId: trip.id, departureId: dep.id, count: n, travelers, unitPrice: dep.price, subtotal: q.subtotal, discount: q.discount, promo: q.promo, campaignId: q.campaign ? q.campaign.id : null, total: q.total, commissionRate: rate, commission: Math.round(q.total * rate / 100), status: 'pending_payment', paymentStatus: 'pending', requestId: priv ? trip.requestId : undefined, createdAt: new Date().toISOString(), holdUntil: new Date(Date.now() + d.settings.holdMinutes * 6e4).toISOString() };
     d.bookings.push(b);
     return b;
   });
@@ -219,6 +221,7 @@ function payBooking({ bookingId, method, idemKey, details }) {
     notify(d, cust.id, { ar: 'تم تأكيد حجزك', en: 'Booking confirmed' }, { ar: `حجزك ${b.ref} لرحلة ${trip.title.ar} مؤكد.`, en: `Booking ${b.ref} for ${trip.title.en} is confirmed.` }, '#/me/booking/' + b.ref);
     notify(d, cust.id, { ar: 'تم استلام الدفع', en: 'Payment received' }, { ar: `استلمنا ${fmtN(b.total)} ج.م عن الحجز ${b.ref}.`, en: `We received EGP ${fmtN(b.total)} for ${b.ref}.` }, '#/me/payments');
     notify(d, 'company:' + b.companyId, { ar: 'حجز جديد', en: 'New booking' }, { ar: `${cust.name} حجز ${b.count} مقعد في ${trip.title.ar} (${dep.start}).`, en: `${cust.name} booked ${b.count} seat(s) on ${trip.title.en} (${dep.start}).` }, '#/co/bookings');
+    requestPaid(d, b);
     notify(d, 'admin', { ar: 'حجز جديد', en: 'New booking' }, { ar: `${b.ref} بقيمة ${fmtN(b.total)} ج.م`, en: `${b.ref} worth EGP ${fmtN(b.total)}` }, '#/admin/bookings');
     if (seatInfo(dep, d).remaining === 0) notify(d, 'company:' + b.companyId, { ar: 'اكتملت المقاعد', en: 'Departure sold out' }, { ar: `موعد ${dep.start} لرحلة ${trip.title.ar} اكتمل.`, en: `${dep.start} for ${trip.title.en} is sold out.` }, '#/co/trips');
     if (b.total >= 50000) notify(d, 'admin', { ar: 'معاملة كبيرة', en: 'Large transaction' }, { ar: `دفعة بقيمة ${fmtN(b.total)} ج.م على ${b.ref}`, en: `Payment of EGP ${fmtN(b.total)} on ${b.ref}` }, '#/admin/finance');
@@ -328,6 +331,9 @@ const PSTAT = {
   refund: { c: 'b-teal', l: { ar: 'استرداد', en: 'Refund' } }
 };
 const CSTAT = { approved: { c: 'b-ok', l: { ar: 'معتمدة', en: 'Approved' } }, pending: { c: 'b-warn', l: { ar: 'قيد المراجعة', en: 'Under review' } }, rejected: { c: 'b-bad', l: { ar: 'مرفوضة', en: 'Rejected' } }, suspended: { c: 'b-mute', l: { ar: 'موقوفة', en: 'Suspended' } } };
-const TSTAT = { active: { c: 'b-ok', l: { ar: 'منشورة', en: 'Live' } }, pending: { c: 'b-warn', l: { ar: 'بانتظار الاعتماد', en: 'Awaiting approval' } }, inactive: { c: 'b-mute', l: { ar: 'متوقفة', en: 'Paused' } }, rejected: { c: 'b-bad', l: { ar: 'مرفوضة', en: 'Rejected' } }, hidden: { c: 'b-mute', l: { ar: 'مخفية', en: 'Hidden' } } };
+const TSTAT = { active: { c: 'b-ok', l: { ar: 'منشورة', en: 'Live' } }, private: { c: 'b-teal', l: { ar: 'مخصصة لعميل', en: 'Private (custom)' } }, pending: { c: 'b-warn', l: { ar: 'بانتظار الاعتماد', en: 'Awaiting approval' } }, inactive: { c: 'b-mute', l: { ar: 'متوقفة', en: 'Paused' } }, rejected: { c: 'b-bad', l: { ar: 'مرفوضة', en: 'Rejected' } }, hidden: { c: 'b-mute', l: { ar: 'مخفية', en: 'Hidden' } } };
 const DSTAT = { open: { c: 'b-ok', l: { ar: 'متاح للحجز', en: 'Open' } }, closed: { c: 'b-mute', l: { ar: 'مغلق', en: 'Closed' } }, cancelled: { c: 'b-bad', l: { ar: 'ملغي', en: 'Cancelled' } }, full: { c: 'b-bad', l: { ar: 'مكتمل', en: 'Sold out' } } };
 const badge = (map, k) => { const s = map[k] || { c: 'b-mute', l: { ar: k, en: k } }; return `<span class="badge ${s.c}">${L(s.l)}</span>`; };
+
+const isMyPrivate = (t) => !!t && t.status === 'private' && t.requestCustomer === (me() || {}).id;
+const privSeats = (t) => { const d = db.departures.find((x) => x.tripId === t.id); return d ? +d.seats : 1; };

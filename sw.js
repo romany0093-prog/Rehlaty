@@ -3,7 +3,7 @@
    installed app opens fast. Live data (Supabase API: trips, bookings, payments,
    accounts) is NEVER cached — it always comes from the server.
    Bump VERSION on every release so phones pick up the new build. */
-const VERSION = 'rehlati-v2';
+const VERSION = 'rehlati-v3';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './assets/hero.jpg', './assets/hero-800.jpg',

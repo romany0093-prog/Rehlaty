@@ -2,9 +2,10 @@
 /* ---------- 7. Checkout ---------- */
 function viewCheckout(tripId) {
   const t = tripById(tripId); const q = readQuery();
-  if (!t || t.status !== 'active') return viewNotFound(tr('الرحلة غير متاحة', 'Trip not available'));
+  const priv = t && isMyPrivate(t);
+  if (!t || (t.status !== 'active' && !priv)) return viewNotFound(tr('الرحلة غير متاحة', 'Trip not available'));
   if (!UI.co || UI.co.tripId !== tripId || (q.dep && UI.co.fromDep !== q.dep) || UI.co.done) {
-    const n = clamp(+q.n || 1, 1, 10); const u = me();
+    const n = priv ? privSeats(t) : clamp(+q.n || 1, 1, 10); const u = me();
     UI.co = { tripId, fromDep: q.dep, depId: q.dep, n, step: 1, code: '', method: 'card', travelers: Array.from({ length: n }, (_, i) => ({ name: i === 0 ? u.name : '', age: '', phone: i === 0 ? u.phone : '' })) };
   }
   const co = UI.co, dep = depById(co.depId), c = compById(t.companyId);
@@ -37,7 +38,7 @@ function coStep1(t, dep) {
     <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn btn-primary btn-lg" type="submit">${tr('متابعة للمراجعة', 'Continue to review')}</button></div></form>`;
 }
 function saveTravelers(f) { UI.co.travelers = UI.co.travelers.map((x, i) => ({ name: (f.elements['name_' + i] || {}).value?.trim() || '', age: (f.elements['age_' + i] || {}).value || '', phone: i === 0 ? (f.elements.phone_0 || {}).value?.trim() : '' })); }
-ACTIONS['co-n'] = (el) => { const f = el.closest('form'); saveTravelers(f); const co = UI.co; co.n = clamp(co.n + +el.dataset.d, 1, 10); while (co.travelers.length < co.n) co.travelers.push({ name: '', age: '', phone: '' }); co.travelers.length = co.n; render(); };
+ACTIONS['co-n'] = (el) => { const f = el.closest('form'); saveTravelers(f); const co = UI.co; const pt = tripById(co.tripId); co.n = pt && isMyPrivate(pt) ? privSeats(pt) : clamp(co.n + +el.dataset.d, 1, 10); while (co.travelers.length < co.n) co.travelers.push({ name: '', age: '', phone: '' }); co.travelers.length = co.n; render(); };
 CHANGES['co-dep'] = (el) => { saveTravelers(el.closest('form')); UI.co.depId = el.value; UI.co.fromDep = el.value; const si = seatInfo(depById(el.value)); if (UI.co.n > si.remaining) { UI.co.n = Math.max(1, si.remaining); UI.co.travelers.length = UI.co.n; } history.replaceState(null, '', `#/book/${UI.co.tripId}?dep=${el.value}&n=${UI.co.n}`); render(); };
 FORMS['co-1'] = (f) => {
   saveTravelers(f);
@@ -119,9 +120,9 @@ setInterval(tickHold, 1000);
 function dashLayout(kind, title, content, actions) {
   const u = me(), h = location.hash.split('?')[0];
   const navs = {
-    me: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['bookings', tr('حجوزاتي', 'My bookings'), 'ticket'], ['payments', tr('المدفوعات والفواتير', 'Payments & invoices'), 'card'], ['cancellations', tr('طلبات الإلغاء', 'Cancellations'), 'refund'], ['favorites', tr('المفضلة', 'Saved trips'), 'heart'], ['reviews', tr('تقييماتي', 'My reviews'), 'star'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['profile', tr('بياناتي', 'My details'), 'user']],
-    co: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['trips', tr('الرحلات والمواعيد', 'Trips & departures'), 'map'], ['bookings', tr('الحجوزات', 'Bookings'), 'ticket', db.bookings.filter((b) => b.companyId === u.companyId && b.status === 'refund_pending').length], ['finance', tr('المستحقات', 'Earnings'), 'money'], ['reviews', tr('التقييمات', 'Reviews'), 'star'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['profile', tr('ملف الشركة', 'Company profile'), 'building']],
-    admin: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['grp', tr('التشغيل', 'Operations')], ['companies', tr('الشركات', 'Companies'), 'building', db.companies.filter((c) => c.status === 'pending').length], ['trips', tr('الرحلات', 'Trips'), 'map', db.trips.filter((t) => t.status === 'pending').length], ['customers', tr('العملاء', 'Customers'), 'users'], ['bookings', tr('الحجوزات والاسترداد', 'Bookings & refunds'), 'ticket', db.refunds.filter((r) => r.status === 'pending').length + db.disputes.filter((d) => d.status === 'open').length], ['grp', tr('المال', 'Money')], ['finance', tr('المالية والعمولات', 'Finance & commission'), 'money'], ['grp', tr('المنصة', 'Platform')], ['offers', tr('عروض المواسم', 'Seasonal offers'), 'tag', liveCampaigns().length], ['content', tr('المحتوى', 'Content'), 'layers'], ['taxonomy', tr('الوجهات والتصنيفات', 'Destinations & categories'), 'tag'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['settings', tr('الإعدادات', 'Settings'), 'cog']]
+    me: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['requests', tr('رحلاتي المخصصة', 'My custom trips'), 'compass', customerNewsTotal()], ['bookings', tr('حجوزاتي', 'My bookings'), 'ticket'], ['payments', tr('المدفوعات والفواتير', 'Payments & invoices'), 'card'], ['cancellations', tr('طلبات الإلغاء', 'Cancellations'), 'refund'], ['favorites', tr('المفضلة', 'Saved trips'), 'heart'], ['reviews', tr('تقييماتي', 'My reviews'), 'star'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['profile', tr('بياناتي', 'My details'), 'user']],
+    co: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['requests', tr('طلبات رحلات مخصصة', 'Custom trip requests'), 'compass', companyNewsTotal()], ['trips', tr('الرحلات والمواعيد', 'Trips & departures'), 'map'], ['bookings', tr('الحجوزات', 'Bookings'), 'ticket', db.bookings.filter((b) => b.companyId === u.companyId && b.status === 'refund_pending').length], ['finance', tr('المستحقات', 'Earnings'), 'money'], ['reviews', tr('التقييمات', 'Reviews'), 'star'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['profile', tr('ملف الشركة', 'Company profile'), 'building']],
+    admin: [['', tr('نظرة عامة', 'Overview'), 'grid'], ['grp', tr('التشغيل', 'Operations')], ['companies', tr('الشركات', 'Companies'), 'building', db.companies.filter((c) => c.status === 'pending').length], ['trips', tr('الرحلات', 'Trips'), 'map', db.trips.filter((t) => t.status === 'pending').length], ['customers', tr('العملاء', 'Customers'), 'users'], ['bookings', tr('الحجوزات والاسترداد', 'Bookings & refunds'), 'ticket', db.refunds.filter((r) => r.status === 'pending').length + db.disputes.filter((d) => d.status === 'open').length], ['grp', tr('المال', 'Money')], ['finance', tr('المالية والعمولات', 'Finance & commission'), 'money'], ['grp', tr('المنصة', 'Platform')], ['offers', tr('عروض المواسم', 'Seasonal offers'), 'tag', liveCampaigns().length], ['requests', tr('الرحلات المخصصة', 'Custom trips'), 'compass', (db.tripRequests || []).filter((r) => r.status === 'open').length], ['content', tr('المحتوى', 'Content'), 'layers'], ['taxonomy', tr('الوجهات والتصنيفات', 'Destinations & categories'), 'tag'], ['notifications', tr('الإشعارات', 'Notifications'), 'bell', unread()], ['settings', tr('الإعدادات', 'Settings'), 'cog']]
   }[kind];
   const base = { me: '#/me', co: '#/co', admin: '#/admin' }[kind];
   const c = kind === 'co' ? myCompany() : null;
@@ -129,7 +130,7 @@ function dashLayout(kind, title, content, actions) {
   return `<div class="dash"><aside class="side ${UI.side ? 'open' : ''}" aria-label="${tr('قائمة اللوحة', 'Dashboard menu')}">
     <a href="#/" class="logo">${logoMark()}<span>${tr('رحلاتي', 'Rehlati')}</span></a>
     <div class="role">${c ? coLogo(c) : `<span class="avatar" style="width:30px;height:30px;font-size:12px">${esc(initials(u.name))}</span>`}<div style="min-width:0"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c ? L(c.name) : u.name)}</b>${roleLabel}</div></div>
-    <nav>${navs.map(([p, l, i, n]) => p === 'grp' ? `<div class="grp">${l}</div>` : `<a href="${base}${p ? '/' + p : ''}" class="${(p ? h.startsWith(base + '/' + p) : h === base) ? 'on' : ''}">${ic(i)}<span>${l}</span>${n ? `<span class="cnt">${n}</span>` : ''}</a>`).join('')}</nav>
+    <nav>${navs.map(([p, l, i, n]) => p === 'grp' ? `<div class="grp">${l}</div>` : `<a href="${base}${p ? '/' + p : ''}" class="${(p ? h.startsWith(base + '/' + p) || (p === 'requests' && h.startsWith(base + '/request/')) : h === base) ? 'on' : ''}">${ic(i)}<span>${l}</span>${n ? `<span class="cnt">${n}</span>` : ''}</a>`).join('')}</nav>
     <div class="side-foot"><nav><a href="#/">${ic('home')}<span>${tr('الموقع العام', 'Public site')}</span></a><a href="#" data-a="lang">${ic('globe')}<span>${LANG === 'ar' ? 'English' : 'العربية'}</span></a><a href="#" data-a="logout">${ic('logout')}<span>${tr('تسجيل الخروج', 'Log out')}</span></a></nav></div></aside>
     ${UI.side ? '<div class="scrim" data-a="side"></div>' : ''}
     <div class="main"><header class="topbar"><button class="icon-btn side-toggle" data-a="side" aria-label="${tr('القائمة', 'Menu')}">${ic('menu')}</button><h1>${title}</h1><div class="grow"></div>${actions || ''}<a class="icon-btn" href="${base}/notifications" aria-label="${tr('الإشعارات', 'Notifications')}">${ic('bell')}${unread() ? `<span class="dot">${unread()}</span>` : ''}</a></header>
@@ -157,6 +158,7 @@ function viewMe() {
   const next = up[0];
   const nd = next && depById(next.departureId), nt = next && tripById(next.tripId);
   return dashLayout('me', tr(`أهلًا ${me().name.split(' ')[0]}`, `Hi ${me().name.split(' ')[0]}`), `
+    <div style="margin-bottom:16px">${meRequestsCard()}</div>
     ${pend.map((b) => `<div class="callout warn" style="margin-bottom:12px">${ic('clock')}<div class="grow">${tr('عندك حجز في انتظار الدفع', 'You have a booking awaiting payment')}: <b>${esc(L(tripById(b.tripId).title))}</b> — ${tr('المقاعد محجوزة لحد', 'seats held until')} ${fmtDT(b.holdUntil)}</div><button class="btn btn-sm btn-sand" data-a="resume" data-id="${b.id}">${tr('أكمل الدفع', 'Complete payment')}</button></div>`).join('')}
     <div class="kpis">${kpi(tr('رحلات قادمة', 'Upcoming trips'), up.length, '', 'cal', true)}${kpi(tr('رحلات مكتملة', 'Completed trips'), done.length, '', 'check')}${kpi(tr('إجمالي المدفوع', 'Total paid'), money(spent), '', 'wallet')}${kpi(tr('بانتظار تقييمك', 'Awaiting your review'), toReview.length, toReview.length ? `<a class="btn-link" href="#/me/reviews">${tr('قيّم الآن', 'Review now')}</a>` : '', 'star')}</div>
     <div class="grid" style="grid-template-columns:1.4fr 1fr;margin-top:20px;align-items:start" id="me-grid">

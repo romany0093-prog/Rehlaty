@@ -31,9 +31,12 @@ const MAP = {
   notifications: { t: 'notifications', c: { id: 'id', to: 'to_user', title: 'title', body: 'body', link: 'link', read: 'read', createdAt: 'created_at' } },
   settlements: { t: 'settlements', c: { id: 'id', companyId: 'company_id', amount: 'amount', method: 'method', note: 'note', createdAt: 'created_at' } },
   disputes: { t: 'disputes', c: { id: 'id', bookingId: 'booking_id', companyId: 'company_id', customerId: 'customer_id', subject: 'subject', status: 'status', resolution: 'resolution', createdAt: 'created_at' } },
-  activity: { t: 'activity', c: { id: 'id', at: 'at', text: 'text' } }
+  activity: { t: 'activity', c: { id: 'id', at: 'at', text: 'text' } },
+  tripRequests: { t: 'trip_requests', ro: true, auth: true, c: { id: 'id', customerId: 'customer_id', status: 'status', expiresAt: 'expires_at', acceptedOfferId: 'accepted_offer_id', acceptedAt: 'accepted_at', createdAt: 'created_at' } },
+  requestOffers: { t: 'request_offers', ro: true, auth: true, c: { id: 'id', requestId: 'request_id', companyId: 'company_id', status: 'status', price: 'price', total: 'total', tripId: 'trip_id', departureId: 'departure_id', createdAt: 'created_at', updatedAt: 'updated_at' } },
+  requestMessages: { t: 'request_messages', ro: true, auth: true, c: { id: 'id', requestId: 'request_id', companyId: 'company_id', sender: 'sender', text: 'text', createdAt: 'created_at' } }
 };
-const ORDER = ['companies', 'users', 'destinations', 'categories', 'trips', 'departures', 'bookings', 'payments', 'refunds', 'reviews', 'notifications', 'settlements', 'disputes', 'activity'];
+const ORDER = ['companies', 'users', 'destinations', 'categories', 'trips', 'departures', 'bookings', 'payments', 'refunds', 'reviews', 'notifications', 'settlements', 'disputes', 'activity', 'tripRequests', 'requestOffers', 'requestMessages'];
 function fromRow(m, r) {
   const o = Object.assign({}, r.data || {});
   Object.entries(m.c).forEach(([k, col]) => { if (r[col] !== undefined) o[k] = r[col]; });
@@ -62,7 +65,7 @@ async function loadCloud() {
   await sb.rpc('housekeeping').then(() => {}, () => {});
   const [settingsRows, seats, cstats, ...lists] = await Promise.all([
     fetchAll('settings'), sb.rpc('seat_counts').then((r) => r.data || []), sb.rpc('company_travellers').then((r) => r.data || []),
-    ...ORDER.map((k) => fetchAll(MAP[k].t))
+    ...ORDER.map((k) => (MAP[k].auth && !AUTH_UID ? Promise.resolve([]) : fetchAll(MAP[k].t)))
   ]);
   const d = { version: DB_VERSION, settings: (settingsRows.find((r) => r.id === 'main') || { data: {} }).data };
   ORDER.forEach((k, i) => { d[k] = lists[i].map((r) => fromRow(MAP[k], r)); });
@@ -113,6 +116,7 @@ function cloudMsg(e) {
     USERNAME_TAKEN: tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken. Choose another.'), EMAIL_TAKEN: tr('البريد مسجل بالفعل. سجّل الدخول بدلًا من ذلك.', 'This email is already registered. Log in instead.'),
     BAD_USERNAME: tr('اسم المستخدم من ٣ إلى ٢٤ حرف إنجليزي صغير أو أرقام أو _ .', 'Username: 3–24 lowercase letters, numbers, _ or .'), WEAK_PASSWORD: tr('كلمة المرور ٦ أحرف على الأقل.', 'Password must be at least 6 characters.'),
     SEATS_BELOW_BOOKED: tr('مينفعش تقلل المقاعد عن المحجوز.', 'Seats can’t go below seats booked.'), DATE_IN_PAST: tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
+    ...Object.fromEntries(Object.keys(REQ_ERR).map((k) => [k, REQ_ERR[k]()])), NOT_FOUND: tr('غير موجود أو مبقاش متاح.', 'Not found or no longer available.'),
     COMPANY_NOT_APPROVED: tr('شركتك لسه ما اتعتمدتش.', 'Your company isn’t approved yet.'), SHORT_TEXT: tr('اكتب ٢٠ حرف على الأقل.', 'Write at least 20 characters.')
   };
   if (M[code]) return M[code];
@@ -169,5 +173,12 @@ if (CLOUD) {
   processRefund = (refundId, approve, note) => afterRpc(rpc('process_refund', { p_refund: refundId, p_approve: !!approve, p_note: note || '' }));
   addReview = (bookingId, ratings, text) => afterRpc(rpc('add_review', { p_booking: bookingId, p_ratings: ratings, p_text: text }));
   cancelDeparture = (depId) => afterRpc(rpc('cancel_departure', { p_dep: depId }));
+  createTripRequest = (p) => afterRpc(rpc('create_trip_request', { p }));
+  cancelTripRequest = (id) => afterRpc(rpc('cancel_trip_request', { p_id: id }));
+  declineOffer = (id) => afterRpc(rpc('decline_offer', { p_offer: id }));
+  acceptOffer = (id) => afterRpc(rpc('accept_offer', { p_offer: id }));
+  sendOffer = (rid, p) => afterRpc(rpc('send_offer', { p_request: rid, p }));
+  withdrawOffer = (id) => afterRpc(rpc('withdraw_offer', { p_offer: id }));
+  sendRequestMessage = (rid, cid, text) => afterRpc(rpc('send_request_message', { p_request: rid, p_company: cid, p_text: text }));
   sb.auth.onAuthStateChange((ev, s) => { const id = s && s.user ? s.user.id : null; if (ev === 'PASSWORD_RECOVERY' && id) { AUTH_UID = id; RESET.recovering = id; } if (ev === 'SIGNED_OUT' && AUTH_UID) { AUTH_UID = null; reloadCloud(); } else if (id) AUTH_UID = id; });
 }

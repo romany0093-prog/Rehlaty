@@ -88,10 +88,12 @@ function viewHome() {
         <div class="tf"><label>${tr('الميزانية للفرد (ج.م)', 'Budget per person (EGP)')}</label><div class="price-pair"><input name="min" type="number" min="0" step="500" placeholder="${tr('من', 'Min')}" aria-label="${tr('أقل سعر', 'Min price')}"><span class="faint">–</span><input name="max" type="number" min="0" step="500" placeholder="${tr('إلى', 'Max')}" aria-label="${tr('أعلى سعر', 'Max price')}"></div></div>
         <div class="go"><button class="btn btn-teal btn-lg" type="submit">${ic('search')}${tr('ابحث', 'Search')}</button></div>
       </form>
+      <div class="hero-plan"><span>${tr('مش لاقي اللي في دماغك؟', 'Have something specific in mind?')}</span><a href="#/plan" class="hero-plan-link">${ic('compass')}${tr('خطط رحلتك بنفسك والشركات تبعتلك عروض', 'Plan your own trip and get offers from operators')}</a></div>
       <div class="hero-stats"><span><b class="num">${trips.length}</b>${tr('رحلة متاحة الآن', 'trips available now')}</span><span><b class="num">${comps.length}</b>${tr('شركات مرخصة', 'licensed operators')}</span><span><b class="num">${r1(avg(db.reviews.map((r) => r.ratings.overall)))} ★</b>${tr(`من ${db.reviews.length} تقييم حقيقي`, `from ${db.reviews.length} verified reviews`)}</span></div>
     </div></section>
 
   ${homeOffers()}
+  ${homePlanBand()}
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('وجهات مختارة', 'Featured destinations')}</h2><p>${tr('من البحر الأحمر إلى واحات الصحراء الغربية.', 'From the Red Sea to the Western Desert oases.')}</p></div><a class="btn btn-ghost btn-sm" href="#/destinations">${tr('كل الوجهات', 'All destinations')}</a></div>
     <div class="dest-row">${dests.map((d, i) => { const n = trips.filter((t) => t.destId === d.id).length; return `<a class="dest ${i === 0 ? 'big' : ''} ${i > 0 && i === dests.length - 1 && (dests.length + 3) % 4 === 2 ? 'wide' : ''}" href="#/trips?dest=${d.id}"><img src="${artURL(d.art, i % 3)}" alt=""><div class="dc"><h3>${esc(L(d.name))}</h3><small>${esc(L(d.region))} · ${tr(`${n} رحلة`, `${n} trips`)}</small></div></a>`; }).join('')}</div>
@@ -213,7 +215,7 @@ function viewCompanies() {
 /* ---- trip details ---- */
 function viewTrip(id) {
   const t = tripById(id);
-  const visible = t && ((t.status === 'active' && compById(t.companyId).status === 'approved') || role() === 'admin' || (role() === 'company' && me().companyId === t.companyId));
+  const visible = t && ((t.status === 'active' && compById(t.companyId).status === 'approved') || isMyPrivate(t) || role() === 'admin' || (role() === 'company' && me().companyId === t.companyId));
   if (!visible) return viewNotFound(tr('الرحلة غير متاحة', 'Trip not available'), tr('ممكن تكون الرحلة اتوقفت أو لسه بتتراجع.', 'It may be paused or still under review.'));
   const c = compById(t.companyId), d = destById(t.destId), s = tripStats(t), revs = tripReviews(t.id), cr = companyRating(c.id);
   UI.bw = UI.bw && UI.bw.tripId === t.id ? UI.bw : { tripId: t.id, depId: (s.avail[0] || {}).id, n: 2 };
@@ -222,7 +224,7 @@ function viewTrip(id) {
   const imgs = t.images.slice(0, 3); while (imgs.length < 3) imgs.push('art:' + d.art + ':' + imgs.length);
   const camp = tripCampaign(t);
   return publicLayout(`<div class="wrap" style="padding-top:20px">
-    ${t.status !== 'active' ? `<div class="callout warn" style="margin-bottom:14px">${ic('info')}<div>${tr('معاينة: هذه الرحلة غير منشورة للعملاء حاليًا', 'Preview: this trip is not visible to customers')} — ${badge(TSTAT, t.status)}</div></div>` : ''}
+    ${isMyPrivate(t) ? `<div class="callout ok" style="margin-bottom:14px">${ic('compass')}<div class="grow">${tr('الرحلة دي اتعملت مخصوص ليك بناءً على طلبك، ومحدش غيرك يقدر يشوفها أو يحجزها.', 'This trip was made just for you from your request — nobody else can see or book it.')}</div><a class="btn btn-sm btn-ghost" href="#/me/request/${t.requestId}">${tr('ارجع للعروض', 'Back to offers')}</a></div>` : t.status !== 'active' ? `<div class="callout warn" style="margin-bottom:14px">${ic('info')}<div>${tr('معاينة: هذه الرحلة غير منشورة للعملاء حاليًا', 'Preview: this trip is not visible to customers')} — ${badge(TSTAT, t.status)}</div></div>` : ''}
     <div class="crumbs" style="color:var(--faint)"><a href="#/">${tr('الرئيسية', 'Home')}</a><span>/</span><a href="#/trips?dest=${d.id}">${esc(L(d.name))}</a><span>/</span><span>${esc(L(catById(t.catId).name))}</span></div>
     <div class="row between wrapx" style="align-items:flex-end;margin-bottom:16px"><div style="max-width:820px"><h1 style="font-size:clamp(24px,3.2vw,36px)">${esc(L(t.title))}</h1>
       <div class="row wrapx small" style="margin-top:8px;gap:16px"><span class="row" style="gap:5px;color:var(--teal-700);font-weight:600">${ic('pin')}${esc(L(d.name))}، ${esc(L(d.region))}</span>${starsHTML(s.rating, s.reviews)}<a class="row" style="gap:8px" href="#/company/${c.id}">${coLogo(c)}<b style="color:var(--navy)">${esc(L(c.name))}</b></a></div></div>

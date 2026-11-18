@@ -1,7 +1,7 @@
 
 /* ---------- 3. Seed data (Egyptian demo content) ---------- */
 const DB_KEY = 'rehlati_db_v1';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 function seedDB() {
   const R = rng(42);
@@ -315,5 +315,17 @@ function seedDB() {
     }
   };
 
-  return { version: DB_VERSION, seededAt: now.toISOString(), settings, users, companies, destinations, categories, trips, departures, bookings, payments, refunds, reviews, notifications, settlements, disputes, activity };
+  /* custom trip requests (demo only) */
+  const dISO = (n) => iso(addDays(now, n)), tISO = (h) => new Date(now.getTime() + h * 36e5).toISOString();
+  const prog = (arr) => arr.map(([t, x], i) => ({ day: i + 1, title: { ar: t, en: '' }, text: { ar: x, en: '' } }));
+  const tripRequests = [
+    { id: 'rq1', customerId: 'u_k0', status: 'open', createdAt: tISO(-30), expiresAt: tISO(90), initials: 'م. ع.', city: 'القاهرة', dests: ['dahab'], anyDest: false, from: dISO(30), to: dISO(33), flex: 1, adults: 2, children: 1, budgetMin: 4000, budgetMax: 6500, stay: '4', meals: 'half', transport: ['bus'], types: ['family'], special: 'عايزين غرفة عائلية قريبة من البحر، والطفل عنده ٧ سنين.', program: [{ day: 1, text: 'وصول وراحة على البحر' }, { day: 2, text: 'سنوركل في البلو هول' }, { day: 3, text: 'رحلة سفاري للوادي الملون' }, { day: 4, text: 'رجوع' }], window: 5 },
+    { id: 'rq2', customerId: 'u_k3', status: 'open', createdAt: tISO(-4), expiresAt: tISO(116), initials: 'ك. ع.', city: 'المنصورة', dests: ['luxor', 'aswan'], anyDest: false, from: dISO(45), to: dISO(50), flex: 3, adults: 4, children: 0, budgetMin: '', budgetMax: 9000, stay: '5', meals: 'full', transport: ['train', 'flight'], types: [], special: 'نفسنا في ليلة على مركب في النيل.', program: [], window: 5 }
+  ];
+  const requestOffers = [
+    { id: 'of1', requestId: 'rq1', companyId: 'c2', status: 'sent', createdAt: tISO(-20), updatedAt: tISO(-20), title: 'دهب العائلية ٤ أيام', destId: 'dahab', catId: 'family', start: dISO(30), end: dISO(33), price: 5900, total: 17700, validUntil: dISO(10), stayLevel: '4', stay: 'فندق ٤ نجوم على الممشى، غرفة عائلية', transportType: 'bus', transport: 'أتوبيس مكيف من القاهرة', program: prog([['السفر والوصول', 'تسكين وسهرة على الممشى'], ['البلو هول', 'سنوركل مع مدرب وأدوات للطفل'], ['الوادي الملون', 'سفاري بالجيب وغدا بدوي'], ['العودة', 'إفطار ثم السفر']]), included: [{ ar: 'نصف إقامة', en: '' }, { ar: 'الانتقالات', en: '' }, { ar: 'رحلة السنوركل والسفاري', en: '' }], excluded: [{ ar: 'المشروبات', en: '' }], notes: 'الطفل تحت ١٢ بخصم ٢٥٪ داخل السعر.', tripId: null, departureId: null },
+    { id: 'of2', requestId: 'rq1', companyId: 'c1', status: 'sent', createdAt: tISO(-6), updatedAt: tISO(-6), title: 'دهب وسانت كاترين', destId: 'dahab', catId: 'adventure', start: dISO(31), end: dISO(34), price: 6800, total: 20400, validUntil: dISO(7), stayLevel: '5', stay: 'منتجع ٥ نجوم', transportType: 'flight', transport: 'طيران لشرم ثم ليموزين', program: prog([['الوصول', 'استقبال في المطار'], ['البلو هول', 'سنوركل'], ['سانت كاترين', 'صعود الجبل وقت الشروق'], ['العودة', '']]), included: [{ ar: 'تذاكر الطيران', en: '' }, { ar: 'إقامة كاملة', en: '' }], excluded: [{ ar: 'رسوم المحمية', en: '' }], notes: '', tripId: null, departureId: null }
+  ];
+  const requestMessages = [{ id: 'm1', requestId: 'rq1', companyId: 'c2', sender: 'company', text: 'أهلًا! هل تفضلوا غرفة واحدة عائلية ولا غرفتين متصلتين؟', createdAt: tISO(-19) }];
+  return { version: DB_VERSION, seededAt: now.toISOString(), settings, users, companies, destinations, categories, trips, departures, bookings, payments, refunds, reviews, notifications, settlements, disputes, activity, tripRequests, requestOffers, requestMessages };
 }

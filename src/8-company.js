@@ -1,6 +1,6 @@
 
 /* ---------- 9. Company dashboard (every read goes through the company scope) ---------- */
-const coTrips = () => db.trips.filter((t) => t.companyId === me().companyId);
+const coTrips = () => db.trips.filter((t) => t.companyId === me().companyId && t.status !== 'private');
 const coBookings = () => db.bookings.filter((b) => b.companyId === me().companyId);
 function coGate(content, title) {
   const c = myCompany();
@@ -18,6 +18,7 @@ function viewCo() {
   const rec = bs.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
   const myCamps = campaigns().filter((x) => x.companyId === c.id && ['live', 'upcoming'].includes(campaignState(x)));
   return dashLayout('co', tr('نظرة عامة', 'Overview'), `
+    ${coRequestsBanner() ? `<div style="margin-bottom:16px">${coRequestsBanner()}</div>` : ''}
     ${c.platformRating || myCamps.length ? `<div class="card card-pad row wrapx" style="margin-bottom:16px;gap:18px">${c.platformRating ? `<div><small class="muted">${tr('تقييم رحلاتي لشركتك', 'Your Rehlati rating')}</small><div>${pStars(c.platformRating)} <b class="num">${c.platformRating}/5</b></div></div>` : ''}${myCamps.map((x) => `<div class="row" style="gap:8px">${seasonChip(x)}<span class="small"><b style="color:var(--navy)">${esc(L(x.title))}</b> · ${tr(`خصم ${x.percent}٪ على ${x.tripIds.length} رحلة`, `${x.percent}% off ${x.tripIds.length} trips`)} · ${badge(CSTATE, campaignState(x))}</span></div>`).join('')}</div>` : ''}
     <div class="kpis">${kpi(tr('إيراد الحجوزات', 'Booking revenue'), money(fin.gross), tr(`صافي لك ${money(fin.net)} بعد عمولة ${effectiveRate(c)}٪`, `Net ${money(fin.net)} after ${effectiveRate(c)}% commission`), 'money', true)}${kpi(tr('إجمالي الحجوزات', 'Total bookings'), bs.filter((b) => b.status !== 'cancelled').length, tr(`${bs.filter((b) => b.status === 'completed').length} مكتمل · ${bs.filter((b) => b.status === 'confirmed').length} مؤكد`, `${bs.filter((b) => b.status === 'completed').length} completed · ${bs.filter((b) => b.status === 'confirmed').length} confirmed`), 'ticket')}${kpi(tr('بانتظار إجراء', 'Pending'), bs.filter((b) => ['pending_payment', 'refund_pending'].includes(b.status)).length, tr('دفع معلق أو طلب استرداد', 'Unpaid or refund requested'), 'clock')}${kpi(tr('الرحلات', 'Trips'), `${trips.filter((t) => t.status === 'active').length} / ${trips.length}`, tr(`نشطة من الإجمالي · ${fmtN(seatsLeft)} مقعد متاح`, `active of total · ${fmtN(seatsLeft)} seats available`), 'map')}</div>
     <div class="grid" style="grid-template-columns:1.6fr 1fr;margin-top:20px;align-items:start" id="co-grid">
