@@ -34,13 +34,13 @@ function viewAdCompanies() {
 }
 ACTIONS['co-approve'] = async (el) => {
   const c = compById(el.dataset.id);
-  if (!(await confirmDialog({ title: tr('اعتماد الشركة؟', 'Approve this company?'), text: tr(`${L(c.name)} هتقدر تنشر رحلات وتستقبل حجوزات. اتأكد إنك راجعت المستندات: ${(c.docs || []).map((d) => d.name).join('، ')}.`, `${L(c.name)} will be able to publish trips and take bookings. Make sure you reviewed: ${(c.docs || []).map((d) => d.name).join(', ')}.`), ok: tr('اعتماد', 'Approve') }))) return;
+  if (!(await confirmDialog({ title: tr('اعتماد الشركة؟', 'Approve this company?'), text: tr(`${esc(L(c.name))} هتقدر تنشر رحلات وتستقبل حجوزات. اتأكد إنك راجعت المستندات: ${(c.docs || []).map((d) => esc(d.name)).join('، ')}.`, `${esc(L(c.name))} will be able to publish trips and take bookings. Make sure you reviewed: ${(c.docs || []).map((d) => d.name).join(', ')}.`), ok: tr('اعتماد', 'Approve') }))) return;
   tx((d) => { const x = byId(d.companies, c.id); x.status = 'approved'; x.approvedAt = new Date().toISOString(); notify(d, 'company:' + c.id, { ar: 'تم اعتماد شركتك', en: 'Your company is approved' }, { ar: 'تقدر دلوقتي تضيف رحلاتك ومواعيدها.', en: 'You can now add your trips and departures.' }, '#/co/trips'); logAct(d, `تم اعتماد ${x.name.ar}`, `${x.name.en} approved`); });
-  closeModal(); toast(tr(`تم اعتماد ${L(c.name)} وإرسال إشعار لها.`, `${L(c.name)} approved and notified.`)); render();
+  closeModal(); toast(tr(`تم اعتماد ${esc(L(c.name))} وإرسال إشعار لها.`, `${esc(L(c.name))} approved and notified.`)); render();
 };
 ACTIONS['co-reject'] = async (el) => {
   const c = compById(el.dataset.id);
-  const reason = await confirmDialog({ title: tr('رفض الطلب', 'Reject application'), text: tr(`هيتبعت سبب الرفض لـ ${L(c.name)}.`, `The reason will be sent to ${L(c.name)}.`), ok: tr('رفض الطلب', 'Reject'), danger: true, input: tr('سبب الرفض', 'Reason') });
+  const reason = await confirmDialog({ title: tr('رفض الطلب', 'Reject application'), text: tr(`هيتبعت سبب الرفض لـ ${esc(L(c.name))}.`, `The reason will be sent to ${esc(L(c.name))}.`), ok: tr('رفض الطلب', 'Reject'), danger: true, input: tr('سبب الرفض', 'Reason') });
   if (reason === false) return;
   tx((d) => { const x = byId(d.companies, c.id); x.status = 'rejected'; x.rejectReason = reason; notify(d, 'company:' + c.id, { ar: 'تم رفض الطلب', en: 'Application declined' }, { ar: reason || 'تواصل معنا للتفاصيل.', en: reason || 'Contact us for details.' }, '#/co'); logAct(d, `تم رفض ${x.name.ar}`, `${x.name.en} rejected`); });
   closeModal(); toast(tr('تم رفض الطلب.', 'Application rejected.')); render();
@@ -63,7 +63,7 @@ const rateInput = (c) => `<div class="row" style="gap:6px;flex-wrap:nowrap"><spa
 ACTIONS['co-rate'] = (el) => {
   const v = +el.dataset.v || null, c = compById(el.dataset.id);
   tx((d) => { const x = byId(d.companies, c.id); x.platformRating = v; if (v) notify(d, 'company:' + c.id, { ar: 'تقييم رحلاتي لشركتك', en: 'Your Rehlati rating' }, { ar: `قيّم فريق رحلاتي شركتك بـ ${v} من ٥. التقييم بيظهر للعملاء في الترشيحات.`, en: `The Rehlati team rated your company ${v} of 5. It appears in customer recommendations.` }, '#/co'); logAct(d, `تقييم رحلاتي لـ ${x.name.ar}: ${v || 'بدون'}`, `Rehlati rating for ${x.name.en}: ${v || 'cleared'}`); });
-  toast(v ? tr(`تم تقييم ${L(c.name)} بـ ${v} من ٥.`, `${L(c.name)} rated ${v} of 5.`) : tr('تم مسح التقييم.', 'Rating cleared.'));
+  toast(v ? tr(`تم تقييم ${esc(L(c.name))} بـ ${v} من ٥.`, `${esc(L(c.name))} rated ${v} of 5.`) : tr('تم مسح التقييم.', 'Rating cleared.'));
   const y = scrollY; render(); scrollTo(0, y);
 };
 
@@ -125,7 +125,7 @@ FORMS.cp = (f) => {
 ACTIONS['cp-toggle'] = (el) => { tx((x) => { const c = x.settings.campaigns.find((y) => y.id === el.dataset.id); c.active = !c.active; }); const c = campaigns().find((y) => y.id === el.dataset.id); toast(c.active ? tr('تم تفعيل العرض.', 'Offer activated.') : tr('تم إيقاف العرض. مش هيظهر للعملاء.', 'Offer paused and hidden from customers.')); render(); };
 ACTIONS['cp-del'] = async (el) => {
   const c = campaigns().find((y) => y.id === el.dataset.id);
-  if (!(await confirmDialog({ title: tr('حذف العرض؟', 'Delete offer?'), text: tr(`"${L(c.title)}" هيختفي فورًا. الحجوزات اللي اتعملت بالعرض هتحتفظ بخصمها.`, `“${L(c.title)}” disappears immediately. Bookings already made keep their discount.`), ok: tr('حذف', 'Delete'), danger: true }))) return;
+  if (!(await confirmDialog({ title: tr('حذف العرض؟', 'Delete offer?'), text: tr(`"${esc(L(c.title))}" هيختفي فورًا. الحجوزات اللي اتعملت بالعرض هتحتفظ بخصمها.`, `“${esc(L(c.title))}” disappears immediately. Bookings already made keep their discount.`), ok: tr('حذف', 'Delete'), danger: true }))) return;
   tx((x) => { x.settings.campaigns = x.settings.campaigns.filter((y) => y.id !== c.id); });
   toast(tr('تم حذف العرض.', 'Offer deleted.')); render();
 };
@@ -205,7 +205,7 @@ function viewAdFinance() {
   <div style="margin-top:20px">${dataTable({ id: 'adtx', title: tr('المعاملات المالية', 'Financial transactions'), rows: txs, defaultSort: 'createdAt', export: true, exportName: 'transactions', searchText: (r) => r.b.ref + ' ' + r.txn,
     filters: [{ key: 'st', label: tr('كل الأنواع', 'All types'), options: [['paid', tr('مدفوع', 'Paid')], ['failed', tr('فشل', 'Failed')], ['refund', tr('استرداد', 'Refund')]], test: (r, v) => r.status === v }, { key: 'm', label: tr('كل الطرق', 'All methods'), options: Object.entries(GATEWAYS).map(([k, g]) => [k, L(g.name)]), test: (r, v) => r.method === v }],
     csvCols: [{ label: tr('التاريخ', 'Date'), csv: (r) => r.createdAt }, { label: 'Ref', csv: (r) => r.b.ref }, { label: 'TXN', csv: (r) => r.txn }, { label: tr('الطريقة', 'Method'), csv: (r) => r.method }, { label: tr('المبلغ', 'Amount'), csv: (r) => r.amount }, { label: tr('العمولة', 'Commission'), csv: (r) => r.status === 'paid' ? r.b.commission : 0 }, { label: tr('الحالة', 'Status'), csv: (r) => r.status }],
-    cols: [{ key: 'createdAt', label: tr('التاريخ', 'Date'), render: (r) => `<span class="small">${fmtDT(r.createdAt)}</span>` }, { key: 'ref', label: tr('الحجز', 'Booking'), sortVal: (r) => r.b.ref, render: (r) => `<button class="btn-link ref" data-a="ad-bk" data-id="${r.b.id}">${r.b.ref}</button>` }, { key: 'txn', label: tr('رقم العملية', 'Transaction'), render: (r) => `<span class="ref faint">${r.txn || '—'}</span>` }, { key: 'method', label: tr('الطريقة', 'Method'), render: (r) => esc(L(GATEWAYS[r.method].name)) }, { key: 'amount', label: tr('المبلغ', 'Amount'), render: (r) => `<b class="num" style="color:${r.amount < 0 ? 'var(--teal-700)' : 'var(--navy)'}">${money(r.amount)}</b>` }, { key: 'comm', label: tr('عمولة الحجز', 'Commission'), sort: false, render: (r) => r.status === 'paid' ? `<span class="num">${money(r.b.commission)}</span> <span class="xs faint">${r.b.commissionRate}٪</span>` : '—' }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(PSTAT, r.status) }] })}</div>
+    cols: [{ key: 'createdAt', label: tr('التاريخ', 'Date'), render: (r) => `<span class="small">${fmtDT(r.createdAt)}</span>` }, { key: 'ref', label: tr('الحجز', 'Booking'), sortVal: (r) => r.b.ref, render: (r) => `<button class="btn-link ref" data-a="ad-bk" data-id="${r.b.id}">${r.b.ref}</button>` }, { key: 'txn', label: tr('رقم العملية', 'Transaction'), render: (r) => `<span class="ref faint">${esc(r.txn || '—')}</span>` }, { key: 'method', label: tr('الطريقة', 'Method'), render: (r) => esc(L(GATEWAYS[r.method].name)) }, { key: 'amount', label: tr('المبلغ', 'Amount'), render: (r) => `<b class="num" style="color:${r.amount < 0 ? 'var(--teal-700)' : 'var(--navy)'}">${money(r.amount)}</b>` }, { key: 'comm', label: tr('عمولة الحجز', 'Commission'), sort: false, render: (r) => r.status === 'paid' ? `<span class="num">${money(r.b.commission)}</span> <span class="xs faint">${r.b.commissionRate}٪</span>` : '—' }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(PSTAT, r.status) }] })}</div>
   <style>@media(max-width:1100px){#fin-grid{grid-template-columns:1fr!important}}</style>`);
 }
 FORMS['ad-comm'] = (f) => { const d = validate(f, { commission: ['req', 'pct'] }); if (!d) return; tx((x) => { x.settings.commission = +d.commission; logAct(x, `تغيير العمولة الافتراضية إلى ${d.commission}٪`, `Default commission set to ${d.commission}%`); }); toast(tr('تم حفظ العمولة الافتراضية.', 'Default commission saved.')); render(); };

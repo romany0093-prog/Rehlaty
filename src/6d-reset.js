@@ -33,14 +33,13 @@ function viewForgot() {
 async function sendReset(ident) {
   const v = String(ident || '').trim();
   if (CLOUD) {
-    const email = await rpc('resolve_login', { p_ident: v });
-    if (email) {
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-      if (error) {
-        if (error.status === 429 || /seconds|rate limit/i.test(error.message || '')) throw new AppError('RATE', tr('طلبت روابط كتير ورا بعض. استنى دقيقة وحاول تاني.', 'Too many requests. Wait a minute and try again.'));
-        if (/Failed to fetch|network/i.test(error.message || '')) throw new AppError('NET', cloudMsg(error));
-        console.warn('reset email', error); // don't reveal anything else
-      }
+    // The username → e-mail lookup happens server-side (Edge Function "password-reset"), so the
+    // browser never learns anyone's e-mail and the answer is the same whether the account exists or not.
+    const { error } = await sb.functions.invoke('password-reset', { body: { ident: v, redirectTo: location.origin + location.pathname } });
+    if (error) {
+      const st = error.context && error.context.status;
+      if (st === 429) throw new AppError('RATE', tr('طلبت روابط كتير ورا بعض. استنى دقيقة وحاول تاني.', 'Too many requests. Wait a minute and try again.'));
+      throw new AppError('NET', tr('مفيش اتصال بالسيرفر. اتأكد من الإنترنت وحاول تاني.', 'Can’t reach the server. Check your connection and try again.'));
     }
     RESET.demoUser = null;
   } else {
@@ -73,13 +72,13 @@ function viewResetPassword() {
     <p class="muted" style="margin:6px 0 22px">${tr(`للحساب <b dir="ltr">${esc(u.username || u.email)}</b>. اختار كلمة مرور ما استخدمتهاش قبل كده.`, `For <b>${esc(u.username || u.email)}</b>. Choose a password you haven’t used before.`)}</p>
     <form data-f="reset-pw" class="stack" novalidate>
       <input type="text" name="username" value="${esc(u.username || u.email)}" autocomplete="username" hidden>
-      ${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}
+      ${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٨ أحرف على الأقل', 'At least 8 characters') })}
       ${inp('nw2', tr('أكّد كلمة المرور', 'Confirm the password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"' })}
       <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('حفظ كلمة المرور والدخول', 'Save password and log in')}</button></form>`;
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('oasis', 1)}" alt=""><p class="cap">${tr('واحة سيوة', 'Siwa Oasis')}</p></div><div class="auth-f"><div class="auth-box">${body}</div></div></main>`;
 }
 FORMS['reset-pw'] = async (f) => {
-  const d = validate(f, { nw: ['req', 'min6'], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
+  const d = validate(f, { nw: ['req', 'pw'], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
   const btn = $('button[type=submit]', f); busy(btn, true);
   try {
     if (CLOUD) {

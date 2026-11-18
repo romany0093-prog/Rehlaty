@@ -159,7 +159,7 @@ function requestSweep(d) {
 }
 
 /* ---------- shared pieces ---------- */
-const chipList = (arr) => arr.filter(Boolean).map((x) => `<span class="chip" style="cursor:default;height:26px;font-size:12.5px">${x}</span>`).join(' ');
+const chipList = (arr) => arr.filter(Boolean).map((x) => `<span class="chip" style="cursor:default;height:26px;font-size:12.5px">${esc(x)}</span>`).join(' ');
 function reqSummary(r, forCompany) {
   return `<div class="card card-pad"><div class="grid g4" style="gap:14px">
     <div><small class="muted">${tr('الوجهة', 'Destination')}</small><div><b style="color:var(--navy)">${esc(reqTitle(r))}</b></div></div>
@@ -314,10 +314,10 @@ function viewMyRequest(id) {
 }
 CHANGES['offer-sort'] = (el) => { UI.offerSort = el.value; render(); };
 ACTIONS['offer-chat'] = (el) => { const o = byId(db.requestOffers, el.dataset.id); UI.chatOpen = UI.chatOpen === o.companyId ? null : o.companyId; const y = scrollY; render(); scrollTo(0, y); seenMark('r:' + o.requestId); };
-ACTIONS['offer-decline'] = async (el) => { const o = byId(db.requestOffers, el.dataset.id); if (!(await confirmDialog({ title: tr('اعتذار عن العرض؟', 'Decline this offer?'), text: tr(`هنبلغ ${L(compById(o.companyId).name)} إنك مش مهتم بالعرض ده. الشركة تقدر تبعتلك عرض معدّل طول ما الطلب مفتوح.`, `We’ll tell ${L(compById(o.companyId).name)} you’re not interested. They can send a revised offer while the request is open.`), ok: tr('اعتذار', 'Decline'), danger: true }))) return; await declineOffer(o.id); toast(tr('تم الاعتذار عن العرض.', 'Offer declined.')); render(); };
+ACTIONS['offer-decline'] = async (el) => { const o = byId(db.requestOffers, el.dataset.id); if (!(await confirmDialog({ title: tr('اعتذار عن العرض؟', 'Decline this offer?'), text: tr(`هنبلغ ${esc(L(compById(o.companyId).name))} إنك مش مهتم بالعرض ده. الشركة تقدر تبعتلك عرض معدّل طول ما الطلب مفتوح.`, `We’ll tell ${esc(L(compById(o.companyId).name))} you’re not interested. They can send a revised offer while the request is open.`), ok: tr('اعتذار', 'Decline'), danger: true }))) return; await declineOffer(o.id); toast(tr('تم الاعتذار عن العرض.', 'Offer declined.')); render(); };
 ACTIONS['offer-accept'] = async (el) => {
   const o = byId(db.requestOffers, el.dataset.id), r = byId(db.tripRequests, o.requestId), c = compById(o.companyId);
-  if (o.status === 'sent' && !(await confirmDialog({ title: tr('قبول العرض والحجز', 'Accept and book'), text: tr(`هتقبل عرض ${L(c.name)}: ${money(o.price)} للفرد × ${reqPax(r)} = ${money(o.total)}. بعدها هتكتب بيانات المسافرين وتدفع. العروض التانية بتتقفل بعد ما الدفع يتم.`, `You’re accepting ${L(c.name)}: ${money(o.price)} per person × ${reqPax(r)} = ${money(o.total)}. Next you’ll enter traveller details and pay. Other offers close once payment completes.`), ok: tr('قبول ومتابعة الدفع', 'Accept & pay') }))) return;
+  if (o.status === 'sent' && !(await confirmDialog({ title: tr('قبول العرض والحجز', 'Accept and book'), text: tr(`هتقبل عرض ${esc(L(c.name))}: ${money(o.price)} للفرد × ${reqPax(r)} = ${money(o.total)}. بعدها هتكتب بيانات المسافرين وتدفع. العروض التانية بتتقفل بعد ما الدفع يتم.`, `You’re accepting ${esc(L(c.name))}: ${money(o.price)} per person × ${reqPax(r)} = ${money(o.total)}. Next you’ll enter traveller details and pay. Other offers close once payment completes.`), ok: tr('قبول ومتابعة الدفع', 'Accept & pay') }))) return;
   busy(el, true);
   try {
     const res = await acceptOffer(o.id);
@@ -436,7 +436,7 @@ function homePlanBand() {
 }
 function meRequestsCard() {
   const reqs = openOfMine(), news = customerNewsTotal(), withOffers = myRequests().find((r) => customerNews(r).total);
-  if (news && withOffers) { const n = customerNews(withOffers); return `<a class="card card-pad plan-alert" href="#/me/request/${withOffers.id}"><span class="ib-ic">${ic('mail')}</span><div class="grow"><b>${n.offers ? tr(`وصلك ${n.offers} عرض جديد على طلب رحلتك لـ${reqTitle(withOffers)}`, `${n.offers} new offer(s) on your ${reqTitle(withOffers)} trip`) : tr(`عندك ${n.msgs} رسالة جديدة على طلب رحلتك`, `${n.msgs} new message(s) on your request`)}</b><div class="small muted">${tr('قارن العروض واختار الأنسب.', 'Compare offers and pick the best.')}</div></div><span class="btn btn-teal btn-sm">${tr('شوف العروض', 'See offers')}</span></a>`; }
+  if (news && withOffers) { const n = customerNews(withOffers); return `<a class="card card-pad plan-alert" href="#/me/request/${withOffers.id}"><span class="ib-ic">${ic('mail')}</span><div class="grow"><b>${n.offers ? tr(`وصلك ${n.offers} عرض جديد على طلب رحلتك لـ${esc(reqTitle(withOffers))}`, `${n.offers} new offer(s) on your ${esc(reqTitle(withOffers))} trip`) : tr(`عندك ${n.msgs} رسالة جديدة على طلب رحلتك`, `${n.msgs} new message(s) on your request`)}</b><div class="small muted">${tr('قارن العروض واختار الأنسب.', 'Compare offers and pick the best.')}</div></div><span class="btn btn-teal btn-sm">${tr('شوف العروض', 'See offers')}</span></a>`; }
   if (reqs.length) return `<a class="card card-pad plan-alert" href="#/me/requests"><span class="ib-ic">${ic('compass')}</span><div class="grow"><b>${tr(`عندك ${reqs.length} طلب رحلة مخصصة مفتوح`, `${reqs.length} open custom trip request(s)`)}</b><div class="small muted">${tr('هنبلغك أول ما توصل عروض.', 'We’ll tell you when offers arrive.')}</div></div><span class="btn btn-ghost btn-sm">${tr('طلباتي', 'My requests')}</span></a>`;
   return `<div class="card card-pad plan-alert"><span class="ib-ic">${ic('compass')}</span><div class="grow"><b>${tr('مش لاقي الرحلة اللي في دماغك؟', 'Can’t find the trip you have in mind?')}</b><div class="small muted">${tr('اطلبها بمواصفاتك والشركات تبعتلك عروض.', 'Request it your way and companies send you offers.')}</div></div>${planCta('btn-sand btn-sm')}</div>`;
 }

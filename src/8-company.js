@@ -46,7 +46,7 @@ ACTIONS['co-trip-toggle'] = (el) => { tx((d) => { const t = byId(d.trips, el.dat
 ACTIONS['co-trip-del'] = async (el) => {
   const t = tripById(el.dataset.id); const hasB = db.bookings.some((b) => b.tripId === t.id && b.status !== 'cancelled');
   if (hasB) { if (await confirmDialog({ title: tr('الرحلة عليها حجوزات', 'This trip has bookings'), text: tr('مينفعش تتحذف لأن عليها حجوزات. تقدر توقفها بدل الحذف فتختفي من الموقع وتفضل حجوزاتها كما هي.', 'It can’t be deleted because it has bookings. You can pause it instead — it disappears from the site and its bookings stay intact.'), ok: tr('إيقاف الرحلة', 'Pause trip') })) { tx((d) => { const x = byId(d.trips, t.id); assertCompanyOwns(d, x); x.status = 'inactive'; }); toast(tr('تم إيقاف الرحلة.', 'Trip paused.')); render(); } return; }
-  if (!(await confirmDialog({ title: tr('حذف الرحلة نهائيًا؟', 'Delete trip permanently?'), text: tr(`"${L(t.title)}" ومواعيدها هتتحذف ومش هتقدر ترجعها.`, `“${L(t.title)}” and its dates will be deleted. This can’t be undone.`), ok: tr('حذف نهائي', 'Delete'), danger: true }))) return;
+  if (!(await confirmDialog({ title: tr('حذف الرحلة نهائيًا؟', 'Delete trip permanently?'), text: tr(`"${esc(L(t.title))}" ومواعيدها هتتحذف ومش هتقدر ترجعها.`, `“${esc(L(t.title))}” and its dates will be deleted. This can’t be undone.`), ok: tr('حذف نهائي', 'Delete'), danger: true }))) return;
   tx((d) => { const x = byId(d.trips, t.id); assertCompanyOwns(d, x); d.trips = d.trips.filter((y) => y.id !== t.id); d.departures = d.departures.filter((y) => y.tripId !== t.id); });
   toast(tr('تم حذف الرحلة.', 'Trip deleted.')); render();
 };

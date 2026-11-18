@@ -114,9 +114,17 @@ function cloudMsg(e) {
     NOT_COMPLETED: tr('التقييم متاح بعد انتهاء الرحلة فقط.', 'You can review only after the trip ends.'), DUP_REVIEW: tr('قيّمت هذا الحجز من قبل.', 'You already reviewed this booking.'),
     EXPIRED: tr('انتهت مهلة حجز المقاعد. ابدأ الحجز من جديد.', 'The seat hold expired. Please start again.'), STATE: tr('تمت معالجة هذا الطلب بالفعل.', 'Already processed.'),
     USERNAME_TAKEN: tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken. Choose another.'), EMAIL_TAKEN: tr('البريد مسجل بالفعل. سجّل الدخول بدلًا من ذلك.', 'This email is already registered. Log in instead.'),
-    BAD_USERNAME: tr('اسم المستخدم من ٣ إلى ٢٤ حرف إنجليزي صغير أو أرقام أو _ .', 'Username: 3–24 lowercase letters, numbers, _ or .'), WEAK_PASSWORD: tr('كلمة المرور ٦ أحرف على الأقل.', 'Password must be at least 6 characters.'),
+    BAD_USERNAME: tr('اسم المستخدم من ٣ إلى ٢٤ حرف إنجليزي صغير أو أرقام أو _ .', 'Username: 3–24 lowercase letters, numbers, _ or .'), WEAK_PASSWORD: tr('كلمة المرور ٨ أحرف على الأقل.', 'Password must be at least 8 characters.'),
     SEATS_BELOW_BOOKED: tr('مينفعش تقلل المقاعد عن المحجوز.', 'Seats can’t go below seats booked.'), DATE_IN_PAST: tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
     ...Object.fromEntries(Object.keys(REQ_ERR).map((k) => [k, REQ_ERR[k]()])), NOT_FOUND: tr('غير موجود أو مبقاش متاح.', 'Not found or no longer available.'),
+    LOCKED: tr('محاولات دخول كتير غلط. استنى ربع ساعة أو استرجع كلمة المرور.', 'Too many failed attempts. Wait 15 minutes or reset your password.'),
+    RATE_LIMIT: tr('اتعمل حسابات كتير من نفس الشبكة. حاول تاني بعد ساعة.', 'Too many sign-ups from this network. Try again in an hour.'),
+    BAD_IMAGE: tr('الصورة لازم تكون JPG أو PNG أو WebP.', 'Images must be JPG, PNG or WebP.'), BAD_ID: tr('بيانات غير صالحة.', 'Invalid data.'), BAD_COLOR: tr('لون غير صالح.', 'Invalid colour.'),
+    TOO_LONG: tr('النص أطول من المسموح.', 'Text is too long.'), TOO_LARGE: tr('حجم البيانات أو الصور أكبر من المسموح.', 'Data or images are too large.'),
+    BAD_PHONE: tr('رقم الموبايل غير صحيح.', 'Invalid phone number.'), BAD_NAME: tr('الاسم من ٢ إلى ٨٠ حرف.', 'Name must be 2–80 characters.'), BAD_EMAIL: tr('اكتب بريدًا صحيحًا.', 'Enter a valid email.'),
+    BAD_TRAVELER: tr('بيانات المسافرين غير مكتملة أو طويلة جدًا.', 'Traveller details are incomplete or too long.'), BAD_FAVORITES: tr('بيانات غير صالحة.', 'Invalid data.'),
+    GATEWAY_REQUIRED: tr('الدفع الإلكتروني متاح من بوابة الدفع فقط.', 'Payment is only available through the payment gateway.'), BAD_IDEM: tr('حدث خطأ في الدفع. حدّث الصفحة.', 'Payment error. Refresh the page.'),
+    OVER_SETTLEMENT: tr('المبلغ أكبر من مستحقات الشركة.', 'The amount exceeds the company balance.'), DATE_IN_PAST: tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
     COMPANY_NOT_APPROVED: tr('شركتك لسه ما اتعتمدتش.', 'Your company isn’t approved yet.'), SHORT_TEXT: tr('اكتب ٢٠ حرف على الأقل.', 'Write at least 20 characters.')
   };
   if (M[code]) return M[code];
@@ -142,7 +150,7 @@ if (CLOUD) {
   setSession = () => {};
   seatInfo = function (dep) { const s = (SEATS && SEATS[dep.id]) || { booked: 0, held: 0 }; return { seats: dep.seats, booked: s.booked, held: s.held, remaining: Math.max(0, dep.seats - s.booked - s.held) }; };
   login = async function (ident, pw) {
-    const email = await rpc('resolve_login', { p_ident: ident });
+    const email = await rpc('resolve_login', { p_ident: ident, p_password: pw });
     if (!email) throw new AppError('BAD_LOGIN', tr('اسم المستخدم أو كلمة المرور غير صحيحة.', 'Username or password is incorrect.'));
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
     if (error) throw new AppError('BAD_LOGIN', cloudMsg(error));

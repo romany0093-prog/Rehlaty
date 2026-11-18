@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: file:; connect-src 'self' https://soysfbirinxmkivenvnp.supabase.co wss://soysfbirinxmkivenvnp.supabase.co https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>رحلاتي | احجز رحلتك في مصر من أفضل شركات السياحة</title>
 <meta name="description" content="رحلاتي: منصة تجمع شركات السياحة المصرية في مكان واحد. قارن الرحلات واحجز مقعدك وادفع أونلاين.">
@@ -813,7 +815,12 @@ function artURL(kind, v) {
   return ART_CACHE[k];
 }
 /** Image entries are either "art:kind:variant" or uploaded data URLs. */
-const imgSrc = (x) => (typeof x === 'string' && x.startsWith('art:')) ? artURL(x.split(':')[1], +x.split(':')[2] || 0) : x;
+/* Only these image sources are ever put into src="": generated art, our own assets, or base64 raster data.
+   Anything else (javascript:, quotes, SVG, remote URLs) falls back to neutral art. Mirrors _safe_img() on the server. */
+const SAFE_IMG = /^(assets\/[A-Za-z0-9_./-]+|data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+)$/;
+const imgSrc = (x) => (typeof x === 'string' && /^art:[a-z]+:[0-9]+$/.test(x)) ? artURL(x.split(':')[1], +x.split(':')[2] || 0) : (typeof x === 'string' && SAFE_IMG.test(x) ? x : artURL('sea', 0));
+const safeColor = (c) => (/^#[0-9A-Fa-f]{3,8}$/.test(String(c || '')) ? c : '#20A6A6');
+const safeLink = (l) => (/^#\/[A-Za-z0-9/_?=&.%,:-]{0,200}$/.test(String(l || '')) ? l : '#');
 
 /* ---------- 3. Seed data (Egyptian demo content) ---------- */
 const DB_KEY = 'rehlati_db_v1';
@@ -1600,9 +1607,17 @@ function cloudMsg(e) {
     NOT_COMPLETED: tr('التقييم متاح بعد انتهاء الرحلة فقط.', 'You can review only after the trip ends.'), DUP_REVIEW: tr('قيّمت هذا الحجز من قبل.', 'You already reviewed this booking.'),
     EXPIRED: tr('انتهت مهلة حجز المقاعد. ابدأ الحجز من جديد.', 'The seat hold expired. Please start again.'), STATE: tr('تمت معالجة هذا الطلب بالفعل.', 'Already processed.'),
     USERNAME_TAKEN: tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken. Choose another.'), EMAIL_TAKEN: tr('البريد مسجل بالفعل. سجّل الدخول بدلًا من ذلك.', 'This email is already registered. Log in instead.'),
-    BAD_USERNAME: tr('اسم المستخدم من ٣ إلى ٢٤ حرف إنجليزي صغير أو أرقام أو _ .', 'Username: 3–24 lowercase letters, numbers, _ or .'), WEAK_PASSWORD: tr('كلمة المرور ٦ أحرف على الأقل.', 'Password must be at least 6 characters.'),
+    BAD_USERNAME: tr('اسم المستخدم من ٣ إلى ٢٤ حرف إنجليزي صغير أو أرقام أو _ .', 'Username: 3–24 lowercase letters, numbers, _ or .'), WEAK_PASSWORD: tr('كلمة المرور ٨ أحرف على الأقل.', 'Password must be at least 8 characters.'),
     SEATS_BELOW_BOOKED: tr('مينفعش تقلل المقاعد عن المحجوز.', 'Seats can’t go below seats booked.'), DATE_IN_PAST: tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
     ...Object.fromEntries(Object.keys(REQ_ERR).map((k) => [k, REQ_ERR[k]()])), NOT_FOUND: tr('غير موجود أو مبقاش متاح.', 'Not found or no longer available.'),
+    LOCKED: tr('محاولات دخول كتير غلط. استنى ربع ساعة أو استرجع كلمة المرور.', 'Too many failed attempts. Wait 15 minutes or reset your password.'),
+    RATE_LIMIT: tr('اتعمل حسابات كتير من نفس الشبكة. حاول تاني بعد ساعة.', 'Too many sign-ups from this network. Try again in an hour.'),
+    BAD_IMAGE: tr('الصورة لازم تكون JPG أو PNG أو WebP.', 'Images must be JPG, PNG or WebP.'), BAD_ID: tr('بيانات غير صالحة.', 'Invalid data.'), BAD_COLOR: tr('لون غير صالح.', 'Invalid colour.'),
+    TOO_LONG: tr('النص أطول من المسموح.', 'Text is too long.'), TOO_LARGE: tr('حجم البيانات أو الصور أكبر من المسموح.', 'Data or images are too large.'),
+    BAD_PHONE: tr('رقم الموبايل غير صحيح.', 'Invalid phone number.'), BAD_NAME: tr('الاسم من ٢ إلى ٨٠ حرف.', 'Name must be 2–80 characters.'), BAD_EMAIL: tr('اكتب بريدًا صحيحًا.', 'Enter a valid email.'),
+    BAD_TRAVELER: tr('بيانات المسافرين غير مكتملة أو طويلة جدًا.', 'Traveller details are incomplete or too long.'), BAD_FAVORITES: tr('بيانات غير صالحة.', 'Invalid data.'),
+    GATEWAY_REQUIRED: tr('الدفع الإلكتروني متاح من بوابة الدفع فقط.', 'Payment is only available through the payment gateway.'), BAD_IDEM: tr('حدث خطأ في الدفع. حدّث الصفحة.', 'Payment error. Refresh the page.'),
+    OVER_SETTLEMENT: tr('المبلغ أكبر من مستحقات الشركة.', 'The amount exceeds the company balance.'), DATE_IN_PAST: tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
     COMPANY_NOT_APPROVED: tr('شركتك لسه ما اتعتمدتش.', 'Your company isn’t approved yet.'), SHORT_TEXT: tr('اكتب ٢٠ حرف على الأقل.', 'Write at least 20 characters.')
   };
   if (M[code]) return M[code];
@@ -1628,7 +1643,7 @@ if (CLOUD) {
   setSession = () => {};
   seatInfo = function (dep) { const s = (SEATS && SEATS[dep.id]) || { booked: 0, held: 0 }; return { seats: dep.seats, booked: s.booked, held: s.held, remaining: Math.max(0, dep.seats - s.booked - s.held) }; };
   login = async function (ident, pw) {
-    const email = await rpc('resolve_login', { p_ident: ident });
+    const email = await rpc('resolve_login', { p_ident: ident, p_password: pw });
     if (!email) throw new AppError('BAD_LOGIN', tr('اسم المستخدم أو كلمة المرور غير صحيحة.', 'Username or password is incorrect.'));
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
     if (error) throw new AppError('BAD_LOGIN', cloudMsg(error));
@@ -1730,7 +1745,7 @@ const RULES = {
   req: (v) => (v !== '' && v != null) || tr('هذا الحقل مطلوب.', 'This field is required.'),
   email: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || tr('اكتب بريدًا صحيحًا مثل name@mail.com', 'Enter a valid email like name@mail.com'),
   phone: (v) => !v || /^01[0125]\d{8}$/.test(v.replace(/\s/g, '')) || tr('رقم موبايل مصري من ١١ رقم يبدأ بـ 01', 'An 11‑digit Egyptian mobile starting with 01'),
-  min6: (v) => !v || v.length >= 6 || tr('٦ أحرف على الأقل.', 'At least 6 characters.'),
+  pw: (v) => !v || v.length >= 8 || tr('٨ أحرف على الأقل.', 'At least 8 characters.'),
   username: (v) => !v || /^[a-z0-9_.]{3,24}$/.test(v.toLowerCase()) || tr('من ٣ إلى ٢٤ حرف إنجليزي أو أرقام أو _ أو . بدون مسافات.', '3–24 letters, numbers, _ or . — no spaces.'),
   pos: (v) => v === '' || +v > 0 || tr('أدخل رقمًا أكبر من صفر.', 'Enter a number above zero.'),
   int: (v) => v === '' || Number.isInteger(+v) || tr('رقم صحيح فقط.', 'Whole numbers only.'),
@@ -1844,7 +1859,7 @@ function lineChart({ labels, values, h, color }) {
 }
 const kpi = (label, value, sub, icon, hl) => `<div class="card kpi ${hl ? 'hl' : ''}"><small><span class="ic">${ic(icon || 'chart')}</span>${label}</small><b class="num">${value}</b>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
 const empty = (icon, title, text, cta) => `<div class="empty"><div class="em-ic">${ic(icon, 'lg')}</div><h3>${title}</h3><p>${text}</p>${cta || ''}</div>`;
-const coLogo = (c, size) => c.logo ? `<span class="co-logo ${size || ''}"><img src="${c.logo}" alt=""></span>` : `<span class="co-logo ${size || ''}" style="background:${c.color}" aria-hidden="true">${esc(initials(L(c.name)).slice(0, 1))}</span>`;
+const coLogo = (c, size) => c.logo ? `<span class="co-logo ${size || ''}"><img src="${imgSrc(c.logo)}" alt=""></span>` : `<span class="co-logo ${size || ''}" style="background:${safeColor(c.color)}" aria-hidden="true">${esc(initials(L(c.name)).slice(0, 1))}</span>`;
 const starInput = (name, val) => `<div class="star-input" role="radiogroup" data-name="${name}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n <= val ? 'on' : ''}" data-a="star" data-v="${n}" role="radio" aria-checked="${n === val}" aria-label="${n}">${starIc}</button>`).join('')}<input type="hidden" name="${name}" value="${val || ''}"></div>`;
 ACTIONS.star = (el) => { const w = el.closest('.star-input'); const v = +el.dataset.v; $$('button', w).forEach((b, i) => { b.classList.toggle('on', i < v); b.setAttribute('aria-checked', i + 1 === v); }); $('input', w).value = v; const f = w.closest('.field'); if (f) f.classList.remove('err'); };
 
@@ -1953,7 +1968,7 @@ function viewHome() {
     <div class="grid g4">${popular.map(tripCard).join('')}</div>
   </div></section>
 
-  ${banner ? `<section class="sec" style="padding-bottom:0"><div class="wrap"><a class="promo" href="${banner.link}"><img src="${imgSrc(banner.art)}" alt=""><div class="pc"><h3>${esc(L(banner.title))}</h3><p>${esc(L(banner.text))} <span class="code">${esc(banner.code)}</span></p><span class="btn btn-sand">${tr('شوف رحلات العرض', 'See offer trips')}</span></div></a></div></section>` : ''}
+  ${banner ? `<section class="sec" style="padding-bottom:0"><div class="wrap"><a class="promo" href="${safeLink(banner.link)}"><img src="${imgSrc(banner.art)}" alt=""><div class="pc"><h3>${esc(L(banner.title))}</h3><p>${esc(L(banner.text))} <span class="code">${esc(banner.code)}</span></p><span class="btn btn-sand">${tr('شوف رحلات العرض', 'See offer trips')}</span></div></a></div></section>` : ''}
 
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('أُضيفت حديثًا', 'Recently added')}</h2></div><a class="btn btn-ghost btn-sm" href="#/trips?sort=new">${tr('عرض الكل', 'View all')}</a></div>
@@ -2136,7 +2151,7 @@ function viewCompany(id) {
   <div class="wrap"><div class="card card-pad" style="margin-top:-70px;position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">${coLogo(c, 'lg')}<div class="grow"><h1 style="font-size:28px">${esc(L(c.name))}</h1><div class="row wrapx small muted" style="gap:14px;margin-top:4px"><span class="row" style="gap:5px">${ic('pin')}${esc(L(c.city))}</span><span class="row" style="gap:5px">${ic('shield')}${esc(c.license)}</span></div></div><div class="row" style="gap:28px">${c.platformRating ? `<div><small class="muted">${tr('تقييم رحلاتي', 'Rehlati rating')}</small><div>${pStars(c.platformRating)}</div></div>` : ''}<div><small class="muted">${tr('تقييم العملاء', 'Customer rating')}</small><div>${starsHTML(cr.avg, cr.count)}</div></div><div><small class="muted">${tr('مسافرون', 'Travellers')}</small><div><b class="num" style="color:var(--navy)">${fmtN(done)}</b></div></div><div><small class="muted">${tr('منذ', 'Since')}</small><div><b style="color:var(--navy)">${c.founded}</b></div></div></div></div>
   <div class="detail-layout"><div>
     <section class="dsec" style="padding-top:0"><h2>${tr('عن الشركة', 'About')}</h2><p>${esc(L(c.desc))}</p></section>
-    <section class="dsec"><h2>${tr(`رحلات ${L(c.name)}`, `Trips by ${L(c.name)}`)} <span class="faint" style="font-size:15px">(${trips.length})</span></h2>${trips.length ? `<div class="grid g2">${trips.map(tripCard).join('')}</div>` : `<p class="muted">${tr('لا توجد رحلات منشورة حاليًا.', 'No published trips right now.')}</p>`}</section>
+    <section class="dsec"><h2>${tr(`رحلات ${esc(L(c.name))}`, `Trips by ${esc(L(c.name))}`)} <span class="faint" style="font-size:15px">(${trips.length})</span></h2>${trips.length ? `<div class="grid g2">${trips.map(tripCard).join('')}</div>` : `<p class="muted">${tr('لا توجد رحلات منشورة حاليًا.', 'No published trips right now.')}</p>`}</section>
     <section class="dsec" style="border:0"><h2>${tr('تقييمات العملاء', 'Customer reviews')}</h2>${revs.length ? revs.slice(0, 8).map(reviewItem).join('') : `<p class="muted">${tr('لا توجد تقييمات بعد.', 'No reviews yet.')}</p>`}</section>
   </div><aside><div class="card card-pad stack" style="position:sticky;top:88px"><h3>${tr('بيانات التواصل', 'Contact details')}</h3>
     <div class="row small">${ic('phone')}<span dir="ltr">${esc(c.phone)}</span></div><div class="row small">${ic('mail')}${esc(c.email)}</div>${c.website ? `<div class="row small">${ic('globe')}${esc(c.website)}</div>` : ''}<div class="row small">${ic('pin')}${esc(L(c.city))}</div>
@@ -2170,13 +2185,13 @@ function viewRegister() {
   const q = readQuery();
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('coast', 0)}" alt=""><p class="cap">${tr('العلمين الجديدة، الساحل الشمالي', 'New Alamein, North Coast')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('إنشاء حساب مسافر', 'Create a traveller account')}</h1><p class="muted" style="margin:6px 0 22px">${tr('دقيقة واحدة وتقدر تحجز وتتابع رحلاتك.', 'One minute and you can book and track your trips.')}</p>
-    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('name', tr('الاسم بالكامل', 'Full name'), '', { attrs: 'autocomplete="name"' })}${inp('username', tr('اسم المستخدم', 'Username'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو . (٣–٢٤)، هتدخل بيه بدل البريد', 'Lowercase letters, numbers, _ or . (3–24). You can log in with it.') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('phone', tr('رقم الموبايل', 'Mobile number'), '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٦ أحرف على الأقل', 'At least 6 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
+    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('name', tr('الاسم بالكامل', 'Full name'), '', { attrs: 'autocomplete="name"' })}${inp('username', tr('اسم المستخدم', 'Username'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو . (٣–٢٤)، هتدخل بيه بدل البريد', 'Lowercase letters, numbers, _ or . (3–24). You can log in with it.') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('phone', tr('رقم الموبايل', 'Mobile number'), '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٨ أحرف على الأقل', 'At least 8 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
     <label class="check field"><input type="checkbox" name="terms" value="1"><span>${tr('أوافق على', 'I agree to the')} <a class="btn-link" href="#/page/terms" target="_blank">${tr('الشروط والأحكام', 'terms')}</a></span><span class="err-msg"></span></label>
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('إنشاء الحساب', 'Create account')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('عندك حساب؟', 'Have an account?')} <a class="btn-link" href="#/login">${tr('سجّل الدخول', 'Log in')}</a> · <a class="btn-link" href="#/register/company">${tr('تسجيل شركة سياحة', 'Register a tour company')}</a></p></div></div></main>`;
 }
 FORMS.register = async (f) => {
-  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], username: ['req', 'username'], email: ['req', 'email'], phone: ['req', 'phone'], password: ['req', 'min6'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
+  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], username: ['req', 'username'], email: ['req', 'email'], phone: ['req', 'phone'], password: ['req', 'pw'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
   d.username = d.username.toLowerCase();
   const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(400);
   try { await registerCustomer(d); toast(tr('تم إنشاء حسابك.', 'Account created.')); go(f.dataset.next || '#/me'); }
@@ -2191,13 +2206,13 @@ function viewRegisterCompany() {
     ${txa('desc', tr('نبذة عن الشركة', 'About the company'), '', { full: true, rows: 3 })}
     <div class="field full"><span class="lbl">${tr('المستندات المطلوبة', 'Required documents')}</span><label class="upload">${ic('upload', 'lg')}<div style="margin-top:6px">${tr('ارفع السجل التجاري، ترخيص وزارة السياحة، والبطاقة الضريبية (PDF أو صورة)', 'Upload commercial register, tourism licence and tax card (PDF or image)')}</div><input type="file" name="docs" multiple accept=".pdf,image/*" class="sr" data-ch="docs-pick"></label><div id="docs-list" class="small muted" style="margin-top:6px"></div><span class="err-msg"></span></div>
   </div><h3 style="margin:24px 0 16px">${tr('حساب المسؤول', 'Account owner')}</h3><div class="form-grid">
-    ${inp('name', tr('اسم المسؤول', 'Contact name'), '')}${inp('username', tr('اسم المستخدم للدخول', 'Login username'), '', { attrs: 'dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو .', 'Lowercase letters, numbers, _ or .') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}
+    ${inp('name', tr('اسم المسؤول', 'Contact name'), '')}${inp('username', tr('اسم المستخدم للدخول', 'Login username'), '', { attrs: 'dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو .', 'Lowercase letters, numbers, _ or .') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'dir="ltr"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٨ أحرف على الأقل', 'At least 8 characters') })}
   </div><div class="row" style="margin-top:22px;justify-content:flex-end"><a class="btn btn-ghost" href="#/">${tr('إلغاء', 'Cancel')}</a><button class="btn btn-primary btn-lg" type="submit">${tr('إرسال الطلب', 'Submit application')}</button></div></form></div></main>` + footer();
 }
 CHANGES['docs-pick'] = (el) => { $('#docs-list').textContent = Array.from(el.files).map((f) => f.name).join('، '); el.closest('.field').classList.remove('err'); };
 FORMS['register-company'] = async (f) => {
   const files = Array.from(f.elements.docs.files || []);
-  const d = validate(f, { company: ['req'], license: ['req'], founded: ['req', 'int', (v) => (+v >= 1950 && +v <= 2026) || tr('سنة غير صحيحة.', 'Invalid year.')], city: ['req'], phone: ['req', 'phone'], name: ['req', (v) => v.length >= 3 || tr('اكتب الاسم بالكامل.', 'Enter the full name.')], username: ['req', 'username'], email: ['req', 'email'], password: ['req', 'min6'] });
+  const d = validate(f, { company: ['req'], license: ['req'], founded: ['req', 'int', (v) => (+v >= 1950 && +v <= 2026) || tr('سنة غير صحيحة.', 'Invalid year.')], city: ['req'], phone: ['req', 'phone'], name: ['req', (v) => v.length >= 3 || tr('اكتب الاسم بالكامل.', 'Enter the full name.')], username: ['req', 'username'], email: ['req', 'email'], password: ['req', 'pw'] });
   if (!files.length) { const fe = f.elements.docs.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = tr('ارفع مستندًا واحدًا على الأقل.', 'Upload at least one document.'); }
   if (!d || !files.length) return;
   d.username = d.username.toLowerCase();
@@ -2455,14 +2470,13 @@ function viewForgot() {
 async function sendReset(ident) {
   const v = String(ident || '').trim();
   if (CLOUD) {
-    const email = await rpc('resolve_login', { p_ident: v });
-    if (email) {
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-      if (error) {
-        if (error.status === 429 || /seconds|rate limit/i.test(error.message || '')) throw new AppError('RATE', tr('طلبت روابط كتير ورا بعض. استنى دقيقة وحاول تاني.', 'Too many requests. Wait a minute and try again.'));
-        if (/Failed to fetch|network/i.test(error.message || '')) throw new AppError('NET', cloudMsg(error));
-        console.warn('reset email', error); // don't reveal anything else
-      }
+    // The username → e-mail lookup happens server-side (Edge Function "password-reset"), so the
+    // browser never learns anyone's e-mail and the answer is the same whether the account exists or not.
+    const { error } = await sb.functions.invoke('password-reset', { body: { ident: v, redirectTo: location.origin + location.pathname } });
+    if (error) {
+      const st = error.context && error.context.status;
+      if (st === 429) throw new AppError('RATE', tr('طلبت روابط كتير ورا بعض. استنى دقيقة وحاول تاني.', 'Too many requests. Wait a minute and try again.'));
+      throw new AppError('NET', tr('مفيش اتصال بالسيرفر. اتأكد من الإنترنت وحاول تاني.', 'Can’t reach the server. Check your connection and try again.'));
     }
     RESET.demoUser = null;
   } else {
@@ -2495,13 +2509,13 @@ function viewResetPassword() {
     <p class="muted" style="margin:6px 0 22px">${tr(`للحساب <b dir="ltr">${esc(u.username || u.email)}</b>. اختار كلمة مرور ما استخدمتهاش قبل كده.`, `For <b>${esc(u.username || u.email)}</b>. Choose a password you haven’t used before.`)}</p>
     <form data-f="reset-pw" class="stack" novalidate>
       <input type="text" name="username" value="${esc(u.username || u.email)}" autocomplete="username" hidden>
-      ${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}
+      ${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٨ أحرف على الأقل', 'At least 8 characters') })}
       ${inp('nw2', tr('أكّد كلمة المرور', 'Confirm the password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"' })}
       <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('حفظ كلمة المرور والدخول', 'Save password and log in')}</button></form>`;
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('oasis', 1)}" alt=""><p class="cap">${tr('واحة سيوة', 'Siwa Oasis')}</p></div><div class="auth-f"><div class="auth-box">${body}</div></div></main>`;
 }
 FORMS['reset-pw'] = async (f) => {
-  const d = validate(f, { nw: ['req', 'min6'], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
+  const d = validate(f, { nw: ['req', 'pw'], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
   const btn = $('button[type=submit]', f); busy(btn, true);
   try {
     if (CLOUD) {
@@ -2678,7 +2692,7 @@ function requestSweep(d) {
 }
 
 /* ---------- shared pieces ---------- */
-const chipList = (arr) => arr.filter(Boolean).map((x) => `<span class="chip" style="cursor:default;height:26px;font-size:12.5px">${x}</span>`).join(' ');
+const chipList = (arr) => arr.filter(Boolean).map((x) => `<span class="chip" style="cursor:default;height:26px;font-size:12.5px">${esc(x)}</span>`).join(' ');
 function reqSummary(r, forCompany) {
   return `<div class="card card-pad"><div class="grid g4" style="gap:14px">
     <div><small class="muted">${tr('الوجهة', 'Destination')}</small><div><b style="color:var(--navy)">${esc(reqTitle(r))}</b></div></div>
@@ -2833,10 +2847,10 @@ function viewMyRequest(id) {
 }
 CHANGES['offer-sort'] = (el) => { UI.offerSort = el.value; render(); };
 ACTIONS['offer-chat'] = (el) => { const o = byId(db.requestOffers, el.dataset.id); UI.chatOpen = UI.chatOpen === o.companyId ? null : o.companyId; const y = scrollY; render(); scrollTo(0, y); seenMark('r:' + o.requestId); };
-ACTIONS['offer-decline'] = async (el) => { const o = byId(db.requestOffers, el.dataset.id); if (!(await confirmDialog({ title: tr('اعتذار عن العرض؟', 'Decline this offer?'), text: tr(`هنبلغ ${L(compById(o.companyId).name)} إنك مش مهتم بالعرض ده. الشركة تقدر تبعتلك عرض معدّل طول ما الطلب مفتوح.`, `We’ll tell ${L(compById(o.companyId).name)} you’re not interested. They can send a revised offer while the request is open.`), ok: tr('اعتذار', 'Decline'), danger: true }))) return; await declineOffer(o.id); toast(tr('تم الاعتذار عن العرض.', 'Offer declined.')); render(); };
+ACTIONS['offer-decline'] = async (el) => { const o = byId(db.requestOffers, el.dataset.id); if (!(await confirmDialog({ title: tr('اعتذار عن العرض؟', 'Decline this offer?'), text: tr(`هنبلغ ${esc(L(compById(o.companyId).name))} إنك مش مهتم بالعرض ده. الشركة تقدر تبعتلك عرض معدّل طول ما الطلب مفتوح.`, `We’ll tell ${esc(L(compById(o.companyId).name))} you’re not interested. They can send a revised offer while the request is open.`), ok: tr('اعتذار', 'Decline'), danger: true }))) return; await declineOffer(o.id); toast(tr('تم الاعتذار عن العرض.', 'Offer declined.')); render(); };
 ACTIONS['offer-accept'] = async (el) => {
   const o = byId(db.requestOffers, el.dataset.id), r = byId(db.tripRequests, o.requestId), c = compById(o.companyId);
-  if (o.status === 'sent' && !(await confirmDialog({ title: tr('قبول العرض والحجز', 'Accept and book'), text: tr(`هتقبل عرض ${L(c.name)}: ${money(o.price)} للفرد × ${reqPax(r)} = ${money(o.total)}. بعدها هتكتب بيانات المسافرين وتدفع. العروض التانية بتتقفل بعد ما الدفع يتم.`, `You’re accepting ${L(c.name)}: ${money(o.price)} per person × ${reqPax(r)} = ${money(o.total)}. Next you’ll enter traveller details and pay. Other offers close once payment completes.`), ok: tr('قبول ومتابعة الدفع', 'Accept & pay') }))) return;
+  if (o.status === 'sent' && !(await confirmDialog({ title: tr('قبول العرض والحجز', 'Accept and book'), text: tr(`هتقبل عرض ${esc(L(c.name))}: ${money(o.price)} للفرد × ${reqPax(r)} = ${money(o.total)}. بعدها هتكتب بيانات المسافرين وتدفع. العروض التانية بتتقفل بعد ما الدفع يتم.`, `You’re accepting ${esc(L(c.name))}: ${money(o.price)} per person × ${reqPax(r)} = ${money(o.total)}. Next you’ll enter traveller details and pay. Other offers close once payment completes.`), ok: tr('قبول ومتابعة الدفع', 'Accept & pay') }))) return;
   busy(el, true);
   try {
     const res = await acceptOffer(o.id);
@@ -2955,7 +2969,7 @@ function homePlanBand() {
 }
 function meRequestsCard() {
   const reqs = openOfMine(), news = customerNewsTotal(), withOffers = myRequests().find((r) => customerNews(r).total);
-  if (news && withOffers) { const n = customerNews(withOffers); return `<a class="card card-pad plan-alert" href="#/me/request/${withOffers.id}"><span class="ib-ic">${ic('mail')}</span><div class="grow"><b>${n.offers ? tr(`وصلك ${n.offers} عرض جديد على طلب رحلتك لـ${reqTitle(withOffers)}`, `${n.offers} new offer(s) on your ${reqTitle(withOffers)} trip`) : tr(`عندك ${n.msgs} رسالة جديدة على طلب رحلتك`, `${n.msgs} new message(s) on your request`)}</b><div class="small muted">${tr('قارن العروض واختار الأنسب.', 'Compare offers and pick the best.')}</div></div><span class="btn btn-teal btn-sm">${tr('شوف العروض', 'See offers')}</span></a>`; }
+  if (news && withOffers) { const n = customerNews(withOffers); return `<a class="card card-pad plan-alert" href="#/me/request/${withOffers.id}"><span class="ib-ic">${ic('mail')}</span><div class="grow"><b>${n.offers ? tr(`وصلك ${n.offers} عرض جديد على طلب رحلتك لـ${esc(reqTitle(withOffers))}`, `${n.offers} new offer(s) on your ${esc(reqTitle(withOffers))} trip`) : tr(`عندك ${n.msgs} رسالة جديدة على طلب رحلتك`, `${n.msgs} new message(s) on your request`)}</b><div class="small muted">${tr('قارن العروض واختار الأنسب.', 'Compare offers and pick the best.')}</div></div><span class="btn btn-teal btn-sm">${tr('شوف العروض', 'See offers')}</span></a>`; }
   if (reqs.length) return `<a class="card card-pad plan-alert" href="#/me/requests"><span class="ib-ic">${ic('compass')}</span><div class="grow"><b>${tr(`عندك ${reqs.length} طلب رحلة مخصصة مفتوح`, `${reqs.length} open custom trip request(s)`)}</b><div class="small muted">${tr('هنبلغك أول ما توصل عروض.', 'We’ll tell you when offers arrive.')}</div></div><span class="btn btn-ghost btn-sm">${tr('طلباتي', 'My requests')}</span></a>`;
   return `<div class="card card-pad plan-alert"><span class="ib-ic">${ic('compass')}</span><div class="grow"><b>${tr('مش لاقي الرحلة اللي في دماغك؟', 'Can’t find the trip you have in mind?')}</b><div class="small muted">${tr('اطلبها بمواصفاتك والشركات تبعتلك عروض.', 'Request it your way and companies send you offers.')}</div></div>${planCta('btn-sand btn-sm')}</div>`;
 }
@@ -3019,7 +3033,7 @@ function coStep2(t, dep, q) {
   return `<form class="card card-pad stack" data-f="co-2" novalidate><h2 style="font-size:20px">${tr('راجع حجزك', 'Review your booking')}</h2>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th>${tr('الاسم', 'Name')}</th><th>${tr('السن', 'Age')}</th><th>${tr('الموبايل', 'Mobile')}</th></tr></thead><tbody>${co.travelers.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.name)}</td><td class="num">${esc(x.age)}</td><td dir="ltr" style="text-align:start">${esc(x.phone || '—')}</td></tr>`).join('')}</tbody></table></div>
     <button type="button" class="btn-link small" data-a="co-back" data-s="1" style="align-self:flex-start">${tr('تعديل البيانات', 'Edit details')}</button>
-    <div class="field" style="max-width:420px"><label for="f-code">${tr('كود خصم (اختياري)', 'Promo code (optional)')}</label><div class="row"><input class="input" id="f-code" name="code" value="${esc(co.code)}" dir="ltr" placeholder="NILE10"><button type="button" class="btn btn-soft" data-a="co-code">${tr('تطبيق', 'Apply')}</button></div><span class="hint">${q.campaign && co.code && q.codeOffer ? tr(`عرض "${L(q.campaign.title)}" (${q.campaign.percent}٪) أكبر من الكود، فطبقنا العرض. الخصومات مش بتتجمع.`, `The “${L(q.campaign.title)}” offer (${q.campaign.percent}%) beats the code, so we applied it. Discounts don’t stack.`) : q.campaign ? tr(`عرض "${L(q.campaign.title)}" متطبق تلقائيًا (${q.campaign.percent}٪). الكود هيتطبق بس لو خصمه أكبر.`, `“${L(q.campaign.title)}” is applied automatically (${q.campaign.percent}%). A code only applies if it’s bigger.`) : co.code ? (q.offer ? tr(`تم تطبيق خصم ${q.offer.percent}٪`, `${q.offer.percent}% off applied`) : tr('الكود غير صالح لهذه الرحلة.', 'This code isn’t valid for this trip.')) : tr('جرّب NILE10 على رحلات الأقصر وأسوان، أو WELCOME5', 'Try NILE10 on Luxor & Aswan trips, or WELCOME5')}</span></div>
+    <div class="field" style="max-width:420px"><label for="f-code">${tr('كود خصم (اختياري)', 'Promo code (optional)')}</label><div class="row"><input class="input" id="f-code" name="code" value="${esc(co.code)}" dir="ltr" placeholder="NILE10"><button type="button" class="btn btn-soft" data-a="co-code">${tr('تطبيق', 'Apply')}</button></div><span class="hint">${q.campaign && co.code && q.codeOffer ? tr(`عرض "${esc(L(q.campaign.title))}" (${q.campaign.percent}٪) أكبر من الكود، فطبقنا العرض. الخصومات مش بتتجمع.`, `The “${esc(L(q.campaign.title))}” offer (${q.campaign.percent}%) beats the code, so we applied it. Discounts don’t stack.`) : q.campaign ? tr(`عرض "${esc(L(q.campaign.title))}" متطبق تلقائيًا (${q.campaign.percent}٪). الكود هيتطبق بس لو خصمه أكبر.`, `“${esc(L(q.campaign.title))}” is applied automatically (${q.campaign.percent}%). A code only applies if it’s bigger.`) : co.code ? (q.offer ? tr(`تم تطبيق خصم ${q.offer.percent}٪`, `${q.offer.percent}% off applied`) : tr('الكود غير صالح لهذه الرحلة.', 'This code isn’t valid for this trip.')) : tr('جرّب NILE10 على رحلات الأقصر وأسوان، أو WELCOME5', 'Try NILE10 on Luxor & Aswan trips, or WELCOME5')}</span></div>
     <div class="callout">${ic('info')}<div><b>${tr('سياسة الإلغاء:', 'Cancellation policy:')}</b> ${esc(L(t.policy))}</div></div>
     <label class="check field"><input type="checkbox" name="terms" value="1"><span>${tr('قرأت وأوافق على', 'I have read and accept the')} <a class="btn-link" href="#/page/terms" target="_blank">${tr('الشروط والأحكام', 'terms & conditions')}</a> ${tr('وسياسة الإلغاء الخاصة بالرحلة.', 'and this trip’s cancellation policy.')}</span><span class="err-msg"></span></label>
     <div class="row between wrapx"><button type="button" class="btn btn-ghost" data-a="co-back" data-s="1">${tr('رجوع', 'Back')}</button><button class="btn btn-primary btn-lg" type="submit">${tr('متابعة للدفع', 'Continue to payment')}</button></div></form>`;
@@ -3106,7 +3120,7 @@ function dashLayout(kind, title, content, actions) {
 ACTIONS.side = () => { UI.side = !UI.side; render(); };
 function notifList(list) {
   if (!list.length) return `<div class="card">${empty('bell', tr('لا توجد إشعارات', 'No notifications'), tr('هنبلغك هنا بأي جديد في حجوزاتك.', 'Updates about your bookings will appear here.'))}</div>`;
-  return `<div class="card"><div class="card-h"><h3>${tr('كل الإشعارات', 'All notifications')}</h3><button class="btn btn-ghost btn-sm" data-a="notif-all">${tr('تعليم الكل كمقروء', 'Mark all as read')}</button></div>${list.map((n) => `<a class="notif ${n.read ? '' : 'unread'}" href="${n.link || '#'}" data-a="notif-open" data-id="${n.id}"><span class="n-ic">${ic('bell')}</span><div class="grow"><b style="color:var(--navy)">${esc(L(n.title))}</b><p class="small muted">${esc(L(n.body))}</p></div><span class="xs faint" style="white-space:nowrap">${ago(n.createdAt)}</span></a>`).join('')}</div>`;
+  return `<div class="card"><div class="card-h"><h3>${tr('كل الإشعارات', 'All notifications')}</h3><button class="btn btn-ghost btn-sm" data-a="notif-all">${tr('تعليم الكل كمقروء', 'Mark all as read')}</button></div>${list.map((n) => `<a class="notif ${n.read ? '' : 'unread'}" href="${safeLink(n.link)}" data-a="notif-open" data-id="${n.id}"><span class="n-ic">${ic('bell')}</span><div class="grow"><b style="color:var(--navy)">${esc(L(n.title))}</b><p class="small muted">${esc(L(n.body))}</p></div><span class="xs faint" style="white-space:nowrap">${ago(n.createdAt)}</span></a>`).join('')}</div>`;
 }
 ACTIONS['notif-open'] = (el) => { tx((d) => { const n = byId(d.notifications, el.dataset.id); if (n) n.read = true; }); const l = el.getAttribute('href'); go(l && l !== '#' ? l : location.hash); };
 ACTIONS['notif-all'] = () => { const ids = myNotifs().map((n) => n.id); tx((d) => d.notifications.forEach((n) => { if (ids.includes(n.id)) n.read = true; })); toast(tr('تم تعليم الكل كمقروء.', 'All marked as read.')); render(); };
@@ -3130,7 +3144,7 @@ function viewMe() {
     <div class="kpis">${kpi(tr('رحلات قادمة', 'Upcoming trips'), up.length, '', 'cal', true)}${kpi(tr('رحلات مكتملة', 'Completed trips'), done.length, '', 'check')}${kpi(tr('إجمالي المدفوع', 'Total paid'), money(spent), '', 'wallet')}${kpi(tr('بانتظار تقييمك', 'Awaiting your review'), toReview.length, toReview.length ? `<a class="btn-link" href="#/me/reviews">${tr('قيّم الآن', 'Review now')}</a>` : '', 'star')}</div>
     <div class="grid" style="grid-template-columns:1.4fr 1fr;margin-top:20px;align-items:start" id="me-grid">
       <div class="card"><div class="card-h"><h3>${tr('رحلتك الجاية', 'Your next trip')}</h3><a class="btn-link small" href="#/me/bookings">${tr('كل الحجوزات', 'All bookings')}</a></div>${next ? `<div class="card-pad"><div class="row wrapx" style="align-items:stretch;gap:18px"><img src="${imgSrc(nt.images[0])}" alt="" style="width:220px;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px"><div class="grow stack"><h3>${esc(L(nt.title))}</h3><div class="row wrapx small muted" style="gap:14px"><span>${ic('cal')} ${fmtD(nd.start, { weekday: 'long', day: 'numeric', month: 'long' })}</span><span>${ic('users')} ${next.count}</span></div><div class="callout ok">${ic('clock')}<div>${tr(`باقي ${daysBetween(TODAY, nd.start)} يوم على السفر`, `${daysBetween(TODAY, nd.start)} days to go`)}</div></div><div class="row wrapx"><a class="btn btn-primary btn-sm" href="#/me/booking/${next.ref}">${tr('تفاصيل الحجز', 'Booking details')}</a><button class="btn btn-ghost btn-sm" data-a="dl-confirm" data-id="${next.id}">${ic('download')}${tr('تأكيد الحجز', 'Confirmation')}</button></div></div></div></div>` : empty('compass', tr('مفيش رحلات قادمة', 'No upcoming trips'), tr('اختار وجهتك الجاية واحجز في دقايق.', 'Pick your next destination and book in minutes.'), `<a class="btn btn-primary" href="#/trips">${tr('تصفح الرحلات', 'Browse trips')}</a>`)}</div>
-      <div class="card"><div class="card-h"><h3>${tr('آخر الإشعارات', 'Latest notifications')}</h3><a class="btn-link small" href="#/me/notifications">${tr('الكل', 'All')}</a></div>${myNotifs().slice(0, 4).map((n) => `<a class="notif ${n.read ? '' : 'unread'}" href="${n.link}" data-a="notif-open" data-id="${n.id}"><span class="n-ic">${ic('bell')}</span><div class="grow"><b class="small" style="color:var(--navy)">${esc(L(n.title))}</b><p class="xs muted">${esc(L(n.body))}</p></div></a>`).join('') || `<p class="card-pad muted">${tr('لا يوجد جديد.', 'Nothing new.')}</p>`}</div>
+      <div class="card"><div class="card-h"><h3>${tr('آخر الإشعارات', 'Latest notifications')}</h3><a class="btn-link small" href="#/me/notifications">${tr('الكل', 'All')}</a></div>${myNotifs().slice(0, 4).map((n) => `<a class="notif ${n.read ? '' : 'unread'}" href="${safeLink(n.link)}" data-a="notif-open" data-id="${n.id}"><span class="n-ic">${ic('bell')}</span><div class="grow"><b class="small" style="color:var(--navy)">${esc(L(n.title))}</b><p class="xs muted">${esc(L(n.body))}</p></div></a>`).join('') || `<p class="card-pad muted">${tr('لا يوجد جديد.', 'Nothing new.')}</p>`}</div>
     </div>
     <div class="grid" style="grid-template-columns:1fr 1.6fr;margin-top:20px;align-items:start" id="me-grid2">${topCompaniesCard(5)}
       <div class="card"><div class="card-h"><h3>${tr('رحلات نرشحها لك', 'Recommended for you')}</h3><a class="btn-link small" href="#/compare?ids=${recommendedTrips(3).map((t) => t.id).join(',')}">${tr('قارن بينهم', 'Compare them')}</a></div><div class="card-pad"><p class="small muted" style="margin-bottom:12px">${tr('من الشركات الأعلى تقييمًا، والأولوية للرحلات اللي عليها عروض.', 'From the top‑rated operators, with seasonal offers first.')}</p><div class="grid g2">${recommendedTrips(2).map(tripCard).join('') || `<p class="muted">${tr('مفيش ترشيحات حاليًا.', 'No recommendations right now.')}</p>`}</div></div></div></div>
@@ -3154,7 +3168,7 @@ function viewMyBooking(ref) {
   const pays = db.payments.filter((p) => p.bookingId === b.id), rf = db.refunds.filter((r) => r.bookingId === b.id), rev = db.reviews.find((r) => r.bookingId === b.id);
   const pol = b.status === 'confirmed' ? refundPolicy(b) : null;
   return dashLayout('me', tr('تفاصيل الحجز', 'Booking details'), `
-  ${isNew ? `<div class="callout ok" style="margin-bottom:16px">${ic('check')}<div><b>${tr('تم تأكيد حجزك!', 'Your booking is confirmed!')}</b> ${tr(`بعتنا الإشعار لك ولشركة ${L(c.name)}. هتلاقي التأكيد والفاتورة هنا في أي وقت.`, `We notified you and ${L(c.name)}. Your confirmation and invoice are always here.`)}</div></div>` : ''}
+  ${isNew ? `<div class="callout ok" style="margin-bottom:16px">${ic('check')}<div><b>${tr('تم تأكيد حجزك!', 'Your booking is confirmed!')}</b> ${tr(`بعتنا الإشعار لك ولشركة ${esc(L(c.name))}. هتلاقي التأكيد والفاتورة هنا في أي وقت.`, `We notified you and ${esc(L(c.name))}. Your confirmation and invoice are always here.`)}</div></div>` : ''}
   <div class="pass"><div class="pass-main"><div class="row between wrapx">${badge(BSTAT, b.status)}${badge(PSTAT, b.paymentStatus)}</div><h2 style="margin-top:12px;font-size:22px">${esc(L(t.title))}</h2><div class="row small muted" style="margin-top:6px">${coLogo(c)}${esc(L(c.name))} · <span dir="ltr">${esc(c.phone)}</span></div>
     <div class="kv"><div><small>${tr('السفر', 'Departs')}</small><b>${fmtD(d.start, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</b></div><div><small>${tr('العودة', 'Returns')}</small><b>${fmtD(d.end)}</b></div><div><small>${tr('الوجهة', 'Destination')}</small><b>${esc(L(destById(t.destId).name))}</b></div><div><small>${tr('المسافرون', 'Travellers')}</small><b>${b.count}</b></div><div><small>${tr('الإقامة', 'Stay')}</small><b class="small">${esc(L(t.accommodation)).slice(0, 48)}</b></div><div><small>${tr('الانتقالات', 'Transport')}</small><b class="small">${esc(L(t.transport)).slice(0, 48)}</b></div></div></div>
     <div class="pass-stub"><div><small>${tr('رقم الحجز', 'Booking ref')}</small><b dir="ltr">${b.ref}</b></div><div><small>${tr('الإجمالي', 'Total')}</small><b class="num">${money(b.total)}</b></div><div class="barcode" aria-hidden="true"></div></div></div>
@@ -3239,9 +3253,9 @@ function viewMyProfile() {
   ${passwordCard()}</div>`);
 }
 FORMS['me-profile'] = (f) => { const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], phone: ['req', 'phone'] }); if (!d) return; tx((x) => Object.assign(byId(x.users, me().id), { name: d.name, phone: d.phone, city: d.city })); toast(tr('تم حفظ بياناتك.', 'Details saved.')); render(); };
-const passwordCard = () => `<form class="card card-pad stack" data-f="me-pass" novalidate><h3>${tr('تغيير كلمة المرور', 'Change password')}</h3>${inp('old', tr('كلمة المرور الحالية', 'Current password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="current-password"' })}${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٦ أحرف على الأقل', 'At least 6 characters') })}${inp('nw2', tr('تأكيد كلمة المرور الجديدة', 'Confirm new password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"' })}<div><button class="btn btn-ghost" type="submit">${tr('تحديث كلمة المرور', 'Update password')}</button></div></form>`;
+const passwordCard = () => `<form class="card card-pad stack" data-f="me-pass" novalidate><h3>${tr('تغيير كلمة المرور', 'Change password')}</h3>${inp('old', tr('كلمة المرور الحالية', 'Current password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="current-password"' })}${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٨ أحرف على الأقل', 'At least 8 characters') })}${inp('nw2', tr('تأكيد كلمة المرور الجديدة', 'Confirm new password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"' })}<div><button class="btn btn-ghost" type="submit">${tr('تحديث كلمة المرور', 'Update password')}</button></div></form>`;
 FORMS['me-pass'] = async (f) => {
-  const d = validate(f, { old: ['req'], nw: ['req', 'min6', (v, a) => v !== a.old || tr('اختر كلمة مرور مختلفة عن الحالية.', 'Choose a different password.')], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
+  const d = validate(f, { old: ['req'], nw: ['req', 'pw', (v, a) => v !== a.old || tr('اختر كلمة مرور مختلفة عن الحالية.', 'Choose a different password.')], nw2: ['req', (v, a) => v === a.nw || tr('كلمتا المرور غير متطابقتين.', 'Passwords don’t match.')] }); if (!d) return;
   const btn = $('button[type=submit]', f); busy(btn, true);
   try { await changePassword(d.old, d.nw); f.reset(); toast(tr('تم تحديث كلمة المرور.', 'Password updated.')); }
   catch (e) { const fe = f.elements.old.closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
@@ -3295,7 +3309,7 @@ ACTIONS['co-trip-toggle'] = (el) => { tx((d) => { const t = byId(d.trips, el.dat
 ACTIONS['co-trip-del'] = async (el) => {
   const t = tripById(el.dataset.id); const hasB = db.bookings.some((b) => b.tripId === t.id && b.status !== 'cancelled');
   if (hasB) { if (await confirmDialog({ title: tr('الرحلة عليها حجوزات', 'This trip has bookings'), text: tr('مينفعش تتحذف لأن عليها حجوزات. تقدر توقفها بدل الحذف فتختفي من الموقع وتفضل حجوزاتها كما هي.', 'It can’t be deleted because it has bookings. You can pause it instead — it disappears from the site and its bookings stay intact.'), ok: tr('إيقاف الرحلة', 'Pause trip') })) { tx((d) => { const x = byId(d.trips, t.id); assertCompanyOwns(d, x); x.status = 'inactive'; }); toast(tr('تم إيقاف الرحلة.', 'Trip paused.')); render(); } return; }
-  if (!(await confirmDialog({ title: tr('حذف الرحلة نهائيًا؟', 'Delete trip permanently?'), text: tr(`"${L(t.title)}" ومواعيدها هتتحذف ومش هتقدر ترجعها.`, `“${L(t.title)}” and its dates will be deleted. This can’t be undone.`), ok: tr('حذف نهائي', 'Delete'), danger: true }))) return;
+  if (!(await confirmDialog({ title: tr('حذف الرحلة نهائيًا؟', 'Delete trip permanently?'), text: tr(`"${esc(L(t.title))}" ومواعيدها هتتحذف ومش هتقدر ترجعها.`, `“${esc(L(t.title))}” and its dates will be deleted. This can’t be undone.`), ok: tr('حذف نهائي', 'Delete'), danger: true }))) return;
   tx((d) => { const x = byId(d.trips, t.id); assertCompanyOwns(d, x); d.trips = d.trips.filter((y) => y.id !== t.id); d.departures = d.departures.filter((y) => y.tripId !== t.id); });
   toast(tr('تم حذف الرحلة.', 'Trip deleted.')); render();
 };
@@ -3525,13 +3539,13 @@ function viewAdCompanies() {
 }
 ACTIONS['co-approve'] = async (el) => {
   const c = compById(el.dataset.id);
-  if (!(await confirmDialog({ title: tr('اعتماد الشركة؟', 'Approve this company?'), text: tr(`${L(c.name)} هتقدر تنشر رحلات وتستقبل حجوزات. اتأكد إنك راجعت المستندات: ${(c.docs || []).map((d) => d.name).join('، ')}.`, `${L(c.name)} will be able to publish trips and take bookings. Make sure you reviewed: ${(c.docs || []).map((d) => d.name).join(', ')}.`), ok: tr('اعتماد', 'Approve') }))) return;
+  if (!(await confirmDialog({ title: tr('اعتماد الشركة؟', 'Approve this company?'), text: tr(`${esc(L(c.name))} هتقدر تنشر رحلات وتستقبل حجوزات. اتأكد إنك راجعت المستندات: ${(c.docs || []).map((d) => esc(d.name)).join('، ')}.`, `${esc(L(c.name))} will be able to publish trips and take bookings. Make sure you reviewed: ${(c.docs || []).map((d) => d.name).join(', ')}.`), ok: tr('اعتماد', 'Approve') }))) return;
   tx((d) => { const x = byId(d.companies, c.id); x.status = 'approved'; x.approvedAt = new Date().toISOString(); notify(d, 'company:' + c.id, { ar: 'تم اعتماد شركتك', en: 'Your company is approved' }, { ar: 'تقدر دلوقتي تضيف رحلاتك ومواعيدها.', en: 'You can now add your trips and departures.' }, '#/co/trips'); logAct(d, `تم اعتماد ${x.name.ar}`, `${x.name.en} approved`); });
-  closeModal(); toast(tr(`تم اعتماد ${L(c.name)} وإرسال إشعار لها.`, `${L(c.name)} approved and notified.`)); render();
+  closeModal(); toast(tr(`تم اعتماد ${esc(L(c.name))} وإرسال إشعار لها.`, `${esc(L(c.name))} approved and notified.`)); render();
 };
 ACTIONS['co-reject'] = async (el) => {
   const c = compById(el.dataset.id);
-  const reason = await confirmDialog({ title: tr('رفض الطلب', 'Reject application'), text: tr(`هيتبعت سبب الرفض لـ ${L(c.name)}.`, `The reason will be sent to ${L(c.name)}.`), ok: tr('رفض الطلب', 'Reject'), danger: true, input: tr('سبب الرفض', 'Reason') });
+  const reason = await confirmDialog({ title: tr('رفض الطلب', 'Reject application'), text: tr(`هيتبعت سبب الرفض لـ ${esc(L(c.name))}.`, `The reason will be sent to ${esc(L(c.name))}.`), ok: tr('رفض الطلب', 'Reject'), danger: true, input: tr('سبب الرفض', 'Reason') });
   if (reason === false) return;
   tx((d) => { const x = byId(d.companies, c.id); x.status = 'rejected'; x.rejectReason = reason; notify(d, 'company:' + c.id, { ar: 'تم رفض الطلب', en: 'Application declined' }, { ar: reason || 'تواصل معنا للتفاصيل.', en: reason || 'Contact us for details.' }, '#/co'); logAct(d, `تم رفض ${x.name.ar}`, `${x.name.en} rejected`); });
   closeModal(); toast(tr('تم رفض الطلب.', 'Application rejected.')); render();
@@ -3554,7 +3568,7 @@ const rateInput = (c) => `<div class="row" style="gap:6px;flex-wrap:nowrap"><spa
 ACTIONS['co-rate'] = (el) => {
   const v = +el.dataset.v || null, c = compById(el.dataset.id);
   tx((d) => { const x = byId(d.companies, c.id); x.platformRating = v; if (v) notify(d, 'company:' + c.id, { ar: 'تقييم رحلاتي لشركتك', en: 'Your Rehlati rating' }, { ar: `قيّم فريق رحلاتي شركتك بـ ${v} من ٥. التقييم بيظهر للعملاء في الترشيحات.`, en: `The Rehlati team rated your company ${v} of 5. It appears in customer recommendations.` }, '#/co'); logAct(d, `تقييم رحلاتي لـ ${x.name.ar}: ${v || 'بدون'}`, `Rehlati rating for ${x.name.en}: ${v || 'cleared'}`); });
-  toast(v ? tr(`تم تقييم ${L(c.name)} بـ ${v} من ٥.`, `${L(c.name)} rated ${v} of 5.`) : tr('تم مسح التقييم.', 'Rating cleared.'));
+  toast(v ? tr(`تم تقييم ${esc(L(c.name))} بـ ${v} من ٥.`, `${esc(L(c.name))} rated ${v} of 5.`) : tr('تم مسح التقييم.', 'Rating cleared.'));
   const y = scrollY; render(); scrollTo(0, y);
 };
 
@@ -3616,7 +3630,7 @@ FORMS.cp = (f) => {
 ACTIONS['cp-toggle'] = (el) => { tx((x) => { const c = x.settings.campaigns.find((y) => y.id === el.dataset.id); c.active = !c.active; }); const c = campaigns().find((y) => y.id === el.dataset.id); toast(c.active ? tr('تم تفعيل العرض.', 'Offer activated.') : tr('تم إيقاف العرض. مش هيظهر للعملاء.', 'Offer paused and hidden from customers.')); render(); };
 ACTIONS['cp-del'] = async (el) => {
   const c = campaigns().find((y) => y.id === el.dataset.id);
-  if (!(await confirmDialog({ title: tr('حذف العرض؟', 'Delete offer?'), text: tr(`"${L(c.title)}" هيختفي فورًا. الحجوزات اللي اتعملت بالعرض هتحتفظ بخصمها.`, `“${L(c.title)}” disappears immediately. Bookings already made keep their discount.`), ok: tr('حذف', 'Delete'), danger: true }))) return;
+  if (!(await confirmDialog({ title: tr('حذف العرض؟', 'Delete offer?'), text: tr(`"${esc(L(c.title))}" هيختفي فورًا. الحجوزات اللي اتعملت بالعرض هتحتفظ بخصمها.`, `“${esc(L(c.title))}” disappears immediately. Bookings already made keep their discount.`), ok: tr('حذف', 'Delete'), danger: true }))) return;
   tx((x) => { x.settings.campaigns = x.settings.campaigns.filter((y) => y.id !== c.id); });
   toast(tr('تم حذف العرض.', 'Offer deleted.')); render();
 };
@@ -3696,7 +3710,7 @@ function viewAdFinance() {
   <div style="margin-top:20px">${dataTable({ id: 'adtx', title: tr('المعاملات المالية', 'Financial transactions'), rows: txs, defaultSort: 'createdAt', export: true, exportName: 'transactions', searchText: (r) => r.b.ref + ' ' + r.txn,
     filters: [{ key: 'st', label: tr('كل الأنواع', 'All types'), options: [['paid', tr('مدفوع', 'Paid')], ['failed', tr('فشل', 'Failed')], ['refund', tr('استرداد', 'Refund')]], test: (r, v) => r.status === v }, { key: 'm', label: tr('كل الطرق', 'All methods'), options: Object.entries(GATEWAYS).map(([k, g]) => [k, L(g.name)]), test: (r, v) => r.method === v }],
     csvCols: [{ label: tr('التاريخ', 'Date'), csv: (r) => r.createdAt }, { label: 'Ref', csv: (r) => r.b.ref }, { label: 'TXN', csv: (r) => r.txn }, { label: tr('الطريقة', 'Method'), csv: (r) => r.method }, { label: tr('المبلغ', 'Amount'), csv: (r) => r.amount }, { label: tr('العمولة', 'Commission'), csv: (r) => r.status === 'paid' ? r.b.commission : 0 }, { label: tr('الحالة', 'Status'), csv: (r) => r.status }],
-    cols: [{ key: 'createdAt', label: tr('التاريخ', 'Date'), render: (r) => `<span class="small">${fmtDT(r.createdAt)}</span>` }, { key: 'ref', label: tr('الحجز', 'Booking'), sortVal: (r) => r.b.ref, render: (r) => `<button class="btn-link ref" data-a="ad-bk" data-id="${r.b.id}">${r.b.ref}</button>` }, { key: 'txn', label: tr('رقم العملية', 'Transaction'), render: (r) => `<span class="ref faint">${r.txn || '—'}</span>` }, { key: 'method', label: tr('الطريقة', 'Method'), render: (r) => esc(L(GATEWAYS[r.method].name)) }, { key: 'amount', label: tr('المبلغ', 'Amount'), render: (r) => `<b class="num" style="color:${r.amount < 0 ? 'var(--teal-700)' : 'var(--navy)'}">${money(r.amount)}</b>` }, { key: 'comm', label: tr('عمولة الحجز', 'Commission'), sort: false, render: (r) => r.status === 'paid' ? `<span class="num">${money(r.b.commission)}</span> <span class="xs faint">${r.b.commissionRate}٪</span>` : '—' }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(PSTAT, r.status) }] })}</div>
+    cols: [{ key: 'createdAt', label: tr('التاريخ', 'Date'), render: (r) => `<span class="small">${fmtDT(r.createdAt)}</span>` }, { key: 'ref', label: tr('الحجز', 'Booking'), sortVal: (r) => r.b.ref, render: (r) => `<button class="btn-link ref" data-a="ad-bk" data-id="${r.b.id}">${r.b.ref}</button>` }, { key: 'txn', label: tr('رقم العملية', 'Transaction'), render: (r) => `<span class="ref faint">${esc(r.txn || '—')}</span>` }, { key: 'method', label: tr('الطريقة', 'Method'), render: (r) => esc(L(GATEWAYS[r.method].name)) }, { key: 'amount', label: tr('المبلغ', 'Amount'), render: (r) => `<b class="num" style="color:${r.amount < 0 ? 'var(--teal-700)' : 'var(--navy)'}">${money(r.amount)}</b>` }, { key: 'comm', label: tr('عمولة الحجز', 'Commission'), sort: false, render: (r) => r.status === 'paid' ? `<span class="num">${money(r.b.commission)}</span> <span class="xs faint">${r.b.commissionRate}٪</span>` : '—' }, { key: 'status', label: tr('الحالة', 'Status'), render: (r) => badge(PSTAT, r.status) }] })}</div>
   <style>@media(max-width:1100px){#fin-grid{grid-template-columns:1fr!important}}</style>`);
 }
 FORMS['ad-comm'] = (f) => { const d = validate(f, { commission: ['req', 'pct'] }); if (!d) return; tx((x) => { x.settings.commission = +d.commission; logAct(x, `تغيير العمولة الافتراضية إلى ${d.commission}٪`, `Default commission set to ${d.commission}%`); }); toast(tr('تم حفظ العمولة الافتراضية.', 'Default commission saved.')); render(); };

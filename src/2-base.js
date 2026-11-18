@@ -202,4 +202,9 @@ function artURL(kind, v) {
   return ART_CACHE[k];
 }
 /** Image entries are either "art:kind:variant" or uploaded data URLs. */
-const imgSrc = (x) => (typeof x === 'string' && x.startsWith('art:')) ? artURL(x.split(':')[1], +x.split(':')[2] || 0) : x;
+/* Only these image sources are ever put into src="": generated art, our own assets, or base64 raster data.
+   Anything else (javascript:, quotes, SVG, remote URLs) falls back to neutral art. Mirrors _safe_img() on the server. */
+const SAFE_IMG = /^(assets\/[A-Za-z0-9_./-]+|data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+)$/;
+const imgSrc = (x) => (typeof x === 'string' && /^art:[a-z]+:[0-9]+$/.test(x)) ? artURL(x.split(':')[1], +x.split(':')[2] || 0) : (typeof x === 'string' && SAFE_IMG.test(x) ? x : artURL('sea', 0));
+const safeColor = (c) => (/^#[0-9A-Fa-f]{3,8}$/.test(String(c || '')) ? c : '#20A6A6');
+const safeLink = (l) => (/^#\/[A-Za-z0-9/_?=&.%,:-]{0,200}$/.test(String(l || '')) ? l : '#');
