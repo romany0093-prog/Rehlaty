@@ -387,3 +387,10 @@ create index if not exists settlements_company_id_idx on public.settlements (com
 create index if not exists trips_company_id_idx on public.trips (company_id);
 create index if not exists payments_customer_id_idx on public.payments (customer_id);
 create index if not exists payments_company_id_idx on public.payments (company_id);
+
+-- fixed search_path for the helper functions (Supabase advisor 0011)
+alter function public._safe_img(text) set search_path = public;
+alter function public._safe_id(text) set search_path = public;
+alter function public._safe_link(text) set search_path = public;
+alter function public._client_ip() set search_path = public;
+alter function public._clean_travelers(jsonb) set search_path = public;
