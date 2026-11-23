@@ -168,8 +168,8 @@ function lineChart({ labels, values, h, color }) {
   let g = '';
   for (let i = 0; i <= 4; i++) { const y = pad.t + ih - (ih * i) / 4; g += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y}" y2="${y}" stroke="#EEF2F6"/><text x="${pad.l - 8}" y="${y + 4}" text-anchor="end">${Math.round((max * i) / 4)}</text>`; }
   const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ' ' + p[1]).join(' ');
-  g += `<path d="${d} L${pts[pts.length - 1][0]} ${pad.t + ih} L${pts[0][0]} ${pad.t + ih}z" fill="${color || '#20A6A6'}" opacity=".12"/><path d="${d}" fill="none" stroke="${color || '#20A6A6'}" stroke-width="2.5" stroke-linejoin="round"/>`;
-  pts.forEach((p, i) => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#fff" stroke="${color || '#20A6A6'}" stroke-width="2"><title>${fmtN(values[i])}</title></circle><text x="${p[0]}" y="${h - 8}" text-anchor="middle">${esc(labels[i])}</text>`; });
+  g += `<path d="${d} L${pts[pts.length - 1][0]} ${pad.t + ih} L${pts[0][0]} ${pad.t + ih}z" fill="${color || '#3D6C93'}" opacity=".12"/><path d="${d}" fill="none" stroke="${color || '#3D6C93'}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  pts.forEach((p, i) => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#fff" stroke="${color || '#3D6C93'}" stroke-width="2"><title>${fmtN(values[i])}</title></circle><text x="${p[0]}" y="${h - 8}" text-anchor="middle">${esc(labels[i])}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${h}" role="img" style="direction:ltr">${g}</svg>`;
 }
 const kpi = (label, value, sub, icon, hl) => `<div class="card kpi ${hl ? 'hl' : ''}"><small><span class="ic">${ic(icon || 'chart')}</span>${label}</small><b class="num">${value}</b>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;

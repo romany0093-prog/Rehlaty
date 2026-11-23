@@ -11,7 +11,7 @@ Authentication → URL Configuration
 
 ## ٢. نص الإيميل بالعربي
 Authentication → Emails → Templates → **Reset password**
-- Subject: `إعادة تعيين كلمة المرور – رحلاتي`
+- Subject: `إعادة تعيين كلمة المرور – UTravel`
 - Body: انسخ محتوى `email-reset-password.html`
 
 ## ٣. خدمة إرسال الإيميل (ضروري قبل ما العملاء يستخدموها)
@@ -19,6 +19,6 @@ Authentication → Emails → Templates → **Reset password**
 للعملاء والشركات: Project Settings → Authentication → **SMTP Settings** → Enable custom SMTP، وحط بيانات خدمة زي Brevo (خطة مجانية):
 - Host: `smtp-relay.brevo.com` · Port: `587`
 - Username / Password: من حسابك على Brevo (SMTP & API → SMTP)
-- Sender email: إيميل أكّدته على Brevo · Sender name: `رحلاتي`
+- Sender email: إيميل أكّدته على Brevo · Sender name: `UTravel`
 
 بعد تفعيل SMTP ارفع حد الإرسال من Authentication → Rate Limits لو احتجت.

@@ -67,7 +67,7 @@ with sync_playwright() as p:
     pg.screenshot(path=O + 'n6-admin-rate.png')
     pg.click('[data-a=co-rate][data-id=c4][data-v="5"]'); pg.wait_for_timeout(300)
     ok('admin sets rating c4=5', pg.evaluate("compById('c4').platformRating") == 5)
-    ok('company notified of rating', pg.evaluate("db.notifications.some(n=>n.to==='company:c4' && /تقييم رحلاتي/.test(n.title.ar))"))
+    ok('company notified of rating', pg.evaluate("db.notifications.some(n=>n.to==='company:c4' && /تقييم UTravel/.test(n.title.ar))"))
     pg.click('[data-a=co-rate][data-id=c4][data-v="0"]'); pg.wait_for_timeout(300)
     ok('admin clears rating', pg.evaluate("compById('c4').platformRating") is None)
     pg.click('[data-a=co-rate][data-id=c2][data-v="5"]'); pg.wait_for_timeout(200)

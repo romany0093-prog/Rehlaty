@@ -2,9 +2,9 @@
 /* ---------- 6b. Seasonal offers, platform rating, trip comparison ---------- */
 const seasonChip = (c) => { const s = SEASONS[c.season] || SEASONS.christmas; return `<span class="offer-chip" style="background:${s.c}">${ic(s.i)}${esc(L(s.l))}</span>`; };
 const starPath = '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>';
-/** Rehlaty's own rating of a company: n of 5 filled stars */
+/** UTravel's own rating of a company: n of 5 filled stars */
 const pStars = (n) => `<span class="pstars" role="img" aria-label="${tr(`${n} من ٥`, `${n} of 5`)}">${[1, 2, 3, 4, 5].map((i) => `<svg viewBox="0 0 24 24" class="${i <= n ? 'on' : ''}">${starPath}</svg>`).join('')}</span>`;
-const prate = (c) => (c && c.platformRating ? `<span class="prate" title="${tr('تقييم فريق رحلاتي للشركة', 'Rehlati team’s rating of this company')}">${pStars(c.platformRating)}${tr('تقييم رحلاتي', 'Rehlati rating')}</span>` : '');
+const prate = (c) => (c && c.platformRating ? `<span class="prate" title="${tr('تقييم فريق UTravel للشركة', 'UTravel team’s rating of this company')}">${pStars(c.platformRating)}${tr('تقييم UTravel', 'UTravel rating')}</span>` : '');
 
 /* ---- homepage: live seasonal offers ---- */
 function campaignCard(c) {
@@ -24,7 +24,7 @@ function homeOffers() {
 function viewOffers() {
   const live = liveCampaigns(), soon = campaigns().filter((c) => campaignState(c) === 'upcoming' && (compById(c.companyId) || {}).status === 'approved');
   const band = (c) => { const co = compById(c.companyId), trips = (c.tripIds || []).map(tripById).filter((t) => t && publicTrips().includes(t)); if (!trips.length) return ''; return `<section class="camp-band" style="margin-bottom:24px" id="${c.id}"><div class="bh">${seasonChip(c)}<div class="grow"><h2 style="font-size:20px">${esc(L(c.title))}</h2><p class="small muted">${esc(L(c.note || {}))} · ${esc(L(co.name))} · ${tr(`للحجز من ${fmtD(c.from)} حتى ${fmtD(c.until)}`, `Book ${fmtD(c.from)} – ${fmtD(c.until)}`)}</p></div><span class="price num" style="color:var(--ok)">−${c.percent}٪</span></div><div class="card-pad"><div class="grid g3">${trips.map(tripCard).join('')}</div></div></section>`; };
-  return publicLayout(`<section class="phead"><div class="wrap"><h1>${tr('عروض الموسم', 'Seasonal offers')}</h1><p>${tr('عروض الكريسماس ونصف العام والصيف والعيد، بالاتفاق مع شركات السياحة على رحلاتي.', 'Christmas, mid‑year, summer and Eid offers agreed with Rehlati’s tour operators.')}</p></div></section>
+  return publicLayout(`<section class="phead"><div class="wrap"><h1>${tr('عروض الموسم', 'Seasonal offers')}</h1><p>${tr('عروض الكريسماس ونصف العام والصيف والعيد، بالاتفاق مع شركات السياحة على UTravel.', 'Christmas, mid‑year, summer and Eid offers agreed with UTravel’s tour operators.')}</p></div></section>
   <div class="wrap sec" style="padding-top:28px">${live.length ? live.map(band).join('') : `<div class="card">${empty('tag', tr('مفيش عروض شغالة دلوقتي', 'No offers running right now'), tr('تابعنا، العروض الجاية هتظهر هنا.', 'Upcoming offers will appear here.'), `<a class="btn btn-primary" href="#/trips">${tr('تصفح كل الرحلات', 'Browse all trips')}</a>`)}</div>`}
   ${soon.length ? `<h2 style="margin:12px 0 14px">${tr('عروض قادمة', 'Coming soon')}</h2><div class="grid g3">${soon.map((c) => `<div class="card card-pad stack">${seasonChip(c)}<h3>${esc(L(c.title))}</h3><p class="small muted">${esc(L((compById(c.companyId) || {}).name))} · ${tr(`تبدأ ${fmtD(c.from)}`, `Starts ${fmtD(c.from)}`)}</p><b style="color:var(--ok)">${tr(`خصم ${c.percent}٪`, `${c.percent}% off`)}</b></div>`).join('')}</div>` : ''}</div>`);
 }
@@ -86,7 +86,7 @@ function viewCompare() {
   const table = rows.length ? `<div class="cmp-wrap"><table class="cmp"><thead><tr><th scope="row" style="vertical-align:bottom">${tr(`${rows.length} رحلات`, `${rows.length} trips`)}${rows.length > 1 ? `<div style="margin-top:8px"><button class="btn-link small" data-a="cmp-clear">${tr('مسح الكل', 'Clear all')}</button></div>` : ''}</th>${rows.map((r) => `<td class="tt"><img src="${imgSrc(r.t.images[0])}" alt=""><a href="#/trip/${r.t.id}"><b style="color:var(--navy)">${esc(L(r.t.title))}</b></a><div style="margin-top:8px"><button class="btn-link small" data-a="cmp-remove" data-id="${r.t.id}">${tr('إزالة', 'Remove')}</button></div></td>`).join('')}</tr></thead><tbody>
     ${R(tr('الوجهة', 'Destination'), (r) => `<td><span class="row" style="gap:5px;color:var(--teal-700);font-weight:600">${ic('pin')}${esc(L(destById(r.t.destId).name))}</span><div class="xs muted">${esc(L(catById(r.t.catId).name))}</div></td>`)}
     ${R(tr('الشركة', 'Operator'), (r) => `<td><a class="row" href="#/company/${r.c.id}" style="gap:8px">${coLogo(r.c)}<b style="color:var(--navy)">${esc(L(r.c.name))}</b></a></td>`)}
-    ${R(tr('تقييم رحلاتي للشركة', 'Rehlati rating'), (r) => cell(+r.c.platformRating || 0, bPr, r.c.platformRating ? pStars(r.c.platformRating) : `<span class="faint">${tr('لم تُقيَّم بعد', 'Not rated yet')}</span>`))}
+    ${R(tr('تقييم UTravel للشركة', 'UTravel rating'), (r) => cell(+r.c.platformRating || 0, bPr, r.c.platformRating ? pStars(r.c.platformRating) : `<span class="faint">${tr('لم تُقيَّم بعد', 'Not rated yet')}</span>`))}
     ${R(tr('تقييم العملاء للشركة', 'Customer rating (company)'), (r) => cell(r.cr.avg, bCo, starsHTML(r.cr.avg, r.cr.count)))}
     ${R(tr('تقييم الرحلة', 'Trip rating'), (r) => cell(r.s.rating, bRate, starsHTML(r.s.rating, r.s.reviews)))}
     ${R(tr('السعر يبدأ من / للفرد', 'From / person'), (r) => cell(r.price, bPrice, `<b class="price num" style="font-size:18px">${money(r.price)}</b>${r.camp ? `<div><s class="was">${money(r.s.minPrice)}</s> ${seasonChip(r.camp)}</div>` : ''}`))}
@@ -109,8 +109,8 @@ function topCompaniesCard(limit) {
   const list = rankedCompanies().slice(0, limit || 5);
   if (!list.length) return '';
   return `<div class="card"><div class="card-h"><h3>${tr('الشركات الأعلى تقييمًا', 'Top‑rated operators')}</h3><a class="btn-link small" href="#/companies">${tr('كل الشركات', 'All operators')}</a></div><div class="card-pad stack">
-    ${list.map((x, i) => `<a class="row" href="#/company/${x.c.id}" style="gap:12px;align-items:center"><span class="rank ${i === 0 ? 'r1' : ''}">${i + 1}</span>${coLogo(x.c, 'md')}<div class="grow" style="min-width:0"><b style="color:var(--navy)">${esc(L(x.c.name))}</b><div class="row wrapx xs muted" style="gap:10px;margin-top:2px">${x.pr ? `<span class="row" style="gap:4px">${pStars(x.pr)}${tr('رحلاتي', 'Rehlati')}</span>` : ''}<span>${starsHTML(x.cr.avg, x.cr.count)}</span><span>${tr(`${x.trips} رحلة`, `${x.trips} trips`)}</span></div></div>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</a>`).join('')}
-    <p class="xs faint">${tr('الترتيب حسب تقييم فريق رحلاتي للشركة، وبعده تقييمات العملاء اللي سافروا معاها.', 'Ranked by the Rehlati team’s rating, then by reviews from travellers who went with them.')}</p></div></div>`;
+    ${list.map((x, i) => `<a class="row" href="#/company/${x.c.id}" style="gap:12px;align-items:center"><span class="rank ${i === 0 ? 'r1' : ''}">${i + 1}</span>${coLogo(x.c, 'md')}<div class="grow" style="min-width:0"><b style="color:var(--navy)">${esc(L(x.c.name))}</b><div class="row wrapx xs muted" style="gap:10px;margin-top:2px">${x.pr ? `<span class="row" style="gap:4px">${pStars(x.pr)}${tr('UTravel', 'UTravel')}</span>` : ''}<span>${starsHTML(x.cr.avg, x.cr.count)}</span><span>${tr(`${x.trips} رحلة`, `${x.trips} trips`)}</span></div></div>${ic(LANG === 'ar' ? 'chev' : 'chevr')}</a>`).join('')}
+    <p class="xs faint">${tr('الترتيب حسب تقييم فريق UTravel للشركة، وبعده تقييمات العملاء اللي سافروا معاها.', 'Ranked by the UTravel team’s rating, then by reviews from travellers who went with them.')}</p></div></div>`;
 }
 function recommendedTrips(n) {
   const u = me(), mine = new Set(db.bookings.filter((b) => b.customerId === (u || {}).id).map((b) => b.tripId));

@@ -118,7 +118,7 @@ function acceptOffer(id) {
     if (o.validUntil < iso(TODAY)) throw reqErr('OFFER_EXPIRED');
     const co = byId(d.companies, o.companyId); if (!co || co.status !== 'approved') throw new AppError('UNAVAILABLE', tr('الشركة دي مش متاحة حاليًا.', 'This company isn’t available right now.'));
     const n = reqPax(r), dest = byId(d.destinations, o.destId) || { art: 'sea' };
-    const t = { id: uid('tp'), companyId: o.companyId, status: 'private', createdAt: new Date().toISOString(), title: { ar: o.title, en: o.title }, summary: { ar: o.notes || '', en: '' }, desc: { ar: o.notes || '', en: '' }, destId: o.destId, catId: o.catId || 'family', days: daysBetween(o.start, o.end) + 1, basePrice: o.price, itinerary: o.program || [], accommodation: { ar: o.stay || '', en: '' }, transport: { ar: o.transport || '', en: '' }, included: o.included || [], excluded: o.excluded || [], policy: { ar: 'نفس سياسة الإلغاء على رحلاتي: استرداد كامل قبل ١٤ يومًا، ٥٠٪ من ١٤ إلى ٧ أيام، ولا استرداد خلال ٧ أيام.', en: '' }, images: ['art:' + dest.art + ':0'], seats: n, requestId: r.id, offerId: o.id, requestCustomer: r.customerId, custom: true };
+    const t = { id: uid('tp'), companyId: o.companyId, status: 'private', createdAt: new Date().toISOString(), title: { ar: o.title, en: o.title }, summary: { ar: o.notes || '', en: '' }, desc: { ar: o.notes || '', en: '' }, destId: o.destId, catId: o.catId || 'family', days: daysBetween(o.start, o.end) + 1, basePrice: o.price, itinerary: o.program || [], accommodation: { ar: o.stay || '', en: '' }, transport: { ar: o.transport || '', en: '' }, included: o.included || [], excluded: o.excluded || [], policy: { ar: 'نفس سياسة الإلغاء على UTravel: استرداد كامل قبل ١٤ يومًا، ٥٠٪ من ١٤ إلى ٧ أيام، ولا استرداد خلال ٧ أيام.', en: '' }, images: ['art:' + dest.art + ':0'], seats: n, requestId: r.id, offerId: o.id, requestCustomer: r.customerId, custom: true };
     const dep = { id: uid('dp'), tripId: t.id, start: o.start, end: o.end, price: o.price, seats: n, status: 'open' };
     d.trips.push(t); d.departures.push(dep);
     Object.assign(o, { status: 'accepted', tripId: t.id, departureId: dep.id, updatedAt: new Date().toISOString() });
@@ -176,7 +176,7 @@ function thread(r, cid, viewer) {
   const msgs = reqMsgs(r.id, cid), co = compById(cid) || { name: '' };
   const canWrite = r.status !== 'cancelled';
   return `<div class="thread"><div class="msgs">${msgs.length ? msgs.map((m) => `<div class="msg ${m.sender === viewer ? 'mine' : ''}"><div class="mb">${esc(m.text)}</div><div class="xs faint">${m.sender === 'company' ? esc(L(co.name)) : (viewer === 'customer' ? tr('إنت', 'You') : tr('العميل', 'Customer'))} · ${ago(m.createdAt)}</div></div>`).join('') : `<p class="small muted">${viewer === 'customer' ? tr('اسأل الشركة عن أي تفصيلة قبل ما تقرر.', 'Ask the company anything before you decide.') : tr('اسأل العميل لو محتاج توضيح قبل ما تبعت السعر.', 'Ask the customer anything before you price it.')}</p>`}</div>
-    ${canWrite ? `<form data-f="req-msg" data-r="${r.id}" data-c="${cid}" class="row" style="align-items:flex-start;margin-top:10px" novalidate><div class="field grow"><textarea class="textarea" name="text" rows="1" style="min-height:42px" maxlength="1000" placeholder="${tr('اكتب رسالتك…', 'Write a message…')}" aria-label="${tr('رسالة', 'Message')}"></textarea><span class="err-msg"></span></div><button class="btn btn-soft" type="submit">${tr('إرسال', 'Send')}</button></form><p class="xs faint" style="margin-top:4px">${tr('للحفاظ على حقك، خلّي الاتفاق والدفع على رحلاتي.', 'To stay protected, keep the agreement and payment on Rehlati.')}</p>` : ''}</div>`;
+    ${canWrite ? `<form data-f="req-msg" data-r="${r.id}" data-c="${cid}" class="row" style="align-items:flex-start;margin-top:10px" novalidate><div class="field grow"><textarea class="textarea" name="text" rows="1" style="min-height:42px" maxlength="1000" placeholder="${tr('اكتب رسالتك…', 'Write a message…')}" aria-label="${tr('رسالة', 'Message')}"></textarea><span class="err-msg"></span></div><button class="btn btn-soft" type="submit">${tr('إرسال', 'Send')}</button></form><p class="xs faint" style="margin-top:4px">${tr('للحفاظ على حقك، خلّي الاتفاق والدفع على UTravel.', 'To stay protected, keep the agreement and payment on UTravel.')}</p>` : ''}</div>`;
 }
 FORMS['req-msg'] = async (f) => {
   const d = validate(f, { text: ['req'] }); if (!d) return;
@@ -338,7 +338,7 @@ ACTIONS['offers-compare'] = (el) => {
     ${R(tr('السعر للفرد', 'Per person'), (x) => cell(x.o.price, bP, `<b class="num">${money(x.o.price)}</b>`))}
     ${R(tr('الإجمالي', 'Total'), (x) => `<td class="num">${money(x.o.total)}</td>`)}
     ${R(tr('الميزانية', 'Budget'), (x) => `<td>${budgetBadge(r, x.o) || '—'}</td>`)}
-    ${R(tr('تقييم رحلاتي', 'Rehlati rating'), (x) => cell(+x.c.platformRating || 0, bR, x.c.platformRating ? pStars(x.c.platformRating) : '—'))}
+    ${R(tr('تقييم UTravel', 'UTravel rating'), (x) => cell(+x.c.platformRating || 0, bR, x.c.platformRating ? pStars(x.c.platformRating) : '—'))}
     ${R(tr('تقييم العملاء', 'Customer rating'), (x) => cell(x.cr.avg, bC, starsHTML(x.cr.avg, x.cr.count)))}
     ${R(tr('الوجهة', 'Destination'), (x) => `<td>${esc(L((destById(x.o.destId) || { name: '' }).name))}</td>`)}
     ${R(tr('التاريخ', 'Dates'), (x) => `<td>${fmtDS(x.o.start)} – ${fmtDS(x.o.end)}</td>`)}
@@ -431,8 +431,8 @@ function viewAdRequests() {
 /* ---------- entry points ---------- */
 const planCta = (cls) => `<a class="btn ${cls || 'btn-sand'}" href="#/plan">${ic('compass')}${tr('خطط رحلتك بنفسك', 'Plan your own trip')}</a>`;
 function homePlanBand() {
-  return `<section class="sec" style="padding-top:8px"><div class="wrap"><div class="plan-band"><div class="grow"><h2>${tr('مش لاقي الرحلة اللي في دماغك؟', 'Can’t find the trip you have in mind?')}</h2><p>${tr('اكتب الوجهة والتاريخ والميزانية والبرنامج اللي نفسك فيه، وشركات السياحة على رحلاتي تبعتلك عروضها وانت تختار.', 'Describe the destination, dates, budget and programme you want — Rehlati’s tour operators send you offers and you choose.')}</p>
-    <ol class="plan-steps"><li><b>${tr('اكتب طلبك', 'Describe it')}</b><span>${tr('في ٣ خطوات', 'in 3 steps')}</span></li><li><b>${tr('استقبل العروض', 'Get offers')}</b><span>${tr('من الشركات المعتمدة', 'from approved operators')}</span></li><li><b>${tr('قارن واحجز', 'Compare & book')}</b><span>${tr('وادفع على المنصة', 'and pay on Rehlati')}</span></li></ol></div>${planCta('btn-sand btn-lg')}</div></div></section>`;
+  return `<section class="sec" style="padding-top:8px"><div class="wrap"><div class="plan-band"><div class="grow"><h2>${tr('مش لاقي الرحلة اللي في دماغك؟', 'Can’t find the trip you have in mind?')}</h2><p>${tr('اكتب الوجهة والتاريخ والميزانية والبرنامج اللي نفسك فيه، وشركات السياحة على UTravel تبعتلك عروضها وانت تختار.', 'Describe the destination, dates, budget and programme you want — UTravel’s tour operators send you offers and you choose.')}</p>
+    <ol class="plan-steps"><li><b>${tr('اكتب طلبك', 'Describe it')}</b><span>${tr('في ٣ خطوات', 'in 3 steps')}</span></li><li><b>${tr('استقبل العروض', 'Get offers')}</b><span>${tr('من الشركات المعتمدة', 'from approved operators')}</span></li><li><b>${tr('قارن واحجز', 'Compare & book')}</b><span>${tr('وادفع على المنصة', 'and pay on UTravel')}</span></li></ol></div>${planCta('btn-sand btn-lg')}</div></div></section>`;
 }
 function meRequestsCard() {
   const reqs = openOfMine(), news = customerNewsTotal(), withOffers = myRequests().find((r) => customerNews(r).total);

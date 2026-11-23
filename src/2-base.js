@@ -1,5 +1,5 @@
 /* =========================================================================
-   رحلاتي — Rehlati: Multi-vendor tourism marketplace (single-file prototype)
+   UTravel (formerly رحلاتي / Rehlati): Multi-vendor tourism marketplace (single-file prototype)
    Architecture (mirrors the target Next.js + Prisma design):
      1. Base: i18n (tr), formatting, icons, destination artwork
      2. Seed: realistic Egyptian demo data
@@ -46,6 +46,22 @@ const ago = (d) => {
   return fmtD(d);
 };
 const nightsLabel = (days) => days <= 1 ? tr('يوم واحد', '1 day') : tr(`${days} أيام / ${days - 1} ليالٍ`, `${days} days / ${days - 1} nights`);
+/* ---------- UTravel brand ----------
+   The customised "T" (gold serif T over a globe with a compass star) is drawn as geometry, so it stays
+   crisp at any size; the rest of the wordmark is set in the brand serif (Marcellus). Colours come from
+   CSS custom properties, so the same mark serves light, dark and monochrome backgrounds. */
+const BRAND = { name: 'UTravel', tagline: 'Your Choice. Your Journey.' };
+const brandT = (cls) => `<svg class="ut-t ${cls || ''}" viewBox="0 0 64 80" aria-hidden="true" focusable="false"><defs>
+<linearGradient id="utGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ut-gold-1,#DCC48F)"/><stop offset=".55" style="stop-color:var(--ut-gold-2,#C8A96E)"/><stop offset="1" style="stop-color:var(--ut-gold-3,#A9874B)"/></linearGradient>
+<radialGradient id="utGlobe" cx=".42" cy=".36" r=".72"><stop offset="0" style="stop-color:var(--ut-globe-1,#F7F1E4)"/><stop offset="1" style="stop-color:var(--ut-globe-2,#DDCCA8)"/></radialGradient></defs>
+<circle cx="32" cy="45" r="19" fill="url(#utGlobe)" style="stroke:var(--ut-gold-2,#C8A96E)" stroke-width="1.1"/>
+<g fill="none" style="stroke:var(--ut-gold-2,#C8A96E)" stroke-width=".8"><ellipse cx="32" cy="45" rx="8" ry="19" opacity=".75"/><ellipse cx="32" cy="45" rx="14.5" ry="19" opacity=".45"/><path d="M13 45H51" opacity=".6"/><path d="M15.5 36.5Q32 32.5 48.5 36.5M15.5 53.5Q32 57.5 48.5 53.5" opacity=".5"/></g>
+<path d="M3 6H61V17.5C58 15.2 55 14.2 50.5 14.2H37.6V69.6C37.6 72.8 39.6 74.4 43.2 74.9V77H20.8V74.9C24.4 74.4 26.4 72.8 26.4 69.6V14.2H13.5C9 14.2 6 15.2 3 17.5Z" fill="url(#utGold)"/>
+<g style="fill:var(--ut-star-d,#1E3F5B)"><path d="M32 44L32 25.5L35 41Z"/><path d="M32 44L51 44L35 47Z"/><path d="M32 44L32 62.5L29 47Z"/><path d="M32 44L13 44L29 41Z"/></g>
+<g style="fill:var(--ut-star-l,#6F9EC6)"><path d="M32 44L32 25.5L29 41Z"/><path d="M32 44L51 44L35 41Z"/><path d="M32 44L32 62.5L35 47Z"/><path d="M32 44L13 44L29 47Z"/></g>
+<circle cx="32" cy="44" r="1.7" style="fill:var(--ut-globe-1,#F7F1E4);stroke:var(--ut-star-d,#1E3F5B)" stroke-width=".7"/></svg>`;
+/* variant: '' (light background) | 'dark' (reversed) | 'mono' (single colour = currentColor) */
+const brandLogo = (opts) => { const o = opts || {}; return `<span class="ut-logo ${o.variant ? 'ut-' + o.variant : ''} ${o.cls || ''}" dir="ltr"><span class="ut-word" role="img" aria-label="${BRAND.name}">U${brandT()}ravel</span>${o.tagline ? `<span class="ut-tag">${BRAND.tagline}</span>` : ''}</span>`; };
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const uid = (p) => p + '_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
 const initials = (n) => String(n || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('');
@@ -206,5 +222,5 @@ function artURL(kind, v) {
    Anything else (javascript:, quotes, SVG, remote URLs) falls back to neutral art. Mirrors _safe_img() on the server. */
 const SAFE_IMG = /^(assets\/[A-Za-z0-9_./-]+|data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+)$/;
 const imgSrc = (x) => (typeof x === 'string' && /^art:[a-z]+:[0-9]+$/.test(x)) ? artURL(x.split(':')[1], +x.split(':')[2] || 0) : (typeof x === 'string' && SAFE_IMG.test(x) ? x : artURL('sea', 0));
-const safeColor = (c) => (/^#[0-9A-Fa-f]{3,8}$/.test(String(c || '')) ? c : '#20A6A6');
+const safeColor = (c) => (/^#[0-9A-Fa-f]{3,8}$/.test(String(c || '')) ? c : '#3D6C93');
 const safeLink = (l) => (/^#\/[A-Za-z0-9/_?=&.%,:-]{0,200}$/.test(String(l || '')) ? l : '#');

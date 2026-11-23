@@ -18,7 +18,7 @@ with sync_playwright() as p:
     pg = ctx.new_page(); pg.on('pageerror', lambda e: err.append(str(e)))
     pg.goto(U); pg.wait_for_timeout(1500)
     man = pg.evaluate("fetch(document.querySelector('link[rel=manifest]').href).then(r=>r.json())")
-    ok('manifest valid', man['display'] == 'standalone' and man['short_name'] == 'رحلاتي' and len(man['icons']) == 3, man['start_url'])
+    ok('manifest valid', man['display'] == 'standalone' and man['short_name'] == 'UTravel' and len(man['icons']) == 3, man['start_url'])
     ok('icons load', all(pg.evaluate(f"fetch('{i['src']}').then(r=>r.status)") == 200 for i in man['icons']))
     sw = pg.evaluate("navigator.serviceWorker.ready.then(r=>!!r.active)")
     ok('service worker active', sw)

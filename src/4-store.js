@@ -116,7 +116,7 @@ function registerCustomer(f) {
     if (d.users.some((u) => (u.username || u.email.split('@')[0]) === f.username)) throw new AppError('USERNAME_TAKEN', tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken.'));
     const u = { id: uid('u'), role: 'customer', username: f.username, name: f.name, email: f.email, password: f.password, phone: f.phone, city: f.city || '', status: 'active', createdAt: new Date().toISOString(), favorites: [] };
     d.users.push(u);
-    notify(d, u.id, { ar: 'أهلًا بك في رحلاتي', en: 'Welcome to Rehlati' }, { ar: 'حسابك جاهز. ابدأ باكتشاف الرحلات.', en: 'Your account is ready. Start exploring trips.' }, '#/trips');
+    notify(d, u.id, { ar: 'أهلًا بك في UTravel', en: 'Welcome to UTravel' }, { ar: 'حسابك جاهز. ابدأ باكتشاف الرحلات.', en: 'Your account is ready. Start exploring trips.' }, '#/trips');
     return u;
   });
   setSession(nu); return nu;
@@ -140,10 +140,10 @@ function registerCompany(f) {
 /* ---------- booking & payment services ---------- */
 /* ---------- seasonal offers (agreed with companies, managed by the admin) ---------- */
 const SEASONS = {
-  christmas: { l: { ar: 'الكريسماس ورأس السنة', en: 'Christmas & New Year' }, c: '#B42318', i: 'sparkle' },
-  midyear: { l: { ar: 'إجازة نصف العام', en: 'Mid‑year break' }, c: '#1D5FA8', i: 'cal' },
-  summer: { l: { ar: 'الصيف', en: 'Summer' }, c: '#B9853A', i: 'sun' },
-  eid: { l: { ar: 'العيد', en: 'Eid' }, c: '#16807F', i: 'star' }
+  christmas: { l: { ar: 'الكريسماس ورأس السنة', en: 'Christmas & New Year' }, c: '#A8443F', i: 'sparkle' },
+  midyear: { l: { ar: 'إجازة نصف العام', en: 'Mid‑year break' }, c: '#3D6C93', i: 'cal' },
+  summer: { l: { ar: 'الصيف', en: 'Summer' }, c: '#8F6420', i: 'sun' },
+  eid: { l: { ar: 'العيد', en: 'Eid' }, c: '#2C7560', i: 'star' }
 };
 const campaigns = () => db.settings.campaigns || [];
 /** 'live' | 'upcoming' | 'ended' | 'off' — compares ISO dates so time zones can't shift a day */
@@ -164,7 +164,7 @@ function priceQuote(dep, count, code, trip) {
   const discount = useCamp ? campDisc : codeDisc;
   return { subtotal, discount, total: subtotal - discount, offer: useCamp ? null : codeOffer, codeOffer, campaign: useCamp ? camp : null, promo: useCamp ? camp.title.ar : (codeOffer ? codeOffer.code : '') };
 }
-/* ---------- company ranking: Rehlaty's own rating (set by the admin) first, then customer reviews ---------- */
+/* ---------- company ranking: UTravel's own rating (set by the admin) first, then customer reviews ---------- */
 function rankedCompanies() {
   return db.companies.filter((c) => c.status === 'approved').map((c) => ({ c, pr: +c.platformRating || 0, cr: companyRating(c.id), trips: publicTrips().filter((t) => t.companyId === c.id).length }))
     .filter((x) => x.trips > 0).sort((a, b) => (b.pr - a.pr) || (b.cr.avg - a.cr.avg) || (b.cr.count - a.cr.count));
@@ -195,7 +195,7 @@ function createBooking({ depId, travelers, code }) {
 /* Payment gateways: each has the same interface so a real Paymob / Fawry / Kashier
    adapter can replace `simulate` later without touching the booking logic. */
 const GATEWAYS = {
-  card: { name: { ar: 'بطاقة بنكية', en: 'Bank card' }, sub: { ar: 'فيزا · ماستركارد · ميزة', en: 'Visa, Mastercard, Meeza' }, color: '#16324F', mark: 'CARD',
+  card: { name: { ar: 'بطاقة بنكية', en: 'Bank card' }, sub: { ar: 'فيزا · ماستركارد · ميزة', en: 'Visa, Mastercard, Meeza' }, color: '#1E3F5B', mark: 'CARD',
     simulate: (p) => { const n = String(p.card || '').replace(/\s/g, ''); if (n === '4000000000000002') return { ok: false, reason: { ar: 'رفض البنك العملية (رصيد غير كافٍ).', en: 'Card declined by the bank (insufficient funds).' } }; return { ok: true }; } },
   fawry: { name: { ar: 'فوري', en: 'Fawry' }, sub: { ar: 'ادفع بكود من أي منفذ فوري', en: 'Pay with a code at any Fawry outlet' }, color: '#F6B800', mark: 'fawry', simulate: () => ({ ok: true }) },
   wallet: { name: { ar: 'المحافظ الإلكترونية', en: 'Mobile wallets' }, sub: { ar: 'فودافون كاش · اتصالات كاش · أورانج كاش · WE Pay', en: 'Vodafone Cash, Etisalat Cash, Orange Cash, WE Pay' }, color: '#E60000', mark: 'CASH',

@@ -74,27 +74,27 @@ function render() {
     if (m.guard !== 'guest' && r === 'guest') { return go('#/login?next=' + encodeURIComponent('#' + h)); }
     if (m.guard !== 'guest' && m.guard !== r) {
       // RBAC: a role can only see its own area
-      document.title = tr('غير مسموح | رحلاتي', 'Not allowed | Rehlati');
+      document.title = tr('غير مسموح | UTravel', 'Not allowed | UTravel');
       $('#app').innerHTML = publicLayout(`<div class="wrap sec">${empty('lock', tr('الصفحة دي مش متاحة لحسابك', 'This page isn’t available for your account'), tr('كل نوع حساب ليه لوحة خاصة بيه.', 'Each account type has its own dashboard.'), `<a class="btn btn-primary" href="${homeFor(me())}">${tr('روح للوحة بتاعتك', 'Go to your dashboard')}</a>`)}</div>`);
       return;
     }
   }
   if (path !== LAST_PATH) { UI.mnav = false; UI.side = false; UI.menu = null; UI.filtersOpen = false; closeModal(); if (!path.startsWith('/book')) { if (UI.co && UI.co.done) UI.co = null; } }
   $('#app').innerHTML = m ? m.fn(m.p) : viewNotFound();
-  const h1 = $('#app h1'); document.title = (h1 ? h1.textContent.trim().slice(0, 60) + ' | ' : '') + tr('رحلاتي', 'Rehlati');
+  const h1 = $('#app h1'); document.title = (h1 ? h1.textContent.trim().slice(0, 60) + ' | ' : '') + tr('UTravel', 'UTravel');
   if (path !== LAST_PATH) { scrollTo(0, 0); LAST_PATH = path; }
   tickHold();
   if (role() !== 'admin') installEngage(path.startsWith('/trip/') ? 'trip' : path.startsWith('/me/booking/') && readQuery().new ? 'booked' : 'page');
 }
 window.addEventListener('hashchange', () => { if (db) render(); });
-function bootScreen(inner) { $('#app').innerHTML = `<main style="min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center"><div class="stack" style="max-width:440px;align-items:center;display:flex;flex-direction:column">${logoMark().replace('logo-mark', 'logo-mark" style="width:56px;height:56px;border-radius:16px')}${inner}</div></main>`; }
+function bootScreen(inner) { $('#app').innerHTML = `<main style="min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center"><div class="stack" style="max-width:440px;align-items:center;display:flex;flex-direction:column">${brandLogo({ tagline: true, cls: 'ut-lg' })}${inner}</div></main>`; }
 async function boot() {
-  if (CLOUD_MISSING && !navigator.onLine) return bootScreen(`<h2 style="font-size:20px">${tr('مفيش اتصال بالإنترنت', 'You’re offline')}</h2><p class="muted">${tr('رحلاتي محتاج إنترنت علشان يعرض الرحلات المتاحة والأسعار الحالية. اتصل بالإنترنت وحاول تاني.', 'Rehlati needs a connection to show current trips and prices. Connect and try again.')}</p><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button>`);
+  if (CLOUD_MISSING && !navigator.onLine) return bootScreen(`<h2 style="font-size:20px">${tr('مفيش اتصال بالإنترنت', 'You’re offline')}</h2><p class="muted">${tr('UTravel محتاج إنترنت علشان يعرض الرحلات المتاحة والأسعار الحالية. اتصل بالإنترنت وحاول تاني.', 'UTravel needs a connection to show current trips and prices. Connect and try again.')}</p><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button>`);
   if (CLOUD_MISSING) return bootScreen(`<h2 style="font-size:20px">${tr('تعذر تحميل مكتبة الاتصال بالسيرفر', 'Couldn’t load the server library')}</h2><p class="muted">${tr('غالبًا مشكلة في الإنترنت أو مانع إعلانات. حدّث الصفحة.', 'Usually a connection problem or an ad blocker. Refresh the page.')}</p><div class="row"><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button><a class="btn btn-ghost" href="?demo=1">${tr('افتح العرض التجريبي', 'Open the offline demo')}</a></div>`);
   if (CLOUD) {
     bootScreen(`<span class="spin" style="color:var(--teal);width:28px;height:28px;margin-top:8px"></span><p class="muted">${tr('جاري تحميل الرحلات…', 'Loading trips…')}</p>`);
     try { await loadCloud(); }
-    catch (e) { console.error(e); if (!navigator.onLine) return bootScreen(`<h2 style="font-size:20px">${tr('مفيش اتصال بالإنترنت', 'You’re offline')}</h2><p class="muted">${tr('رحلاتي محتاج إنترنت علشان يعرض الرحلات المتاحة والأسعار الحالية. اتصل بالإنترنت وحاول تاني.', 'Rehlati needs a connection to show current trips and prices. Connect and try again.')}</p><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button>`); return bootScreen(`<h2 style="font-size:20px">${tr('السيرفر مش بيرد دلوقتي', 'The server isn’t responding')}</h2><p class="muted">${esc(cloudMsg(e))}</p><div class="row"><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button><a class="btn btn-ghost" href="?demo=1">${tr('افتح العرض التجريبي', 'Open the offline demo')}</a></div>`); }
+    catch (e) { console.error(e); if (!navigator.onLine) return bootScreen(`<h2 style="font-size:20px">${tr('مفيش اتصال بالإنترنت', 'You’re offline')}</h2><p class="muted">${tr('UTravel محتاج إنترنت علشان يعرض الرحلات المتاحة والأسعار الحالية. اتصل بالإنترنت وحاول تاني.', 'UTravel needs a connection to show current trips and prices. Connect and try again.')}</p><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button>`); return bootScreen(`<h2 style="font-size:20px">${tr('السيرفر مش بيرد دلوقتي', 'The server isn’t responding')}</h2><p class="muted">${esc(cloudMsg(e))}</p><div class="row"><button class="btn btn-primary" onclick="location.reload()">${tr('حاول تاني', 'Try again')}</button><a class="btn btn-ghost" href="?demo=1">${tr('افتح العرض التجريبي', 'Open the offline demo')}</a></div>`); }
     if (RECOVERY_IN_URL && AUTH_UID) { RESET.recovering = AUTH_UID; history.replaceState(null, '', location.pathname + location.search + '#/reset-password'); }
     else if (RECOVERY_ERROR_IN_URL) history.replaceState(null, '', location.pathname + location.search + '#/forgot?expired=1');
   } else { initDB(); if (SESSION && !me()) setSession(null); }

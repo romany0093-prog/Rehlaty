@@ -5,7 +5,7 @@ function header() {
   const navs = [['#/', tr('الرئيسية', 'Home')], ['#/trips', tr('الرحلات', 'Trips')], ['#/offers', tr('العروض', 'Offers')], ['#/compare', tr('قارن', 'Compare') + (cmpList().length ? ` (${cmpList().length})` : '')], ['#/destinations', tr('الوجهات', 'Destinations')], ['#/companies', tr('شركات السياحة', 'Tour operators')], ['#/page/faq', tr('الأسئلة الشائعة', 'FAQ')]];
   const isOn = (p) => (p === '#/' ? h === '#/' || h === '#' : h.startsWith(p));
   return `<header class="site-h"><div class="wrap">
-    <a href="#/" class="logo" aria-label="${tr('رحلاتي – الرئيسية', 'Rehlati – home')}">${logoMark()}<span>${tr('رحلاتي', 'Rehlati')}</span></a>
+    <a href="#/" class="logo" aria-label="${tr('UTravel – الرئيسية', 'UTravel – home')}">${brandLogo()}</a>
     <nav class="nav" aria-label="${tr('القائمة الرئيسية', 'Main')}">${navs.map(([p, l]) => `<a href="${p}" class="${isOn(p) ? 'on' : ''}">${l}</a>`).join('')}</nav>
     <div class="h-actions">
       <button class="lang-btn" data-a="lang" aria-label="${tr('English', 'العربية')}">${LANG === 'ar' ? 'EN' : 'ع'}</button>
@@ -16,7 +16,7 @@ function header() {
     </div></div></header>
     ${UI.mnav ? `<div class="m-nav">${navs.map(([p, l]) => `<a href="${p}">${l}</a>`).join('')}${u ? `<a href="${homeFor(u)}">${tr('لوحة التحكم', 'Dashboard')}</a>` : `<a href="#/login">${tr('تسجيل الدخول', 'Log in')}</a>`}<a href="#/register/company">${tr('سجّل شركتك', 'List your company')}</a>${installLink('btn btn-soft btn-block')}</div>` : ''}`;
 }
-const logoMark = () => `<span class="logo-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 64 64"><path d="M14 44 L32 14 L50 44 Z" fill="#E9B872"/><path d="M8 47 Q32 34 56 47" stroke="#20A6A6" stroke-width="6" fill="none" stroke-linecap="round"/></svg></span>`;
+const logoMark = () => `<span class="logo-mark" aria-hidden="true">${brandT()}</span>`;
 const notifLink = () => (role() === 'admin' ? '#/admin/notifications' : role() === 'company' ? '#/co/notifications' : '#/me/notifications');
 function userMenu(u) {
   return `<div class="menu" role="menu"><div style="padding:8px 10px 10px;border-bottom:1px solid var(--line-2);margin-bottom:4px"><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint">${esc(u.email)}</div></div>
@@ -31,11 +31,11 @@ ACTIONS.lang = () => { LANG = LANG === 'ar' ? 'en' : 'ar'; try { localStorage.se
 ACTIONS.logout = async () => { UI.menu = null; await logout(); toast(tr('تم تسجيل الخروج.', 'Logged out.')); go('#/'); };
 function footer() {
   return `<footer class="site-f"><div class="wrap"><div class="f-grid">
-    <div><a href="#/" class="logo" style="color:#fff">${logoMark()}<span>${tr('رحلاتي', 'Rehlati')}</span></a><p style="margin-top:12px;font-size:14.5px;max-width:320px">${tr('منصة تجمع شركات السياحة المرخصة في مصر. قارن واحجز وادفع في مكان واحد.', 'Licensed Egyptian tour operators in one place. Compare, book and pay securely.')}</p></div>
+    <div><a href="#/" class="logo" aria-label="UTravel">${brandLogo({ variant: 'dark', tagline: true })}</a><p style="margin-top:12px;font-size:14.5px;max-width:320px">${tr('منصة تجمع شركات السياحة المرخصة في مصر. قارن واحجز وادفع في مكان واحد.', 'Licensed Egyptian tour operators in one place. Compare, book and pay securely.')}</p></div>
     <div><h4>${tr('اكتشف', 'Explore')}</h4><a href="#/trips">${tr('كل الرحلات', 'All trips')}</a><a href="#/destinations">${tr('الوجهات', 'Destinations')}</a><a href="#/companies">${tr('شركات السياحة', 'Tour operators')}</a><a href="#/trips?cat=day">${tr('رحلات اليوم الواحد', 'Day trips')}</a></div>
-    <div><h4>${tr('رحلاتي', 'Rehlati')}</h4><a href="#/page/about">${tr('من نحن', 'About')}</a><a href="#/page/faq">${tr('الأسئلة الشائعة', 'FAQ')}</a><a href="#/page/terms">${tr('الشروط والأحكام', 'Terms')}</a><a href="#/page/privacy">${tr('الخصوصية', 'Privacy')}</a><a href="#/register/company">${tr('سجّل شركتك معنا', 'List your company')}</a></div>
+    <div><h4>${tr('UTravel', 'UTravel')}</h4><a href="#/page/about">${tr('من نحن', 'About')}</a><a href="#/page/faq">${tr('الأسئلة الشائعة', 'FAQ')}</a><a href="#/page/terms">${tr('الشروط والأحكام', 'Terms')}</a><a href="#/page/privacy">${tr('الخصوصية', 'Privacy')}</a><a href="#/register/company">${tr('سجّل شركتك معنا', 'List your company')}</a></div>
     <div><h4>${tr('تواصل معنا', 'Contact')}</h4><a href="#/page/contact" class="row" style="gap:8px">${ic('phone')}<span dir="ltr">16xxx</span></a><a href="#/page/contact" class="row" style="gap:8px">${ic('mail')}support@rehlati.eg</a><p style="font-size:14px;margin-top:6px">${tr('التجمع الخامس، القاهرة الجديدة', 'Fifth Settlement, New Cairo')}</p>${installLink('btn btn-sand btn-sm')}</div>
-  </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('رحلاتي', 'Rehlati')}${CLOUD ? '' : ' · ' + tr('وضع العرض التجريبي (البيانات في متصفحك فقط)', 'Demo mode (data stays in your browser)')}</span>${CLOUD ? '' : `<button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button>`}</div></div></footer>`;
+  </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('UTravel', 'UTravel')}${CLOUD ? '' : ' · ' + tr('وضع العرض التجريبي (البيانات في متصفحك فقط)', 'Demo mode (data stays in your browser)')}</span>${CLOUD ? '' : `<button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button>`}</div></div></footer>`;
 }
 ACTIONS['reset-demo'] = async () => { if (await confirmDialog({ title: tr('إعادة ضبط البيانات؟', 'Reset demo data?'), text: tr('ستُحذف كل التعديلات والحجوزات التي أضفتها وتعود البيانات التجريبية الأصلية.', 'All your changes and bookings will be removed and the original demo data restored.'), ok: tr('إعادة الضبط', 'Reset'), danger: true })) { resetDB(); setSession(null); toast(tr('تمت إعادة ضبط البيانات.', 'Demo data reset.')); go('#/'); } };
 const publicLayout = (inner) => header() + `<main id="main" class="route-fade">${inner}</main>` + footer() + cmpTray();
@@ -112,7 +112,7 @@ function viewHome() {
   </div></section>
 
   <section class="sec why"><div class="wrap grid g2" style="gap:48px;align-items:start">
-    <div><h2>${tr('ليه تحجز من رحلاتي بدل ما تحوّل لشركة مباشرة؟', 'Why book through Rehlati instead of paying a company directly?')}</h2><p style="color:#C7D5E2;margin-top:12px;max-width:440px">${tr('لأن فلوسك بتفضل محفوظة عندنا لحد ما الرحلة تتم، ولأنك بتقارن بين أكتر من شركة بنفس التفاصيل.', 'Because your money stays with us until the trip happens, and you compare operators on the same details.')}</p></div>
+    <div><h2>${tr('ليه تحجز من UTravel بدل ما تحوّل لشركة مباشرة؟', 'Why book through UTravel instead of paying a company directly?')}</h2><p style="color:#C7D5E2;margin-top:12px;max-width:440px">${tr('لأن فلوسك بتفضل محفوظة عندنا لحد ما الرحلة تتم، ولأنك بتقارن بين أكتر من شركة بنفس التفاصيل.', 'Because your money stays with us until the trip happens, and you compare operators on the same details.')}</p></div>
     <div>
       <div class="why-item"><h3>${tr('شركات راجعنا ورقها', 'Operators we have vetted')}</h3><p>${tr('مفيش شركة بتنشر رحلة قبل ما نراجع السجل التجاري وترخيص وزارة السياحة.', 'No company can publish before we review its commercial register and tourism licence.')}</p></div>
       <div class="why-item"><h3>${tr('فلوسك محفوظة لحد ما تسافر', 'Your payment is held until you travel')}</h3><p>${tr('الشركة بتستلم المبلغ بعد انتهاء الرحلة، ولو اتلغت بيرجعلك حسب السياسة المعلنة.', 'The operator is paid after the trip; if it’s cancelled you’re refunded under the published policy.')}</p></div>
@@ -121,7 +121,7 @@ function viewHome() {
     </div></div></section>
 
   <section class="sec"><div class="wrap">
-    <div class="sec-h"><div><h2>${tr('شركات السياحة على رحلاتي', 'Tour operators on Rehlati')}</h2></div><a class="btn btn-ghost btn-sm" href="#/companies">${tr('كل الشركات', 'All operators')}</a></div>
+    <div class="sec-h"><div><h2>${tr('شركات السياحة على UTravel', 'Tour operators on UTravel')}</h2></div><a class="btn btn-ghost btn-sm" href="#/companies">${tr('كل الشركات', 'All operators')}</a></div>
     <div class="grid g4">${comps.map(companyCard).join('')}</div>
   </div></section>
 
@@ -284,21 +284,21 @@ function viewCompany(id) {
   const trips = publicTrips().filter((t) => t.companyId === c.id), revs = companyReviews(c.id), cr = companyRating(c.id);
   const done = CLOUD ? ((CO_STATS[c.id] || {}).travellers || 0) : db.bookings.filter((b) => b.companyId === c.id && b.status === 'completed').reduce((a, b) => a + b.count, 0);
   return publicLayout(`<section style="position:relative;height:240px;overflow:hidden;background:var(--navy)"><img src="${imgSrc(c.cover)}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.85"></section>
-  <div class="wrap"><div class="card card-pad" style="margin-top:-70px;position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">${coLogo(c, 'lg')}<div class="grow"><h1 style="font-size:28px">${esc(L(c.name))}</h1><div class="row wrapx small muted" style="gap:14px;margin-top:4px"><span class="row" style="gap:5px">${ic('pin')}${esc(L(c.city))}</span><span class="row" style="gap:5px">${ic('shield')}${esc(c.license)}</span></div></div><div class="row" style="gap:28px">${c.platformRating ? `<div><small class="muted">${tr('تقييم رحلاتي', 'Rehlati rating')}</small><div>${pStars(c.platformRating)}</div></div>` : ''}<div><small class="muted">${tr('تقييم العملاء', 'Customer rating')}</small><div>${starsHTML(cr.avg, cr.count)}</div></div><div><small class="muted">${tr('مسافرون', 'Travellers')}</small><div><b class="num" style="color:var(--navy)">${fmtN(done)}</b></div></div><div><small class="muted">${tr('منذ', 'Since')}</small><div><b style="color:var(--navy)">${c.founded}</b></div></div></div></div>
+  <div class="wrap"><div class="card card-pad" style="margin-top:-70px;position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">${coLogo(c, 'lg')}<div class="grow"><h1 style="font-size:28px">${esc(L(c.name))}</h1><div class="row wrapx small muted" style="gap:14px;margin-top:4px"><span class="row" style="gap:5px">${ic('pin')}${esc(L(c.city))}</span><span class="row" style="gap:5px">${ic('shield')}${esc(c.license)}</span></div></div><div class="row" style="gap:28px">${c.platformRating ? `<div><small class="muted">${tr('تقييم UTravel', 'UTravel rating')}</small><div>${pStars(c.platformRating)}</div></div>` : ''}<div><small class="muted">${tr('تقييم العملاء', 'Customer rating')}</small><div>${starsHTML(cr.avg, cr.count)}</div></div><div><small class="muted">${tr('مسافرون', 'Travellers')}</small><div><b class="num" style="color:var(--navy)">${fmtN(done)}</b></div></div><div><small class="muted">${tr('منذ', 'Since')}</small><div><b style="color:var(--navy)">${c.founded}</b></div></div></div></div>
   <div class="detail-layout"><div>
     <section class="dsec" style="padding-top:0"><h2>${tr('عن الشركة', 'About')}</h2><p>${esc(L(c.desc))}</p></section>
     <section class="dsec"><h2>${tr(`رحلات ${esc(L(c.name))}`, `Trips by ${esc(L(c.name))}`)} <span class="faint" style="font-size:15px">(${trips.length})</span></h2>${trips.length ? `<div class="grid g2">${trips.map(tripCard).join('')}</div>` : `<p class="muted">${tr('لا توجد رحلات منشورة حاليًا.', 'No published trips right now.')}</p>`}</section>
     <section class="dsec" style="border:0"><h2>${tr('تقييمات العملاء', 'Customer reviews')}</h2>${revs.length ? revs.slice(0, 8).map(reviewItem).join('') : `<p class="muted">${tr('لا توجد تقييمات بعد.', 'No reviews yet.')}</p>`}</section>
   </div><aside><div class="card card-pad stack" style="position:sticky;top:88px"><h3>${tr('بيانات التواصل', 'Contact details')}</h3>
     <div class="row small">${ic('phone')}<span dir="ltr">${esc(c.phone)}</span></div><div class="row small">${ic('mail')}${esc(c.email)}</div>${c.website ? `<div class="row small">${ic('globe')}${esc(c.website)}</div>` : ''}<div class="row small">${ic('pin')}${esc(L(c.city))}</div>
-    <div class="callout ok" style="margin-top:8px">${ic('shield')}<div>${tr('راجعت رحلاتي السجل التجاري وترخيص وزارة السياحة لهذه الشركة.', 'Rehlati checked this company’s commercial register and tourism licence.')}</div></div></div></aside></div></div>`);
+    <div class="callout ok" style="margin-top:8px">${ic('shield')}<div>${tr('راجعت UTravel السجل التجاري وترخيص وزارة السياحة لهذه الشركة.', 'UTravel checked this company’s commercial register and tourism licence.')}</div></div></div></aside></div></div>`);
 }
 
 /* ---- auth ---- */
 function viewLogin() {
   const q = readQuery();
   const co = (id) => (compById(id) ? L(compById(id).name) : id);
-  const demo = db.settings.showDemo === false ? [] : [['mariam', '123456', tr('عميل', 'Customer'), 'مريم عادل', 'user'], ['bahr', '123456', tr('شركة سياحة', 'Tour company'), co('c2'), 'building'], ['nilestar', '123456', tr('شركة سياحة', 'Tour company'), co('c1'), 'building'], ...(CLOUD ? [] : [['admin', 'admin123', tr('مدير المنصة', 'Platform admin'), tr('إدارة رحلاتي', 'Rehlati admin'), 'shield']])];
+  const demo = db.settings.showDemo === false ? [] : [['mariam', '123456', tr('عميل', 'Customer'), 'مريم عادل', 'user'], ['bahr', '123456', tr('شركة سياحة', 'Tour company'), co('c2'), 'building'], ['nilestar', '123456', tr('شركة سياحة', 'Tour company'), co('c1'), 'building'], ...(CLOUD ? [] : [['admin', 'admin123', tr('مدير المنصة', 'Platform admin'), tr('إدارة UTravel', 'UTravel admin'), 'shield']])];
   return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('sinai', 2)}" alt=""><p class="cap">${tr('الشروق من فوق جبل موسى، دهب', 'Sunrise from Mount Sinai, Dahab')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('تسجيل الدخول', 'Log in')}</h1><p class="muted" style="margin:6px 0 22px">${tr('ادخل علشان تتابع حجوزاتك أو تدير شركتك.', 'Log in to manage your bookings or your company.')}</p>
     <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('ident', tr('اسم المستخدم أو البريد الإلكتروني', 'Username or email'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
@@ -334,7 +334,7 @@ FORMS.register = async (f) => {
   catch (e) { busy(btn, false); const fe = f.elements[e.code === 'USERNAME_TAKEN' || e.code === 'BAD_USERNAME' ? 'username' : 'email'].closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
 };
 function viewRegisterCompany() {
-  return header() + `<main class="route-fade"><section class="phead"><div class="wrap"><h1>${tr('سجّل شركتك على رحلاتي', 'List your company on Rehlati')}</h1><p>${tr('بنراجع الطلب والمستندات خلال يومين عمل. بعد الاعتماد تقدر تنشر رحلاتك وتستقبل حجوزات.', 'We review applications within two business days. Once approved you can publish trips and take bookings.')}</p></div></section>
+  return header() + `<main class="route-fade"><section class="phead"><div class="wrap"><h1>${tr('سجّل شركتك على UTravel', 'List your company on UTravel')}</h1><p>${tr('بنراجع الطلب والمستندات خلال يومين عمل. بعد الاعتماد تقدر تنشر رحلاتك وتستقبل حجوزات.', 'We review applications within two business days. Once approved you can publish trips and take bookings.')}</p></div></section>
   <div class="wrap sec" style="padding-top:28px"><form class="card card-pad" data-f="register-company" novalidate style="max-width:860px"><h3 style="margin-bottom:16px">${tr('بيانات الشركة', 'Company details')}</h3><div class="form-grid">
     ${inp('company', tr('اسم الشركة (عربي)', 'Company name (Arabic)'), '')}${inp('companyEn', tr('اسم الشركة (إنجليزي)', 'Company name (English)'), '', { attrs: 'dir="ltr"' })}
     ${inp('license', tr('رقم ترخيص وزارة السياحة', 'Tourism licence number'), '', { ph: tr('مثال: فئة (أ) رقم 1234', 'e.g. Category A no. 1234') })}${inp('founded', tr('سنة التأسيس', 'Year founded'), '', { type: 'number', attrs: 'min="1950" max="2026"' })}

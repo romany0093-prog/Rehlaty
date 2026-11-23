@@ -1,14 +1,14 @@
-/* رحلاتي – service worker
+/* UTravel – service worker
    Caches the app shell (page, images, icons, fonts, Supabase library) so the
    installed app opens fast. Live data (Supabase API: trips, bookings, payments,
    accounts) is NEVER cached — it always comes from the server.
    Bump VERSION on every release so phones pick up the new build. */
-const VERSION = 'rehlati-v4';
+const VERSION = 'utravel-v5';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './assets/hero.jpg', './assets/hero-800.jpg',
   './assets/icons/icon-192.png', './assets/icons/icon-512.png', './assets/icons/maskable-512.png',
-  './assets/icons/apple-touch-icon.png', './assets/icons/favicon-32.png'
+  './assets/icons/apple-touch-icon.png', './assets/icons/favicon-32.png', './assets/brand/utravel-symbol.svg'
 ];
 const STATIC_HOSTS = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
