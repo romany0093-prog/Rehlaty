@@ -117,6 +117,7 @@ function cloudMsg(e) {
     BAD_USERNAME: tr('اسم المستخدم من ٣ إلى ٢٤ حرف إنجليزي صغير أو أرقام أو _ .', 'Username: 3–24 lowercase letters, numbers, _ or .'), WEAK_PASSWORD: tr('كلمة المرور ٨ أحرف على الأقل.', 'Password must be at least 8 characters.'),
     SEATS_BELOW_BOOKED: tr('مينفعش تقلل المقاعد عن المحجوز.', 'Seats can’t go below seats booked.'), DATE_IN_PAST: tr('اختر تاريخًا بعد اليوم.', 'Pick a date after today.'),
     ...Object.fromEntries(Object.keys(REQ_ERR).map((k) => [k, REQ_ERR[k]()])), NOT_FOUND: tr('غير موجود أو مبقاش متاح.', 'Not found or no longer available.'),
+    PHONE_TAKEN: tr('رقم الموبايل ده مسجل بحساب تاني. سجّل الدخول بيه أو استرجع كلمة المرور.', 'This mobile number is already registered. Log in or recover your password.'),
     LOCKED: tr('محاولات دخول كتير غلط. استنى ربع ساعة أو استرجع كلمة المرور.', 'Too many failed attempts. Wait 15 minutes or reset your password.'),
     RATE_LIMIT: tr('اتعمل حسابات كتير من نفس الشبكة. حاول تاني بعد ساعة.', 'Too many sign-ups from this network. Try again in an hour.'),
     BAD_IMAGE: tr('الصورة لازم تكون JPG أو PNG أو WebP.', 'Images must be JPG, PNG or WebP.'), BAD_ID: tr('بيانات غير صالحة.', 'Invalid data.'), BAD_COLOR: tr('لون غير صالح.', 'Invalid colour.'),
@@ -159,7 +160,7 @@ if (CLOUD) {
     return u;
   };
   logout = async function () { await sb.auth.signOut(); AUTH_UID = null; await loadCloud(); };
-  registerCustomer = async function (f) { await rpc('register_account', { p_username: f.username, p_email: f.email, p_password: f.password, p_name: f.name, p_phone: f.phone, p_role: 'customer', p_company: null }); return login(f.username, f.password); };
+  registerCustomer = async function (f) { await rpc('register_account', { p_username: f.username, p_email: f.email, p_password: f.password, p_name: f.name, p_phone: f.phone || null, p_role: 'customer', p_company: null, p_via: f.via === 'phone' ? 'phone' : 'email' }); return login(f.username, f.password); };
   registerCompany = async function (f) {
     const palette = ['#2E6F6F', '#8C5A2B', '#5E4B8B', '#2F5D8A', '#9A3B3B', '#4E7A3A'];
     const company = { name: { ar: f.company, en: f.companyEn || f.company }, color: palette[Math.floor(Math.random() * palette.length)], city: { ar: f.city, en: f.city }, phone: f.phone, website: '', license: f.license, founded: +f.founded || new Date().getFullYear(), desc: { ar: f.desc || '', en: '' }, logo: null, cover: 'art:sea:0', docs: (f.docs || []).map((n) => ({ name: n })) };

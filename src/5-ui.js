@@ -83,7 +83,10 @@ function validate(form, spec) {
   return ok ? data : null;
 }
 const fld = (name, label, inner, opts) => `<div class="field ${opts && opts.full ? 'full' : ''}">${label ? `<label for="f-${name}">${label}</label>` : ''}${inner}${opts && opts.hint ? `<span class="hint">${opts.hint}</span>` : ''}<span class="err-msg"></span></div>`;
-const inp = (name, label, val, opts) => fld(name, label, `<input class="input" id="f-${name}" name="${name}" value="${esc(val == null ? '' : val)}" type="${(opts && opts.type) || 'text'}" ${opts && opts.ph ? `placeholder="${esc(opts.ph)}"` : ''} ${opts && opts.attrs || ''}>`, opts);
+const inp = (name, label, val, opts) => { const el = `<input class="input" id="f-${name}" name="${name}" value="${esc(val == null ? '' : val)}" type="${(opts && opts.type) || 'text'}" ${opts && opts.ph ? `placeholder="${esc(opts.ph)}"` : ''} ${opts && opts.attrs || ''}>`;
+  // every password field gets a show / hide button
+  return fld(name, label, opts && opts.type === 'password' ? `<div class="pw-wrap">${el}<button type="button" class="pw-eye" data-a="pw-eye" aria-controls="f-${name}" aria-pressed="false" aria-label="${tr('إظهار كلمة المرور', 'Show password')}" title="${tr('إظهار كلمة المرور', 'Show password')}">${ic('eye')}</button></div>` : el, opts); };
+ACTIONS['pw-eye'] = (el) => { const i = document.getElementById(el.getAttribute('aria-controls')); if (!i) return; const show = i.type === 'password'; i.type = show ? 'text' : 'password'; el.setAttribute('aria-pressed', show); const l = show ? tr('إخفاء كلمة المرور', 'Hide password') : tr('إظهار كلمة المرور', 'Show password'); el.setAttribute('aria-label', l); el.title = l; el.innerHTML = ic(show ? 'eyeoff' : 'eye'); i.focus(); };
 const sel = (name, label, options, val, opts) => fld(name, label, `<select class="select" id="f-${name}" name="${name}" ${opts && opts.attrs || ''}>${options.map(([v, l]) => `<option value="${esc(v)}" ${String(v) === String(val) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`, opts);
 const txa = (name, label, val, opts) => fld(name, label, `<textarea class="textarea" id="f-${name}" name="${name}" rows="${(opts && opts.rows) || 4}">${esc(val || '')}</textarea>`, opts);
 

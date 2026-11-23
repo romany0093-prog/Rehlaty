@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: file:; connect-src 'self' https://soysfbirinxmkivenvnp.supabase.co wss://soysfbirinxmkivenvnp.supabase.co https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>UTravel | احجز رحلتك في مصر من أفضل شركات السياحة</title>
+<title>UTravel | Your Choice. Your Journey. – احجز رحلتك في مصر</title>
 <meta name="description" content="UTravel: منصة تجمع شركات السياحة المصرية في مكان واحد. قارن الرحلات واحجز مقعدك وادفع أونلاين.">
 <meta name="theme-color" content="#1E3F5B">
 <link rel="manifest" href="manifest.webmanifest">
@@ -694,18 +694,37 @@ details.faq[open]{border-color:rgba(111,158,198,.6);box-shadow:var(--sh-1)}
 .logo{gap:10px;letter-spacing:0}
 .ut-logo{display:inline-flex;flex-direction:column;align-items:center;line-height:1;color:var(--navy);
   --ut-star-d:var(--navy);--ut-star-l:var(--teal)}
-.ut-word{display:inline-flex;align-items:baseline;font-family:var(--f-brand);font-weight:400;font-size:28px;letter-spacing:.005em;white-space:nowrap}
+.ut-word{display:inline-flex;align-items:baseline;font-family:var(--f-brand);font-weight:400;font-size:34px;letter-spacing:.005em;white-space:nowrap}
 .ut-t{height:.97em;width:auto;margin:0 -.02em 0 0;align-self:baseline;transform:translateY(.045em);overflow:visible}
 .ut-tag{font-family:var(--f-brand);font-weight:400;letter-spacing:.03em;margin-top:.5em;color:inherit;opacity:.92;font-size:12.5px;white-space:nowrap}
 .ut-dark{color:#F7F5F0;--ut-star-d:#F7F5F0;--ut-star-l:var(--teal);--ut-globe-1:rgba(247,241,228,.22);--ut-globe-2:rgba(200,169,110,.30)}
 .ut-mono{color:currentColor;--ut-gold-1:currentColor;--ut-gold-2:currentColor;--ut-gold-3:currentColor;--ut-star-d:currentColor;--ut-star-l:currentColor;--ut-globe-1:transparent;--ut-globe-2:transparent}
 .ut-lg .ut-word{font-size:46px}.ut-lg .ut-tag{font-size:16px}
 .side .logo{padding:6px 8px 18px}
-.side .ut-word{font-size:26px}
-.site-f .ut-word{font-size:30px}
+.side .ut-word{font-size:34px}.side .ut-tag{font-size:12px}
+.site-f .ut-word{font-size:42px}.site-f .ut-tag{font-size:14px}
 .logo-mark{width:40px;height:40px;border-radius:12px;background:transparent;box-shadow:none}
 .logo-mark .ut-t{height:36px;transform:none}
-@media(max-width:640px){.site-h .ut-word{font-size:24px}}
+@media(max-width:640px){.site-h .ut-word{font-size:27px}.site-h .ut-tag{font-size:9.5px;letter-spacing:.01em}}
+
+/* show / hide password */
+.pw-wrap{position:relative}
+.pw-wrap .input{padding-inline-end:46px}
+[dir=ltr] .pw-wrap .input,.pw-wrap .input[dir=ltr]{padding-right:46px;padding-left:12px}
+.pw-eye{position:absolute;top:50%;transform:translateY(-50%);right:6px;width:36px;height:36px;border:0;border-radius:10px;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.pw-eye:hover{background:var(--teal-50);color:var(--navy)}
+.pw-eye svg{width:19px;height:19px}
+
+/* tagline placements */
+.site-h .wrap{height:84px}
+.site-h .ut-tag{font-size:11.5px;margin-top:.4em;color:var(--teal-700);opacity:1}
+.hero-kicker{display:inline-block;font-family:var(--f-brand);font-size:17px;letter-spacing:.06em;color:var(--sand);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid rgba(200,169,110,.55)}
+.auth-brand{position:absolute;top:34px;inset-inline-start:34px;z-index:1}
+.auth-brand .ut-word{font-size:40px;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+.auth-brand .ut-tag{font-size:14px;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.auth-art::before{content:"";position:absolute;inset:0 0 auto 0;height:180px;background:linear-gradient(180deg,rgba(20,31,42,.55),transparent);z-index:1}
+.ut-doc{align-items:flex-start}.ut-doc .ut-word{font-size:26px}.ut-doc .ut-tag{font-size:11px}
+@media(max-width:640px){.site-h .wrap{height:70px}.hero-kicker{font-size:15px}}
 </style>
 </head>
 <body>

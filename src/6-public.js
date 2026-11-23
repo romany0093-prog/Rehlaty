@@ -5,7 +5,7 @@ function header() {
   const navs = [['#/', tr('الرئيسية', 'Home')], ['#/trips', tr('الرحلات', 'Trips')], ['#/offers', tr('العروض', 'Offers')], ['#/compare', tr('قارن', 'Compare') + (cmpList().length ? ` (${cmpList().length})` : '')], ['#/destinations', tr('الوجهات', 'Destinations')], ['#/companies', tr('شركات السياحة', 'Tour operators')], ['#/page/faq', tr('الأسئلة الشائعة', 'FAQ')]];
   const isOn = (p) => (p === '#/' ? h === '#/' || h === '#' : h.startsWith(p));
   return `<header class="site-h"><div class="wrap">
-    <a href="#/" class="logo" aria-label="${tr('UTravel – الرئيسية', 'UTravel – home')}">${brandLogo()}</a>
+    <a href="#/" class="logo" aria-label="${tr('UTravel – الرئيسية', 'UTravel – home')}">${brandLogo({ tagline: true })}</a>
     <nav class="nav" aria-label="${tr('القائمة الرئيسية', 'Main')}">${navs.map(([p, l]) => `<a href="${p}" class="${isOn(p) ? 'on' : ''}">${l}</a>`).join('')}</nav>
     <div class="h-actions">
       <button class="lang-btn" data-a="lang" aria-label="${tr('English', 'العربية')}">${LANG === 'ar' ? 'EN' : 'ع'}</button>
@@ -80,6 +80,7 @@ function viewHome() {
   return publicLayout(`
   <section class="hero"><div class="hero-art"><img src="assets/hero.jpg" srcset="assets/hero-800.jpg 800w, assets/hero.jpg 1376w" sizes="100vw" alt="" fetchpriority="high" onerror="this.onerror=null;this.removeAttribute('srcset');this.src=artURL('nile',1)"></div>
     <div class="wrap hero-in" style="position:relative">
+      <p class="hero-kicker" dir="ltr">${BRAND.tagline}</p>
       <h1>${tr('كل رحلات مصر، من شركات موثوقة، في حجز واحد', 'Every Egyptian trip, from trusted operators, in one booking')}</h1>
       <p class="lead">${tr('قارن البرامج والأسعار والمواعيد بين أكثر من شركة سياحة مرخصة، واحجز مقعدك وادفع أونلاين.', 'Compare programmes, prices and dates across licensed tour operators, then book your seat and pay online.')}</p>
       <form class="ticket" data-f="hero-search" role="search">
@@ -299,9 +300,9 @@ function viewLogin() {
   const q = readQuery();
   const co = (id) => (compById(id) ? L(compById(id).name) : id);
   const demo = db.settings.showDemo === false ? [] : [['mariam', '123456', tr('عميل', 'Customer'), 'مريم عادل', 'user'], ['bahr', '123456', tr('شركة سياحة', 'Tour company'), co('c2'), 'building'], ['nilestar', '123456', tr('شركة سياحة', 'Tour company'), co('c1'), 'building'], ...(CLOUD ? [] : [['admin', 'admin123', tr('مدير المنصة', 'Platform admin'), tr('إدارة UTravel', 'UTravel admin'), 'shield']])];
-  return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('sinai', 2)}" alt=""><p class="cap">${tr('الشروق من فوق جبل موسى، دهب', 'Sunrise from Mount Sinai, Dahab')}</p></div>
+  return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('sinai', 2)}" alt="">${authBrand()}<p class="cap">${tr('الشروق من فوق جبل موسى، دهب', 'Sunrise from Mount Sinai, Dahab')}</p></div>
   <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('تسجيل الدخول', 'Log in')}</h1><p class="muted" style="margin:6px 0 22px">${tr('ادخل علشان تتابع حجوزاتك أو تدير شركتك.', 'Log in to manage your bookings or your company.')}</p>
-    <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('ident', tr('اسم المستخدم أو البريد الإلكتروني', 'Username or email'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
+    <form data-f="login" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('ident', tr('الإيميل أو رقم الموبايل أو اسم المستخدم', 'Email, mobile number or username'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', attrs: 'autocomplete="current-password" dir="ltr"' })}
     <div style="margin-top:-4px;text-align:end"><a class="btn-link small" href="#/forgot" data-a="to-forgot">${tr('نسيت كلمة المرور؟', 'Forgot password?')}</a></div>
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('دخول', 'Log in')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('ما عندكش حساب؟', 'No account?')} <a class="btn-link" href="#/register${q.next ? '?next=' + encodeURIComponent(q.next) : ''}">${tr('أنشئ حساب', 'Sign up')}</a> · <a class="btn-link" href="#/register/company">${tr('سجّل شركتك', 'Register a company')}</a></p>
@@ -318,21 +319,28 @@ FORMS.login = async (f) => {
 ACTIONS['to-forgot'] = () => { const v = ($('#f-ident') || {}).value || ''; RESET.sentTo = null; go('#/forgot' + (v ? '?u=' + encodeURIComponent(v) : '')); };
 ACTIONS['demo-login'] = async (el) => { el.disabled = true; let u; try { u = await login(el.dataset.e, el.dataset.p); } finally { el.disabled = false; } const nx = readQuery().next; toast(tr(`أهلًا ${u.name.split(' ')[0]}`, `Welcome, ${u.name.split(' ')[0]}`)); go(nx && u.role === 'customer' ? nx : homeFor(u)); };
 function viewRegister() {
-  const q = readQuery();
-  return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('coast', 0)}" alt=""><p class="cap">${tr('العلمين الجديدة، الساحل الشمالي', 'New Alamein, North Coast')}</p></div>
-  <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('إنشاء حساب مسافر', 'Create a traveller account')}</h1><p class="muted" style="margin:6px 0 22px">${tr('دقيقة واحدة وتقدر تحجز وتتابع رحلاتك.', 'One minute and you can book and track your trips.')}</p>
-    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}">${inp('name', tr('الاسم بالكامل', 'Full name'), '', { attrs: 'autocomplete="name"' })}${inp('username', tr('اسم المستخدم', 'Username'), '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو . (٣–٢٤)، هتدخل بيه بدل البريد', 'Lowercase letters, numbers, _ or . (3–24). You can log in with it.') })}${inp('email', tr('البريد الإلكتروني', 'Email'), '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"' })}${inp('phone', tr('رقم الموبايل', 'Mobile number'), '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric"' })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٨ أحرف على الأقل', 'At least 8 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
+  const q = readQuery(), via = UI.regVia || 'email';
+  const phoneFld = inp('phone', via === 'phone' ? tr('رقم الموبايل (واتساب)', 'Mobile number (WhatsApp)') : tr('رقم الموبايل (اختياري)', 'Mobile number (optional)'), UI.regDraft && UI.regDraft.phone || '', { type: 'tel', ph: '01xxxxxxxxx', attrs: 'dir="ltr" inputmode="numeric" autocomplete="tel"', hint: via === 'phone' ? tr('هتدخل بيه، ولو نسيت كلمة المرور هيوصلك كود على واتساب.', 'You’ll log in with it, and a WhatsApp code recovers your password.') : '' });
+  const emailFld = inp('email', tr('البريد الإلكتروني', 'Email'), UI.regDraft && UI.regDraft.email || '', { type: 'email', attrs: 'autocomplete="email" dir="ltr"', hint: via === 'phone' ? tr('مطلوب كمان، علشان التأكيدات والفواتير وطريقة تانية لاسترجاع الحساب.', 'Also required, for confirmations, invoices and as a second way to recover your account.') : tr('هتدخل بيه، ولو نسيت كلمة المرور هيوصلك رابط عليه.', 'You’ll log in with it, and a reset link is sent to it if you forget your password.') });
+  return header() + `<main class="auth route-fade"><div class="auth-art"><img src="${artURL('coast', 0)}" alt="">${authBrand()}<p class="cap">${tr('العلمين الجديدة، الساحل الشمالي', 'New Alamein, North Coast')}</p></div>
+  <div class="auth-f"><div class="auth-box"><h1 style="font-size:28px">${tr('إنشاء حساب مسافر', 'Create a traveller account')}</h1><p class="muted" style="margin:6px 0 18px">${tr('دقيقة واحدة وتقدر تحجز وتتابع رحلاتك.', 'One minute and you can book and track your trips.')}</p>
+    <div class="field" style="margin-bottom:16px"><span class="lbl">${tr('سجّل بـ', 'Sign up with')}</span><div class="seg seg-block" role="radiogroup" aria-label="${tr('طريقة التسجيل', 'Sign-up method')}"><button type="button" role="radio" aria-checked="${via === 'email'}" class="${via === 'email' ? 'on' : ''}" data-a="reg-via" data-v="email">${ic('mail')}${tr('البريد الإلكتروني', 'Email')}</button><button type="button" role="radio" aria-checked="${via === 'phone'}" class="${via === 'phone' ? 'on' : ''}" data-a="reg-via" data-v="phone">${ic('phone')}${tr('رقم الموبايل', 'Mobile number')}</button></div></div>
+    <form data-f="register" class="stack" novalidate data-next="${esc(q.next || '')}" data-via="${via}">${inp('name', tr('الاسم بالكامل', 'Full name'), UI.regDraft && UI.regDraft.name || '', { attrs: 'autocomplete="name"' })}${via === 'phone' ? phoneFld + emailFld : emailFld + phoneFld}${inp('username', tr('اسم المستخدم', 'Username'), UI.regDraft && UI.regDraft.username || '', { attrs: 'autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"', hint: tr('حروف إنجليزي صغيرة وأرقام و _ أو . (٣–٢٤). تقدر تدخل بيه كمان.', 'Lowercase letters, numbers, _ or . (3–24). You can log in with it too.') })}${inp('password', tr('كلمة المرور', 'Password'), '', { type: 'password', hint: tr('٨ أحرف على الأقل', 'At least 8 characters'), attrs: 'autocomplete="new-password" dir="ltr"' })}
     <label class="check field"><input type="checkbox" name="terms" value="1"><span>${tr('أوافق على', 'I agree to the')} <a class="btn-link" href="#/page/terms" target="_blank">${tr('الشروط والأحكام', 'terms')}</a></span><span class="err-msg"></span></label>
     <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('إنشاء الحساب', 'Create account')}</button></form>
     <p class="small muted" style="margin-top:14px;text-align:center">${tr('عندك حساب؟', 'Have an account?')} <a class="btn-link" href="#/login">${tr('سجّل الدخول', 'Log in')}</a> · <a class="btn-link" href="#/register/company">${tr('تسجيل شركة سياحة', 'Register a tour company')}</a></p></div></div></main>`;
 }
+ACTIONS['reg-via'] = (el) => { const f = $('form[data-f=register]'); if (f) { const d = formData(f); UI.regDraft = { name: d.name, email: d.email, phone: d.phone, username: d.username }; } UI.regVia = el.dataset.v; render(); };
 FORMS.register = async (f) => {
-  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], username: ['req', 'username'], email: ['req', 'email'], phone: ['req', 'phone'], password: ['req', 'pw'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
-  d.username = d.username.toLowerCase();
+  const via = f.dataset.via === 'phone' ? 'phone' : 'email';
+  const d = validate(f, { name: ['req', (v) => v.length >= 3 || tr('اكتب اسمك بالكامل.', 'Enter your full name.')], email: ['req', 'email'], phone: via === 'phone' ? ['req', 'phone'] : ['phone'], username: ['req', 'username'], password: ['req', 'pw'], terms: [(v) => !!v || tr('لازم توافق على الشروط.', 'You must accept the terms.')] }); if (!d) return;
+  d.username = d.username.toLowerCase(); d.via = via; d.phone = (d.phone || '').replace(/\s/g, '');
   const btn = $('button[type=submit]', f); busy(btn, true); if (!CLOUD) await wait(400);
-  try { await registerCustomer(d); toast(tr('تم إنشاء حسابك.', 'Account created.')); go(f.dataset.next || '#/me'); }
-  catch (e) { busy(btn, false); const fe = f.elements[e.code === 'USERNAME_TAKEN' || e.code === 'BAD_USERNAME' ? 'username' : 'email'].closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
+  try { await registerCustomer(d); UI.regDraft = null; UI.regVia = null; toast(tr('تم إنشاء حسابك.', 'Account created.')); go(f.dataset.next || '#/me'); }
+  catch (e) { busy(btn, false); const k = e.code === 'USERNAME_TAKEN' || e.code === 'BAD_USERNAME' ? 'username' : e.code === 'PHONE_TAKEN' || e.code === 'BAD_PHONE' ? 'phone' : e.code === 'WEAK_PASSWORD' ? 'password' : 'email'; const fe = f.elements[k].closest('.field'); fe.classList.add('err'); $('.err-msg', fe).textContent = e.message; }
 };
+/* brand mark + tagline over the photo on the sign-in / sign-up / recovery pages */
+const authBrand = () => `<div class="auth-brand">${brandLogo({ variant: 'dark', tagline: true })}</div>`;
 function viewRegisterCompany() {
   return header() + `<main class="route-fade"><section class="phead"><div class="wrap"><h1>${tr('سجّل شركتك على UTravel', 'List your company on UTravel')}</h1><p>${tr('بنراجع الطلب والمستندات خلال يومين عمل. بعد الاعتماد تقدر تنشر رحلاتك وتستقبل حجوزات.', 'We review applications within two business days. Once approved you can publish trips and take bookings.')}</p></div></section>
   <div class="wrap sec" style="padding-top:28px"><form class="card card-pad" data-f="register-company" novalidate style="max-width:860px"><h3 style="margin-bottom:16px">${tr('بيانات الشركة', 'Company details')}</h3><div class="form-grid">

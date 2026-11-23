@@ -83,8 +83,8 @@ let me = () => (SESSION ? byId(db.users, SESSION.userId) || null : null);
 const role = () => (me() ? me().role : 'guest');
 function setSession(u) { SESSION = u ? { userId: u.id, at: Date.now() } : null; try { u ? localStorage.setItem(SESS_KEY, JSON.stringify(SESSION)) : localStorage.removeItem(SESS_KEY); } catch (e) { } }
 function login(ident, pw) {
-  const v = String(ident).trim().toLowerCase();
-  const u = db.users.find((x) => x.email.toLowerCase() === v || (x.username || x.email.split('@')[0].toLowerCase()) === v);
+  const v = String(ident).trim().toLowerCase(), ph = normPhone(v);
+  const u = db.users.find((x) => x.email.toLowerCase() === v || (x.username || x.email.split('@')[0].toLowerCase()) === v || (ph && x.via === 'phone' && normPhone(x.phone) === ph));
   if (!u || u.password !== pw) throw new AppError('BAD_LOGIN', tr('البريد أو كلمة المرور غير صحيحة.', 'Email or password is incorrect.'));
   if (u.status === 'suspended') throw new AppError('SUSPENDED', tr('هذا الحساب موقوف. تواصل مع خدمة العملاء.', 'This account is suspended. Contact support.'));
   setSession(u); return u;
@@ -114,7 +114,8 @@ function registerCustomer(f) {
   const nu = tx((d) => {
     if (d.users.some((u) => u.email.toLowerCase() === f.email.toLowerCase())) throw new AppError('EMAIL_TAKEN', tr('البريد مسجل بالفعل. سجّل الدخول بدلًا من ذلك.', 'This email is already registered. Log in instead.'));
     if (d.users.some((u) => (u.username || u.email.split('@')[0]) === f.username)) throw new AppError('USERNAME_TAKEN', tr('اسم المستخدم محجوز. اختر اسمًا آخر.', 'That username is taken.'));
-    const u = { id: uid('u'), role: 'customer', username: f.username, name: f.name, email: f.email, password: f.password, phone: f.phone, city: f.city || '', status: 'active', createdAt: new Date().toISOString(), favorites: [] };
+    if (f.via === 'phone' && d.users.some((u) => u.via === 'phone' && normPhone(u.phone) === normPhone(f.phone))) throw new AppError('PHONE_TAKEN', tr('رقم الموبايل ده مسجل بحساب تاني. سجّل الدخول بيه أو استرجع كلمة المرور.', 'This mobile number is already registered. Log in or recover your password.'));
+    const u = { id: uid('u'), role: 'customer', via: f.via === 'phone' ? 'phone' : 'email', username: f.username, name: f.name, email: f.email, password: f.password, phone: f.phone, city: f.city || '', status: 'active', createdAt: new Date().toISOString(), favorites: [] };
     d.users.push(u);
     notify(d, u.id, { ar: 'أهلًا بك في UTravel', en: 'Welcome to UTravel' }, { ar: 'حسابك جاهز. ابدأ باكتشاف الرحلات.', en: 'Your account is ready. Start exploring trips.' }, '#/trips');
     return u;
@@ -337,3 +338,6 @@ const badge = (map, k) => { const s = map[k] || { c: 'b-mute', l: { ar: k, en: k
 
 const isMyPrivate = (t) => !!t && t.status === 'private' && t.requestCustomer === (me() || {}).id;
 const privSeats = (t) => { const d = db.departures.find((x) => x.tripId === t.id); return d ? +d.seats : 1; };
+
+/* Egyptian mobile → digits in international form without '+': 01xxxxxxxxx → 201xxxxxxxxx (null if not a mobile). Mirrors _norm_phone() on the server. */
+function normPhone(p) { const d = String(p || '').replace(/\D/g, ''); if (/^01[0125]\d{8}$/.test(d)) return '2' + d; if (/^201[0125]\d{8}$/.test(d)) return d; if (/^00201[0125]\d{8}$/.test(d)) return d.slice(2); return null; }
