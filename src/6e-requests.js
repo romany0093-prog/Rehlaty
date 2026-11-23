@@ -232,7 +232,7 @@ ACTIONS['plan-any'] = (el) => { planCapture(el.closest('form')); UI.plan.anyDest
 ACTIONS['plan-win'] = (el) => { planCapture(el.closest('form')); UI.plan.window = +el.dataset.v; render(); };
 ACTIONS['plan-back'] = (el) => { planCapture(el.closest('form')); UI.plan.step--; render(); scrollTo(0, 0); };
 CHANGES['plan-radio'] = (el) => { planCapture(el.closest('form')); render(); };
-CHANGES['plan-from'] = (el) => { const to = $('#f-to'); if (to && el.value) { to.min = el.value; if (to.value < el.value) to.value = iso(addDays(el.value, 3)); } };
+CHANGES['plan-from'] = (el) => { const to = $('#f-to'); if (to && el.value) { to.min = el.value; if (to.value < el.value) { to.value = iso(addDays(el.value, 3)); to.dispatchEvent(new Event('input')); } } };
 FORMS.plan = async (f) => {
   const P = UI.plan;
   if (P.step === 1) {

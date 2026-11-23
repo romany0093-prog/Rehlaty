@@ -34,11 +34,21 @@ function footer() {
     <div><a href="#/" class="logo" aria-label="UTravel">${brandLogo({ variant: 'dark', tagline: true })}</a><p style="margin-top:12px;font-size:14.5px;max-width:320px">${tr('منصة تجمع شركات السياحة المرخصة في مصر. قارن واحجز وادفع في مكان واحد.', 'Licensed Egyptian tour operators in one place. Compare, book and pay securely.')}</p></div>
     <div><h4>${tr('اكتشف', 'Explore')}</h4><a href="#/trips">${tr('كل الرحلات', 'All trips')}</a><a href="#/destinations">${tr('الوجهات', 'Destinations')}</a><a href="#/companies">${tr('شركات السياحة', 'Tour operators')}</a><a href="#/trips?cat=day">${tr('رحلات اليوم الواحد', 'Day trips')}</a></div>
     <div><h4>${tr('UTravel', 'UTravel')}</h4><a href="#/page/about">${tr('من نحن', 'About')}</a><a href="#/page/faq">${tr('الأسئلة الشائعة', 'FAQ')}</a><a href="#/page/terms">${tr('الشروط والأحكام', 'Terms')}</a><a href="#/page/privacy">${tr('الخصوصية', 'Privacy')}</a><a href="#/register/company">${tr('سجّل شركتك معنا', 'List your company')}</a></div>
-    <div><h4>${tr('تواصل معنا', 'Contact')}</h4><a href="#/page/contact" class="row" style="gap:8px">${ic('phone')}<span dir="ltr">16xxx</span></a><a href="#/page/contact" class="row" style="gap:8px">${ic('mail')}support@rehlati.eg</a><p style="font-size:14px;margin-top:6px">${tr('التجمع الخامس، القاهرة الجديدة', 'Fifth Settlement, New Cairo')}</p>${installLink('btn btn-sand btn-sm')}</div>
+    <div><h4>${tr('تواصل معنا', 'Contact')}</h4><a href="#/page/contact" class="row" style="gap:8px">${ic('phone')}<span dir="ltr">16xxx</span></a><a href="#/page/contact" class="row" style="gap:8px">${ic('mail')}support@utravel.eg</a><p style="font-size:14px;margin-top:6px">${tr('التجمع الخامس، القاهرة الجديدة', 'Fifth Settlement, New Cairo')}</p>${installLink('btn btn-sand btn-sm')}</div>
   </div><div class="f-bot"><span>© ${new Date().getFullYear()} ${tr('UTravel', 'UTravel')}${CLOUD ? '' : ' · ' + tr('وضع العرض التجريبي (البيانات في متصفحك فقط)', 'Demo mode (data stays in your browser)')}</span>${CLOUD ? '' : `<button class="btn-link" style="color:#B9C7D4" data-a="reset-demo">${tr('إعادة ضبط البيانات التجريبية', 'Reset demo data')}</button>`}</div></div></footer>`;
 }
 ACTIONS['reset-demo'] = async () => { if (await confirmDialog({ title: tr('إعادة ضبط البيانات؟', 'Reset demo data?'), text: tr('ستُحذف كل التعديلات والحجوزات التي أضفتها وتعود البيانات التجريبية الأصلية.', 'All your changes and bookings will be removed and the original demo data restored.'), ok: tr('إعادة الضبط', 'Reset'), danger: true })) { resetDB(); setSession(null); toast(tr('تمت إعادة ضبط البيانات.', 'Demo data reset.')); go('#/'); } };
-const publicLayout = (inner) => header() + `<main id="main" class="route-fade">${inner}</main>` + footer() + cmpTray();
+const publicLayout = (inner) => header() + `<main id="main" class="route-fade">${inner}</main>` + footer() + cmpTray() + tabBar();
+/* bottom tab bar (phones): travellers and guests get app-style navigation; companies and admins use their dashboards */
+function tabBar() {
+  const r = role(); if (r === 'company' || r === 'admin') return '';
+  const h = (location.hash || '#/').split('?')[0], n = cmpList().length;
+  const items = r === 'customer'
+    ? [['#/', 'home', tr('الرئيسية', 'Home')], ['#/trips', 'search', tr('الرحلات', 'Trips')], ['#/me/bookings', 'ticket', tr('رحلاتي', 'My trips')], ['#/me/notifications', 'bell', tr('الإشعارات', 'Alerts'), unread()], ['#/me', 'user', tr('حسابي', 'Account')]]
+    : [['#/', 'home', tr('الرئيسية', 'Home')], ['#/trips', 'search', tr('الرحلات', 'Trips')], ['#/plan', 'compass', tr('خطط رحلتك', 'Plan a trip')], ['#/compare', 'layers', tr('قارن', 'Compare'), n], ['#/login', 'user', tr('دخول', 'Log in')]];
+  const on = (p) => p === '#/' ? h === '#/' || h === '#' || h === '' : p === '#/me' ? h === '#/me' || (h.startsWith('#/me/') && !h.startsWith('#/me/bookings') && !h.startsWith('#/me/booking/') && !h.startsWith('#/me/notifications')) : p === '#/me/bookings' ? h.startsWith('#/me/booking') : h.startsWith(p) || (p === '#/login' && h.startsWith('#/register'));
+  return `<nav class="tabbar" aria-label="${tr('التنقل السريع', 'Quick navigation')}">${items.map(([p, i, l, c]) => `<a href="${p}" class="${on(p) ? 'on' : ''}" ${on(p) ? 'aria-current="page"' : ''}>${ic(i)}${c ? `<span class="tb-dot">${c}</span>` : ''}<span>${l}</span></a>`).join('')}</nav>`;
+}
 
 /* trip card */
 function tripCard(t) {
@@ -97,19 +107,19 @@ function viewHome() {
   ${homePlanBand()}
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('وجهات مختارة', 'Featured destinations')}</h2><p>${tr('من البحر الأحمر إلى واحات الصحراء الغربية.', 'From the Red Sea to the Western Desert oases.')}</p></div><a class="btn btn-ghost btn-sm" href="#/destinations">${tr('كل الوجهات', 'All destinations')}</a></div>
-    <div class="dest-row">${dests.map((d, i) => { const n = trips.filter((t) => t.destId === d.id).length; return `<a class="dest ${i === 0 ? 'big' : ''} ${i > 0 && i === dests.length - 1 && (dests.length + 3) % 4 === 2 ? 'wide' : ''}" href="#/trips?dest=${d.id}"><img src="${artURL(d.art, i % 3)}" alt=""><div class="dc"><h3>${esc(L(d.name))}</h3><small>${esc(L(d.region))} · ${tr(`${n} رحلة`, `${n} trips`)}</small></div></a>`; }).join('')}</div>
+    <div class="dest-row rail-dest">${dests.map((d, i) => { const n = trips.filter((t) => t.destId === d.id).length; return `<a class="dest ${i === 0 ? 'big' : ''} ${i > 0 && i === dests.length - 1 && (dests.length + 3) % 4 === 2 ? 'wide' : ''}" href="#/trips?dest=${d.id}"><img src="${artURL(d.art, i % 3)}" alt=""><div class="dc"><h3>${esc(L(d.name))}</h3><small>${esc(L(d.region))} · ${tr(`${n} رحلة`, `${n} trips`)}</small></div></a>`; }).join('')}</div>
   </div></section>
 
   <section class="sec band"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('الأكثر حجزًا', 'Most booked')}</h2><p>${tr('الرحلات اللي المسافرين اختاروها أكتر الشهر ده.', 'The trips travellers chose most this month.')}</p></div><a class="btn btn-ghost btn-sm" href="#/trips?sort=popular">${tr('عرض الكل', 'View all')}</a></div>
-    <div class="grid g4">${popular.map(tripCard).join('')}</div>
+    <div class="grid g4 rail">${popular.map(tripCard).join('')}</div>
   </div></section>
 
   ${banner ? `<section class="sec" style="padding-bottom:0"><div class="wrap"><a class="promo" href="${safeLink(banner.link)}"><img src="${imgSrc(banner.art)}" alt=""><div class="pc"><h3>${esc(L(banner.title))}</h3><p>${esc(L(banner.text))} <span class="code">${esc(banner.code)}</span></p><span class="btn btn-sand">${tr('شوف رحلات العرض', 'See offer trips')}</span></div></a></div></section>` : ''}
 
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('أُضيفت حديثًا', 'Recently added')}</h2></div><a class="btn btn-ghost btn-sm" href="#/trips?sort=new">${tr('عرض الكل', 'View all')}</a></div>
-    <div class="grid g4">${latest.map(tripCard).join('')}</div>
+    <div class="grid g4 rail">${latest.map(tripCard).join('')}</div>
   </div></section>
 
   <section class="sec why"><div class="wrap grid g2" style="gap:48px;align-items:start">
@@ -123,17 +133,17 @@ function viewHome() {
 
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('شركات السياحة على UTravel', 'Tour operators on UTravel')}</h2></div><a class="btn btn-ghost btn-sm" href="#/companies">${tr('كل الشركات', 'All operators')}</a></div>
-    <div class="grid g4">${comps.map(companyCard).join('')}</div>
+    <div class="grid g4 rail">${comps.map(companyCard).join('')}</div>
   </div></section>
 
   <section class="sec band"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('قالوا عن رحلاتهم', 'What travellers said')}</h2><p>${tr('تقييمات منشورة من حجوزات مكتملة.', 'Published reviews from completed bookings.')}</p></div></div>
-    <div class="grid g3">${revs.map((r) => { const u = { name: r.customerName || userById(r.customerId).name }, t = tripById(r.tripId); return `<figure class="quote" style="margin:0">${starsHTML(r.ratings.overall)}<p style="margin:10px 0 14px">${esc(r.text)}</p><figcaption class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint"><a href="#/trip/${t.id}">${esc(L(t.title))}</a></div></div></figcaption></figure>`; }).join('')}</div>
+    <div class="grid g3 rail">${revs.map((r) => { const u = { name: r.customerName || userById(r.customerId).name }, t = tripById(r.tripId); return `<figure class="quote" style="margin:0">${starsHTML(r.ratings.overall)}<p style="margin:10px 0 14px">${esc(r.text)}</p><figcaption class="row"><span class="avatar">${esc(initials(u.name))}</span><div><b style="color:var(--navy)">${esc(u.name)}</b><div class="xs faint"><a href="#/trip/${t.id}">${esc(L(t.title))}</a></div></div></figcaption></figure>`; }).join('')}</div>
   </div></section>
 
   <section class="sec"><div class="wrap"><div class="card card-pad row wrapx between" style="gap:20px;padding:28px"><div><h2 style="font-size:22px">${tr('عندك شركة سياحة؟', 'Run a tour company?')}</h2><p class="muted" style="margin-top:6px">${tr('اعرض رحلاتك لآلاف المسافرين وخلّي الحجز والتحصيل علينا. العمولة ' + db.settings.commission + '٪ على الحجز المكتمل فقط.', 'Reach thousands of travellers and let us handle booking and payment. ' + db.settings.commission + '% commission on completed bookings only.')}</p></div><a class="btn btn-primary btn-lg" href="#/register/company">${tr('سجّل شركتك', 'List your company')}</a></div></div></section>`);
 }
-CHANGES['date-from'] = (el) => { const to = document.getElementById(el.dataset.to); if (!to) return; to.min = el.value || to.min; if (to.value && el.value && to.value < el.value) to.value = ''; };
+CHANGES['date-from'] = (el) => { const to = document.getElementById(el.dataset.to); if (!to) return; to.min = el.value || to.min; if (to.value && el.value && to.value < el.value) { to.value = ''; to.dispatchEvent(new Event('input')); } };
 FORMS['hero-search'] = (f) => { const d = formData(f); if (d.date && d.to && d.to < d.date) return toast(tr('تاريخ "إلى" لازم يكون بعد تاريخ "من".', 'The “to” date must be after the “from” date.'), 'bad'); const q = new URLSearchParams(); Object.entries(d).forEach(([k, v]) => v && q.set(k, v)); go('#/trips' + (q.toString() ? '?' + q : '')); };
 function companyCard(c) {
   const cr = companyRating(c.id), n = publicTrips().filter((t) => t.companyId === c.id).length;
@@ -183,7 +193,7 @@ function viewTrips() {
     </aside>
     <div>
       <div class="toolbar"><div class="row"><button class="btn btn-ghost btn-sm filters-toggle" data-a="flt-toggle">${ic('filter')}${tr('الفلاتر', 'Filters')}${active ? ` (${active})` : ''}</button><span class="muted"><b class="num" style="color:var(--navy)">${list.length}</b> ${tr('رحلة', 'trips')}</span></div>
-        <label class="row small"><span class="muted">${tr('ترتيب حسب', 'Sort by')}</span><select class="select" style="width:auto;height:38px" data-ch="flt-text" data-k="sort">${[['popular', tr('الأكثر طلبًا', 'Most popular')], ['price_asc', tr('السعر: الأقل أولًا', 'Price: low to high')], ['price_desc', tr('السعر: الأعلى أولًا', 'Price: high to low')], ['rating', tr('الأعلى تقييمًا', 'Highest rated')], ['new', tr('الأحدث', 'Recently added')]].map(([v, l]) => `<option value="${v}" ${(q.sort || 'popular') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div>
+        <label class="row small sort-l"><span class="muted sort-t">${tr('ترتيب حسب', 'Sort by')}</span><select class="select" style="width:auto;height:38px" data-ch="flt-text" data-k="sort" aria-label="${tr('ترتيب حسب', 'Sort by')}">${[['popular', tr('الأكثر طلبًا', 'Most popular')], ['price_asc', tr('السعر: الأقل أولًا', 'Price: low to high')], ['price_desc', tr('السعر: الأعلى أولًا', 'Price: high to low')], ['rating', tr('الأعلى تقييمًا', 'Highest rated')], ['new', tr('الأحدث', 'Recently added')]].map(([v, l]) => `<option value="${v}" ${(q.sort || 'popular') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div>
       <div id="trip-results">${list.length ? `<div class="grid g3">${list.map(tripCard).join('')}</div>` : empty('compass', tr('مفيش رحلات بالشروط دي', 'No trips match these filters'), tr('جرّب توسّع نطاق السعر أو تشيل فلتر التاريخ.', 'Try a wider price range or remove the date filter.'), `<button class="btn btn-primary" data-a="flt-clear">${tr('مسح الفلاتر', 'Clear filters')}</button>`)}</div>
     </div></div></div>`);
 }
@@ -229,8 +239,8 @@ function viewTrip(id) {
     <div class="crumbs" style="color:var(--faint)"><a href="#/">${tr('الرئيسية', 'Home')}</a><span>/</span><a href="#/trips?dest=${d.id}">${esc(L(d.name))}</a><span>/</span><span>${esc(L(catById(t.catId).name))}</span></div>
     <div class="row between wrapx" style="align-items:flex-end;margin-bottom:16px"><div style="max-width:820px"><h1 style="font-size:clamp(24px,3.2vw,36px)">${esc(L(t.title))}</h1>
       <div class="row wrapx small" style="margin-top:8px;gap:16px"><span class="row" style="gap:5px;color:var(--teal-700);font-weight:600">${ic('pin')}${esc(L(d.name))}، ${esc(L(d.region))}</span>${starsHTML(s.rating, s.reviews)}<a class="row" style="gap:8px" href="#/company/${c.id}">${coLogo(c)}<b style="color:var(--navy)">${esc(L(c.name))}</b></a></div></div>
-      <div class="row"><button class="btn btn-ghost btn-sm" data-a="cmp-toggle" data-id="${t.id}">${ic(cmpList().includes(t.id) ? 'check' : 'layers')}${cmpList().includes(t.id) ? tr('في المقارنة', 'In comparison') : tr('أضف للمقارنة', 'Add to compare')}</button><a class="btn btn-ghost btn-sm" href="#/compare?dest=${d.id}">${tr('قارن رحلات ', 'Compare ')}${esc(L(d.name))}</a><button class="btn btn-ghost btn-sm" data-a="fav" data-id="${t.id}">${ic('heart')}${tr('حفظ', 'Save')}</button></div></div>
-    ${camp ? `<div class="callout ok" style="margin-bottom:16px;align-items:center">${seasonChip(camp)}<div class="grow"><b>${esc(L(camp.title))}</b> — ${tr(`خصم ${camp.percent}٪ على كل المواعيد، للحجز حتى ${fmtD(camp.until)}`, `${camp.percent}% off every departure when you book by ${fmtD(camp.until)}`)}</div></div>` : ''}
+      <div class="row t-actions"><button class="btn btn-ghost btn-sm" data-a="cmp-toggle" data-id="${t.id}">${ic(cmpList().includes(t.id) ? 'check' : 'layers')}${cmpList().includes(t.id) ? tr('في المقارنة', 'In comparison') : tr('أضف للمقارنة', 'Add to compare')}</button><a class="btn btn-ghost btn-sm" href="#/compare?dest=${d.id}">${tr('قارن رحلات ', 'Compare ')}${esc(L(d.name))}</a><button class="btn btn-ghost btn-sm" data-a="fav" data-id="${t.id}">${ic('heart')}${tr('حفظ', 'Save')}</button></div></div>
+    ${camp ? `<div class="callout ok camp-note" style="margin-bottom:16px;align-items:center">${seasonChip(camp)}<div class="grow"><b>${esc(L(camp.title))}</b> — ${tr(`خصم ${camp.percent}٪ على كل المواعيد، للحجز حتى ${fmtD(camp.until)}`, `${camp.percent}% off every departure when you book by ${fmtD(camp.until)}`)}</div></div>` : ''}
     <div class="gallery">${imgs.map((im, i) => `<button data-a="lightbox" data-src="${i}" aria-label="${tr('تكبير الصورة', 'Enlarge image')}"><img src="${imgSrc(im)}" alt="${esc(L(t.title))}"></button>`).join('')}</div>
     <div class="detail-layout"><div>
       <div class="facts"><div><small>${tr('المدة', 'Duration')}</small><b>${nightsLabel(t.days)}</b></div><div><small>${tr('أقرب موعد', 'Next departure')}</small><b>${s.next ? fmtDS(s.next.start) : '—'}</b></div><div><small>${tr('السعر يبدأ من', 'From')}</small><b class="num">${money(offerPrice(s.minPrice, camp))}</b>${camp ? ` <s class="was">${money(s.minPrice)}</s>` : ''}</div><div><small>${tr('المقاعد المتاحة', 'Seats left')}</small><b class="num">${s.next ? s.remaining : 0}</b></div></div>
@@ -244,7 +254,8 @@ function viewTrip(id) {
         ${revs.length ? `<div class="grid g2" style="align-items:center;margin-bottom:8px"><div class="row"><b style="font-family:var(--f-disp);font-size:44px;color:var(--navy);line-height:1">${r1(s.rating)}</b><div>${starsHTML(s.rating)}<div class="small muted">${tr(`${revs.length} تقييم من حجوزات مكتملة`, `${revs.length} reviews from completed bookings`)}</div></div></div><div class="rbars">${ratingBars.map(([k, v]) => `<div class="rbar"><span>${rlabels[k]}</span><i><b style="width:${(v / 5) * 100}%"></b></i><span class="num">${r1(v)}</span></div>`).join('')}</div></div>${revs.slice(0, 6).map(reviewItem).join('')}` : `<p class="muted">${tr('لسه مفيش تقييمات. التقييم بيكون متاح للمسافرين بعد انتهاء الرحلة.', 'No reviews yet. Travellers can review after the trip ends.')}</p>`}</section>
       <section class="dsec" style="border:0"><h2>${tr('الشركة المنظمة', 'Organised by')}</h2><div class="card card-pad"><div class="row wrapx">${coLogo(c, 'md')}<div class="grow"><h3><a href="#/company/${c.id}">${esc(L(c.name))}</a></h3><div class="small muted">${esc(c.license)} · ${tr('منذ', 'since')} ${c.founded}</div></div><div class="row wrapx">${prate(c)}${starsHTML(cr.avg, cr.count)}</div></div><p class="muted small" style="margin-top:10px">${esc(L(c.desc))}</p><div class="row wrapx small" style="margin-top:12px;gap:18px"><span class="row" style="gap:6px">${ic('phone')}<span dir="ltr">${esc(c.phone)}</span></span><span class="row" style="gap:6px">${ic('mail')}${esc(c.email)}</span><span class="row" style="gap:6px">${ic('pin')}${esc(L(c.city))}</span></div></div></section>
     </div>
-    <aside><div class="bw" id="bw">${bookingWidget(t)}</div></aside></div></div>`);
+    <aside><div class="bw" id="bw">${bookingWidget(t)}</div></aside></div></div>
+    ${s.avail.length ? `<div class="m-book" id="m-book"><div class="price num"><small>${tr('يبدأ من / للفرد', 'From / person')}</small>${camp ? `<s>${money(s.minPrice)}</s> ` : ''}${money(offerPrice(s.minPrice, camp))}</div><button class="btn btn-teal" data-a="m-book">${ic('cal')}${tr('اختار الموعد واحجز', 'Pick a date & book')}</button></div>` : ''}`);
 }
 function reviewItem(r) {
   const u = { name: r.customerName || userById(r.customerId).name }; const c = compById(r.companyId) || { name: '' };
@@ -267,6 +278,7 @@ function bookingWidget(t) {
 }
 const refreshBW = () => { const el = $('#bw'); const t = tripById(UI.bw.tripId); if (el && t) el.innerHTML = bookingWidget(t); };
 ACTIONS['bw-pick'] = (el) => { UI.bw.depId = el.dataset.id; refreshBW(); if (innerWidth < 980) $('#bw').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+ACTIONS['m-book'] = () => { const el = $('#bw'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 ACTIONS['bw-n'] = (el) => { UI.bw.n = clamp(UI.bw.n + +el.dataset.d, 1, 10); refreshBW(); };
 ACTIONS['bw-book'] = () => {
   const target = `#/book/${UI.bw.tripId}?dep=${UI.bw.depId}&n=${UI.bw.n}`;

@@ -19,7 +19,7 @@ function homeOffers() {
   const live = liveCampaigns().map(campaignCard).filter(Boolean);
   if (!live.length) return '';
   return `<section class="sec" style="padding-bottom:16px"><div class="wrap"><div class="sec-h"><div><h2>${tr('عروض الموسم', 'Seasonal offers')}</h2><p>${tr('خصومات متفق عليها مع شركات السياحة، والخصم بيتطبق تلقائيًا وقت الحجز.', 'Discounts agreed with tour operators — applied automatically when you book.')}</p></div><a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a></div>
-    <div class="grid ${live.length === 2 ? 'g2' : 'g3'}">${live.slice(0, 3).join('')}</div></div></section>`;
+    <div class="grid ${live.length === 2 ? 'g2' : 'g3'} rail">${live.slice(0, 3).join('')}</div></div></section>`;
 }
 function viewOffers() {
   const live = liveCampaigns(), soon = campaigns().filter((c) => campaignState(c) === 'upcoming' && (compById(c.companyId) || {}).status === 'approved');
