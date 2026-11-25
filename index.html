@@ -830,6 +830,21 @@ details.faq[open]{border-color:rgba(111,158,198,.6);box-shadow:var(--sh-1)}
   /* toasts span the screen */
   .toasts{inset-inline:12px;max-width:none}
 }
+
+/* traveller offers block */
+.cust-offers{margin-bottom:18px;background:linear-gradient(135deg,#FFF8EC,#fff 60%);border:1px solid rgba(200,169,110,.55);border-radius:22px;padding:20px 20px 18px;box-shadow:var(--sh-1)}
+.cust-offers.on-home{border-radius:0;border-inline:0;border-top:0;margin:0;padding:24px 0 22px}
+.cust-offers h2{font-size:21px}
+.cust-offers .co-ic{width:36px;height:36px;border-radius:11px;background:var(--sand);color:var(--navy-950);display:inline-grid;place-items:center;flex:none}
+.cust-offers .camp{min-height:250px}
+.coupons{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px}.coupon .grow{min-width:0}.coupons.mt{margin-top:14px}
+.coupon{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px dashed var(--sand);border-radius:16px;padding:12px 14px}
+.coupon .cp-pct{font-family:var(--f-disp);font-weight:800;font-size:20px;color:var(--navy);background:var(--sand-50,#F6EEDD);border-radius:12px;padding:8px 10px;flex:none}
+.coupon b{color:var(--navy);font-size:14.5px}
+.cp-code{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-family:ui-monospace,Menlo,monospace;font-weight:700;letter-spacing:.06em;cursor:pointer;flex:none}
+.cp-code svg{width:16px;height:16px}
+.cp-code:hover{background:var(--navy-950)}
+@media(max-width:640px){.camp .pct{top:12px;inset-inline-end:12px;font-size:17px;padding:5px 9px;border-radius:12px}.camp .top{top:12px;inset-inline-start:12px;inset-inline-end:84px;display:flex}.camp .cb{padding-top:54px}.cust-offers h2{white-space:nowrap;font-size:17px!important}.cust-offers .sec-h{flex-wrap:nowrap}.camp .top .offer-chip{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cust-offers .sec-h p{display:none}.cust-offers .sec-h .btn{flex:none}.cust-offers{padding:16px 16px 14px}.cust-offers.on-home{padding:18px 0 16px}.cust-offers h2{font-size:18px}.coupons{grid-template-columns:1fr}.coupon{flex-wrap:wrap}.coupon .grow{flex:1 1 60%}.cp-code{width:100%;justify-content:center}}
 </style>
 </head>
 <body>
@@ -2232,7 +2247,8 @@ function viewHome() {
   const banner = db.settings.banners.find((b) => b.active);
   const heroTrip = featured[0] || trips[0];
   const destOpts = db.destinations.map((d) => `<option value="${d.id}">${esc(L(d.name))}</option>`).join('');
-  return publicLayout(`
+  const custOffers = role() === 'customer' ? customerOffers('home') : '';
+  return publicLayout(`${custOffers}
   <section class="hero"><div class="hero-art"><img src="assets/hero.jpg" srcset="assets/hero-800.jpg 800w, assets/hero.jpg 1376w" sizes="100vw" alt="" fetchpriority="high" onerror="this.onerror=null;this.removeAttribute('srcset');this.src=artURL('nile',1)"></div>
     <div class="wrap hero-in" style="position:relative">
       <p class="hero-kicker" dir="ltr">${BRAND.tagline}</p>
@@ -2248,7 +2264,7 @@ function viewHome() {
       <div class="hero-stats"><span><b class="num">${trips.length}</b>${tr('رحلة متاحة الآن', 'trips available now')}</span><span><b class="num">${comps.length}</b>${tr('شركات مرخصة', 'licensed operators')}</span><span><b class="num">${r1(avg(db.reviews.map((r) => r.ratings.overall)))} ★</b>${tr(`من ${db.reviews.length} تقييم حقيقي`, `from ${db.reviews.length} verified reviews`)}</span></div>
     </div></section>
 
-  ${homeOffers()}
+  ${custOffers ? '' : homeOffers()}
   ${homePlanBand()}
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('وجهات مختارة', 'Featured destinations')}</h2><p>${tr('من البحر الأحمر إلى واحات الصحراء الغربية.', 'From the Red Sea to the Western Desert oases.')}</p></div><a class="btn btn-ghost btn-sm" href="#/destinations">${tr('كل الوجهات', 'All destinations')}</a></div>
@@ -2554,6 +2570,24 @@ function homeOffers() {
   return `<section class="sec" style="padding-bottom:16px"><div class="wrap"><div class="sec-h"><div><h2>${tr('عروض الموسم', 'Seasonal offers')}</h2><p>${tr('خصومات متفق عليها مع شركات السياحة، والخصم بيتطبق تلقائيًا وقت الحجز.', 'Discounts agreed with tour operators — applied automatically when you book.')}</p></div><a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a></div>
     <div class="grid ${live.length === 2 ? 'g2' : 'g3'} rail">${live.slice(0, 3).join('')}</div></div></section>`;
 }
+/* ---- traveller: offers up front (top of the dashboard, and under the header on the home page) ---- */
+const livePromos = () => (db.settings.offers || []).filter((o) => o.active && o.until >= iso(TODAY));
+function promoCoupon(o) {
+  const where = o.dests && o.dests.length ? o.dests.map((d) => esc(L((destById(d) || { name: { ar: d, en: d } }).name))).join(tr('، ', ', ')) : tr('كل الرحلات', 'all trips');
+  return `<div class="coupon"><span class="cp-pct num">−${o.percent}٪</span><div class="grow"><b>${tr(`خصم ${o.percent}٪ على ${where}`, `${o.percent}% off ${where}`)}</b><div class="xs muted">${tr('اكتب الكود وقت الدفع · لحد', 'Enter the code at checkout · until')} ${fmtD(o.until)}</div></div><button type="button" class="cp-code" data-a="copy-code" data-code="${esc(o.code)}" aria-label="${tr('انسخ الكود', 'Copy code')} ${esc(o.code)}"><span dir="ltr">${esc(o.code)}</span>${ic('doc')}</button></div>`;
+}
+function customerOffers(where) {
+  const camps = liveCampaigns().map(campaignCard).filter(Boolean), promos = livePromos();
+  if (!camps.length && !promos.length) return '';
+  const n = camps.length + promos.length;
+  return `<section class="cust-offers ${where === 'home' ? 'on-home' : ''}" aria-labelledby="co-h-${where}"><div class="${where === 'home' ? 'wrap' : ''}">
+    <div class="sec-h" style="margin-bottom:14px"><div><h2 id="co-h-${where}" class="row" style="gap:10px"><span class="co-ic">${ic('tag')}</span>${tr('عروض ليك دلوقتي', 'Offers for you right now')} <span class="badge b-ok num">${n}</span></h2><p>${tr('الخصم بيتطبق تلقائيًا على رحلات العروض، وأكواد الخصم بتكتبها وقت الدفع.', 'Seasonal discounts apply automatically; promo codes go in at checkout.')}</p></div>${camps.length ? `<a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a>` : ''}</div>
+    ${camps.length ? `<div class="grid ${camps.length === 1 ? 'g2' : camps.length === 2 ? 'g2' : 'g3'} rail">${camps.slice(0, 3).join('')}</div>` : ''}
+    ${promos.length ? `<div class="coupons ${camps.length ? 'mt' : ''}">${promos.map(promoCoupon).join('')}</div>` : ''}
+  </div></section>`;
+}
+ACTIONS['copy-code'] = async (el) => { const c = el.dataset.code; try { await navigator.clipboard.writeText(c); toast(tr(`اتنسخ الكود ${c}. اكتبه وقت الدفع.`, `Copied ${c}. Enter it at checkout.`)); } catch (e) { toast(tr(`الكود: ${c}`, `Code: ${c}`), 'info'); } };
+
 function viewOffers() {
   const live = liveCampaigns(), soon = campaigns().filter((c) => campaignState(c) === 'upcoming' && (compById(c.companyId) || {}).status === 'approved');
   const band = (c) => { const co = compById(c.companyId), trips = (c.tripIds || []).map(tripById).filter((t) => t && publicTrips().includes(t)); if (!trips.length) return ''; return `<section class="camp-band" style="margin-bottom:24px" id="${c.id}"><div class="bh">${seasonChip(c)}<div class="grow"><h2 style="font-size:20px">${esc(L(c.title))}</h2><p class="small muted">${esc(L(c.note || {}))} · ${esc(L(co.name))} · ${tr(`للحجز من ${fmtD(c.from)} حتى ${fmtD(c.until)}`, `Book ${fmtD(c.from)} – ${fmtD(c.until)}`)}</p></div><span class="price num" style="color:var(--ok)">−${c.percent}٪</span></div><div class="card-pad"><div class="grid g3">${trips.map(tripCard).join('')}</div></div></section>`; };
@@ -3487,6 +3521,7 @@ function viewMe() {
   const next = up[0];
   const nd = next && depById(next.departureId), nt = next && tripById(next.tripId);
   return dashLayout('me', tr(`أهلًا ${me().name.split(' ')[0]}`, `Hi ${me().name.split(' ')[0]}`), `
+    ${customerOffers('me')}
     <div style="margin-bottom:16px">${meRequestsCard()}</div>
     ${pend.map((b) => `<div class="callout warn m-stack" style="margin-bottom:12px">${ic('clock')}<div class="grow">${tr('عندك حجز في انتظار الدفع', 'You have a booking awaiting payment')}: <b>${esc(L(tripById(b.tripId).title))}</b> — ${tr('المقاعد محجوزة لحد', 'seats held until')} ${fmtDT(b.holdUntil)}</div><button class="btn btn-sm btn-sand" data-a="resume" data-id="${b.id}">${tr('أكمل الدفع', 'Complete payment')}</button></div>`).join('')}
     <div class="kpis">${kpi(tr('رحلات قادمة', 'Upcoming trips'), up.length, '', 'cal', true)}${kpi(tr('رحلات مكتملة', 'Completed trips'), done.length, '', 'check')}${kpi(tr('إجمالي المدفوع', 'Total paid'), money(spent), '', 'wallet')}${kpi(tr('بانتظار تقييمك', 'Awaiting your review'), toReview.length, toReview.length ? `<a class="btn-link" href="#/me/reviews">${tr('قيّم الآن', 'Review now')}</a>` : '', 'star')}</div>

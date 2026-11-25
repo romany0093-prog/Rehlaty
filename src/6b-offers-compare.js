@@ -21,6 +21,24 @@ function homeOffers() {
   return `<section class="sec" style="padding-bottom:16px"><div class="wrap"><div class="sec-h"><div><h2>${tr('عروض الموسم', 'Seasonal offers')}</h2><p>${tr('خصومات متفق عليها مع شركات السياحة، والخصم بيتطبق تلقائيًا وقت الحجز.', 'Discounts agreed with tour operators — applied automatically when you book.')}</p></div><a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a></div>
     <div class="grid ${live.length === 2 ? 'g2' : 'g3'} rail">${live.slice(0, 3).join('')}</div></div></section>`;
 }
+/* ---- traveller: offers up front (top of the dashboard, and under the header on the home page) ---- */
+const livePromos = () => (db.settings.offers || []).filter((o) => o.active && o.until >= iso(TODAY));
+function promoCoupon(o) {
+  const where = o.dests && o.dests.length ? o.dests.map((d) => esc(L((destById(d) || { name: { ar: d, en: d } }).name))).join(tr('، ', ', ')) : tr('كل الرحلات', 'all trips');
+  return `<div class="coupon"><span class="cp-pct num">−${o.percent}٪</span><div class="grow"><b>${tr(`خصم ${o.percent}٪ على ${where}`, `${o.percent}% off ${where}`)}</b><div class="xs muted">${tr('اكتب الكود وقت الدفع · لحد', 'Enter the code at checkout · until')} ${fmtD(o.until)}</div></div><button type="button" class="cp-code" data-a="copy-code" data-code="${esc(o.code)}" aria-label="${tr('انسخ الكود', 'Copy code')} ${esc(o.code)}"><span dir="ltr">${esc(o.code)}</span>${ic('doc')}</button></div>`;
+}
+function customerOffers(where) {
+  const camps = liveCampaigns().map(campaignCard).filter(Boolean), promos = livePromos();
+  if (!camps.length && !promos.length) return '';
+  const n = camps.length + promos.length;
+  return `<section class="cust-offers ${where === 'home' ? 'on-home' : ''}" aria-labelledby="co-h-${where}"><div class="${where === 'home' ? 'wrap' : ''}">
+    <div class="sec-h" style="margin-bottom:14px"><div><h2 id="co-h-${where}" class="row" style="gap:10px"><span class="co-ic">${ic('tag')}</span>${tr('عروض ليك دلوقتي', 'Offers for you right now')} <span class="badge b-ok num">${n}</span></h2><p>${tr('الخصم بيتطبق تلقائيًا على رحلات العروض، وأكواد الخصم بتكتبها وقت الدفع.', 'Seasonal discounts apply automatically; promo codes go in at checkout.')}</p></div>${camps.length ? `<a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a>` : ''}</div>
+    ${camps.length ? `<div class="grid ${camps.length === 1 ? 'g2' : camps.length === 2 ? 'g2' : 'g3'} rail">${camps.slice(0, 3).join('')}</div>` : ''}
+    ${promos.length ? `<div class="coupons ${camps.length ? 'mt' : ''}">${promos.map(promoCoupon).join('')}</div>` : ''}
+  </div></section>`;
+}
+ACTIONS['copy-code'] = async (el) => { const c = el.dataset.code; try { await navigator.clipboard.writeText(c); toast(tr(`اتنسخ الكود ${c}. اكتبه وقت الدفع.`, `Copied ${c}. Enter it at checkout.`)); } catch (e) { toast(tr(`الكود: ${c}`, `Code: ${c}`), 'info'); } };
+
 function viewOffers() {
   const live = liveCampaigns(), soon = campaigns().filter((c) => campaignState(c) === 'upcoming' && (compById(c.companyId) || {}).status === 'approved');
   const band = (c) => { const co = compById(c.companyId), trips = (c.tripIds || []).map(tripById).filter((t) => t && publicTrips().includes(t)); if (!trips.length) return ''; return `<section class="camp-band" style="margin-bottom:24px" id="${c.id}"><div class="bh">${seasonChip(c)}<div class="grow"><h2 style="font-size:20px">${esc(L(c.title))}</h2><p class="small muted">${esc(L(c.note || {}))} · ${esc(L(co.name))} · ${tr(`للحجز من ${fmtD(c.from)} حتى ${fmtD(c.until)}`, `Book ${fmtD(c.from)} – ${fmtD(c.until)}`)}</p></div><span class="price num" style="color:var(--ok)">−${c.percent}٪</span></div><div class="card-pad"><div class="grid g3">${trips.map(tripCard).join('')}</div></div></section>`; };

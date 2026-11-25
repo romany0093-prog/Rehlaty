@@ -830,6 +830,21 @@ details.faq[open]{border-color:rgba(111,158,198,.6);box-shadow:var(--sh-1)}
   /* toasts span the screen */
   .toasts{inset-inline:12px;max-width:none}
 }
+
+/* traveller offers block */
+.cust-offers{margin-bottom:18px;background:linear-gradient(135deg,#FFF8EC,#fff 60%);border:1px solid rgba(200,169,110,.55);border-radius:22px;padding:20px 20px 18px;box-shadow:var(--sh-1)}
+.cust-offers.on-home{border-radius:0;border-inline:0;border-top:0;margin:0;padding:24px 0 22px}
+.cust-offers h2{font-size:21px}
+.cust-offers .co-ic{width:36px;height:36px;border-radius:11px;background:var(--sand);color:var(--navy-950);display:inline-grid;place-items:center;flex:none}
+.cust-offers .camp{min-height:250px}
+.coupons{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px}.coupon .grow{min-width:0}.coupons.mt{margin-top:14px}
+.coupon{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px dashed var(--sand);border-radius:16px;padding:12px 14px}
+.coupon .cp-pct{font-family:var(--f-disp);font-weight:800;font-size:20px;color:var(--navy);background:var(--sand-50,#F6EEDD);border-radius:12px;padding:8px 10px;flex:none}
+.coupon b{color:var(--navy);font-size:14.5px}
+.cp-code{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-family:ui-monospace,Menlo,monospace;font-weight:700;letter-spacing:.06em;cursor:pointer;flex:none}
+.cp-code svg{width:16px;height:16px}
+.cp-code:hover{background:var(--navy-950)}
+@media(max-width:640px){.camp .pct{top:12px;inset-inline-end:12px;font-size:17px;padding:5px 9px;border-radius:12px}.camp .top{top:12px;inset-inline-start:12px;inset-inline-end:84px;display:flex}.camp .cb{padding-top:54px}.cust-offers h2{white-space:nowrap;font-size:17px!important}.cust-offers .sec-h{flex-wrap:nowrap}.camp .top .offer-chip{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cust-offers .sec-h p{display:none}.cust-offers .sec-h .btn{flex:none}.cust-offers{padding:16px 16px 14px}.cust-offers.on-home{padding:18px 0 16px}.cust-offers h2{font-size:18px}.coupons{grid-template-columns:1fr}.coupon{flex-wrap:wrap}.coupon .grow{flex:1 1 60%}.cp-code{width:100%;justify-content:center}}
 </style>
 </head>
 <body>
