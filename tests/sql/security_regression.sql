@@ -30,6 +30,7 @@ select pg_temp.run('AUTH-01 username lookup without password reveals nothing', n
 select pg_temp.run('AUTH-02 legacy 1-argument lookup removed', null, 'does not exist', $q$select public.resolve_login('mariam')$q$);
 select pg_temp.run('AUTH-03 sign-up rejects weak password', null, 'WEAK_PASSWORD', $q$select public.register_account('sec_tmp1','sec_tmp1@example.com','123456','Sec Tmp','010','customer',null)::text$q$);
 select pg_temp.run('AUTH-04 sign-up cannot create admin', null, 'BAD_ROLE', $q$select public.register_account('sec_tmp2','sec_tmp2@example.com','Str0ngPass!','Sec Tmp','010','admin',null)::text$q$);
+select pg_temp.run('AUTH-06 company sign-up still needs a valid username', null, 'BAD_USERNAME', $q$select public.register_account(null,'sec_tmp3@example.com','Str0ngPass!','Sec Tmp','010','company','{"name":{"ar":"x"}}'::jsonb)::text$q$);
 select pg_temp.run('AUTH-05 anonymous cannot run housekeeping', null, 'permission denied', $q$select public.housekeeping()::text$q$);
 select pg_temp.run('AUTH-06 customer cannot become admin', 'mariam', '^customer$', $q$with u as (update public.profiles set role='admin' where id=auth.uid() returning role) select role from u$q$);
 select pg_temp.run('AUTH-07 suspended customer cannot book', 'khaled', 'SUSPENDED', $q$select public.create_booking('dp_sec','[{"name":"a b"}]',null)::text$q$);

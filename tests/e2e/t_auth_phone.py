@@ -47,7 +47,8 @@ with sync_playwright() as p:
     ok('password hidden by default', pg.get_attribute('#f-password', 'type') == 'password')
     pg.click('#f-password ~ .pw-eye'); ok('eye shows the password', pg.get_attribute('#f-password', 'type') == 'text' and pg.get_attribute('#f-password ~ .pw-eye', 'aria-pressed') == 'true')
     pg.click('#f-password ~ .pw-eye'); ok('eye hides it again', pg.get_attribute('#f-password', 'type') == 'password')
-    pg.fill('#f-username', 'sara.m'); pg.check('input[name=terms]')
+    ok('no username field: the email or mobile is the username', pg.locator('#f-username').count() == 0)
+    pg.check('input[name=terms]')
     pg.click('form[data-f=register] button[type=submit]'); pg.wait_for_timeout(300)
     ok('mobile required in mobile mode', pg.locator('#f-phone').evaluate("e=>e.closest('.field').classList.contains('err')"))
     pg.fill('#f-phone', '0101 234 5678'); pg.screenshot(path=SHOTS + '/auth-register-phone.png')
@@ -58,7 +59,7 @@ with sync_playwright() as p:
     ok('sidebar logo with tagline', pg.inner_text('.side .ut-tag') == TAG)
     # duplicate mobile
     pg.evaluate("setSession(null)"); pg.goto(D + '#/register'); pg.wait_for_timeout(200); pg.click('[data-a=reg-via][data-v=phone]'); pg.wait_for_timeout(150)
-    pg.fill('#f-name', 'Another One'); pg.fill('#f-phone', '01012345678'); pg.fill('#f-email', 'other@example.com'); pg.fill('#f-username', 'another1'); pg.fill('#f-password', 'Secret123'); pg.check('input[name=terms]')
+    pg.fill('#f-name', 'Another One'); pg.fill('#f-phone', '01012345678'); pg.fill('#f-email', 'other@example.com'); pg.fill('#f-password', 'Secret123'); pg.check('input[name=terms]')
     pg.click('form[data-f=register] button[type=submit]'); pg.wait_for_timeout(600)
     ok('same mobile cannot register twice', 'مسجل' in pg.inner_text('form[data-f=register]'))
     # login by mobile
@@ -90,10 +91,10 @@ with sync_playwright() as p:
     # cloud flow with stand-in client
     ctx = b.new_context(); ctx.add_init_script(FAKE); c = ctx.new_page(); c.on('pageerror', lambda e: err.append('cloud ' + str(e)[:160]))
     c.goto(C + '#/register'); c.wait_for_timeout(900); c.click('[data-a=reg-via][data-v=phone]'); c.wait_for_timeout(150)
-    c.fill('#f-name', 'Cloud User'); c.fill('#f-phone', '01012345678'); c.fill('#f-email', 'cloud@example.com'); c.fill('#f-username', 'cloud.u'); c.fill('#f-password', 'Secret123'); c.check('input[name=terms]')
+    c.fill('#f-name', 'Cloud User'); c.fill('#f-phone', '01012345678'); c.fill('#f-email', 'cloud@example.com'); c.fill('#f-password', 'Secret123'); c.check('input[name=terms]')
     c.click('form[data-f=register] button[type=submit]'); c.wait_for_timeout(800)
     reg = c.evaluate("window.__calls.find(x=>x[1]==='register_account')")
-    ok('cloud: register_account sends p_via=phone', reg and reg[2]['p_via'] == 'phone' and reg[2]['p_phone'] == '01012345678', reg and reg[2])
+    ok('cloud: register_account sends p_via=phone and no username', reg and reg[2]['p_via'] == 'phone' and reg[2]['p_phone'] == '01012345678' and reg[2]['p_username'] is None, reg and reg[2])
     lg = c.evaluate("window.__calls.find(x=>x[1]==='resolve_login')")
     ok('cloud: login after sign-up sends the password with the lookup', lg and lg[2].get('p_password') == 'Secret123')
     c.goto(C + '#/forgot'); c.wait_for_timeout(500); c.fill('#f-ident', '01012345678'); c.click('form[data-f=forgot] button[type=submit]'); c.wait_for_timeout(700)

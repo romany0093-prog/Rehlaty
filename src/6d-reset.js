@@ -116,9 +116,9 @@ function viewResetPassword() {
     <a class="btn btn-primary" href="#/forgot">${tr('اطلب رابط جديد', 'Request a new link')}</a>`
   : `
     <h1 style="font-size:28px">${tr('كلمة مرور جديدة', 'Set a new password')}</h1>
-    <p class="muted" style="margin:6px 0 22px">${tr(`للحساب <b dir="ltr">${esc(u.username || u.email)}</b>. اختار كلمة مرور ما استخدمتهاش قبل كده.`, `For <b>${esc(u.username || u.email)}</b>. Choose a password you haven’t used before.`)}</p>
+    <p class="muted" style="margin:6px 0 22px">${tr(`للحساب <b dir="ltr">${esc(loginId(u))}</b>. اختار كلمة مرور ما استخدمتهاش قبل كده.`, `For <b>${esc(loginId(u))}</b>. Choose a password you haven’t used before.`)}</p>
     <form data-f="reset-pw" class="stack" novalidate>
-      <input type="text" name="username" value="${esc(u.username || u.email)}" autocomplete="username" hidden>
+      <input type="text" name="username" value="${esc(loginId(u))}" autocomplete="username" hidden>
       ${inp('nw', tr('كلمة المرور الجديدة', 'New password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"', hint: tr('٨ أحرف على الأقل', 'At least 8 characters') })}
       ${inp('nw2', tr('أكّد كلمة المرور', 'Confirm the password'), '', { type: 'password', attrs: 'dir="ltr" autocomplete="new-password"' })}
       <button class="btn btn-primary btn-lg btn-block" type="submit">${tr('حفظ كلمة المرور والدخول', 'Save password and log in')}</button></form>`;

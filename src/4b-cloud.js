@@ -160,7 +160,7 @@ if (CLOUD) {
     return u;
   };
   logout = async function () { await sb.auth.signOut(); AUTH_UID = null; await loadCloud(); };
-  registerCustomer = async function (f) { await rpc('register_account', { p_username: f.username, p_email: f.email, p_password: f.password, p_name: f.name, p_phone: f.phone || null, p_role: 'customer', p_company: null, p_via: f.via === 'phone' ? 'phone' : 'email' }); return login(f.username, f.password); };
+  registerCustomer = async function (f) { await rpc('register_account', { p_username: null, p_email: f.email, p_password: f.password, p_name: f.name, p_phone: f.phone || null, p_role: 'customer', p_company: null, p_via: f.via === 'phone' ? 'phone' : 'email' }); return login(f.username, f.password); };
   registerCompany = async function (f) {
     const palette = ['#2E6F6F', '#8C5A2B', '#5E4B8B', '#2F5D8A', '#9A3B3B', '#4E7A3A'];
     const company = { name: { ar: f.company, en: f.companyEn || f.company }, color: palette[Math.floor(Math.random() * palette.length)], city: { ar: f.city, en: f.city }, phone: f.phone, website: '', license: f.license, founded: +f.founded || new Date().getFullYear(), desc: { ar: f.desc || '', en: '' }, logo: null, cover: 'art:sea:0', docs: (f.docs || []).map((n) => ({ name: n })) };
