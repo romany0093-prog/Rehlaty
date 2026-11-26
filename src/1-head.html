@@ -884,6 +884,14 @@ body.ofc-on .toasts{bottom:calc(20px + env(safe-area-inset-bottom))}
   body:has(.tabbar).ofc-on .toasts{bottom:calc(270px + env(safe-area-inset-bottom))}
 }
 @media(max-width:900px){.ofc-go .btn{height:44px}}
+@media(min-width:901px) and (max-height:900px){.ofc{width:340px}.ofc-track{height:118px}.ofc-slide img{display:none}.ofc-big{width:72px;height:72px;font-size:22px}.ofc-b b{-webkit-line-clamp:1}.ofc-h{padding-block:8px 6px}.ofc-x{width:40px;height:40px}.ofc-f{padding-bottom:10px}}
+@media(min-width:901px){
+  body.ofc-top #ofc-layer{top:104px;bottom:auto;inset-inline-start:auto;inset-inline-end:24px}
+  body.ofc-top .ofc{transform:translateY(-30px) scale(.96)}
+  body.ofc-top .ofc.in{transform:none}
+}
+@media(min-width:901px) and (max-width:1199px){body.ofc-top .hero h1{max-width:calc(100% - 300px)}body.ofc-top .ofc{width:280px}body.ofc-top .ofc-h b{font-size:14px}body.ofc-top .ofc-go{flex-wrap:wrap}body.ofc-top .ofc-track{height:140px}}
+body.ofc-away .ofc{opacity:0;transform:translateY(40px) scale(.96);pointer-events:none}
 @media(max-width:640px){.ofc-track{height:170px}.ofc-slide img{width:88px;height:104px}.ofc-big{width:88px;height:88px;font-size:26px}}
 </style>
 </head>

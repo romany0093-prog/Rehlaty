@@ -26,7 +26,10 @@ with sync_playwright() as p:
         ok(f'{vw}: card slides in', pg.locator('.ofc.in').count() == 1 and pg.evaluate("getComputedStyle(document.querySelector('.ofc')).opacity") == '1')
         ok(f'{vw}: titled "عروض حصرية ليك"', pg.inner_text('.ofc-h b') == 'عروض حصرية ليك')
         bb = pg.locator('.ofc').bounding_box()
-        ok(f'{vw}: sits in the bottom corner, inside the screen', bb['y'] + bb['height'] <= size[1] - 10 and bb['x'] >= 0 and bb['x'] + bb['width'] <= size[0], bb)
+        if vw == 'desktop':
+            ok('desktop home: card in the top corner under the header', 84 <= bb['y'] <= 130 and bb['x'] < 60, bb)
+        else:
+            ok('phone: card in the bottom corner, inside the screen', bb['y'] + bb['height'] <= size[1] - 10 and bb['x'] >= 0 and bb['x'] + bb['width'] <= size[0], bb)
         if vw == 'phone':
             tb = pg.locator('.tabbar').bounding_box(); ok('phone: card sits above the tab bar', bb['y'] + bb['height'] <= tb['y'], (bb, tb))
         ok(f'{vw}: home page back to its normal order (hero first)', pg.evaluate("document.querySelector('#main').firstElementChild.className.split(' ')[0]") == 'hero')
@@ -67,5 +70,19 @@ with sync_playwright() as p:
         login(pg, 'mariam'); pg.evaluate("sessionStorage.clear(); tx(d => { d.settings.campaigns = []; d.settings.offers = []; }); render()"); pg.wait_for_timeout(2400)
         ok(f'{vw}: no offers → no card', pg.locator('.ofc, .ofc-pill').count() == 0)
         ctx.close()
+    # desktop: never covers the headline, search box or plan link, at common laptop sizes
+    COVER = """(c)=>{const out=[];for(const sel of ['.hero h1','.hero .lead','.hero-kicker','form.ticket','.hero-plan']){const el=document.querySelector(sel);if(!el)continue;const r=document.createRange();r.selectNodeContents(el);const rects=sel==='form.ticket'?[el.getBoundingClientRect()]:[...r.getClientRects()];if(rects.some(x=>!(x.right<=c.x||x.left>=c.x+c.width||x.bottom<=c.y||x.top>=c.y+c.height)))out.push(sel)}return out}"""
+    bad = {}
+    for w, h in [(1024, 700), (1280, 800), (1366, 768), (1440, 900), (1920, 1080)]:
+        pg = b.new_page(viewport={'width': w, 'height': h}); pg.goto(U); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(300)
+        login(pg, 'mariam'); pg.mouse.move(5, 5); pg.goto(U + '#/'); pg.wait_for_timeout(2500)
+        hit = pg.evaluate(COVER, pg.locator('.ofc').bounding_box())
+        if hit: bad[f'{w}x{h}'] = hit
+        if (w, h) == (1366, 768):
+            pg.focus('#hs-dest'); pg.wait_for_timeout(450); away = pg.evaluate("getComputedStyle(document.querySelector('.ofc')).opacity")
+            pg.locator('#hs-dest').blur(); pg.wait_for_timeout(450); back = pg.evaluate("getComputedStyle(document.querySelector('.ofc')).opacity")
+            ok('card steps aside while the search box is in use, then returns', away == '0' and back == '1', (away, back))
+        pg.close()
+    ok('desktop: card never covers the hero headline, search or plan link', not bad, bad)
     b.close()
 print('errors:', err[:5]); print(f'{sum(res)}/{len(res)} passed')

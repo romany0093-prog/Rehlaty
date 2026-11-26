@@ -41,6 +41,7 @@ function ofcMount() {
   const path = (location.hash.replace(/^#/, '') || '/').split('?')[0].replace(/\/$/, '') || '/';
   const slides = role() === 'customer' && (path === '/' || path === '/me') ? ofcSlides() : [];
   const layer = ofcLayer(), key = slides.length ? path + '|' + LANG + '|' + slides.length : '';
+  document.body.classList.toggle('ofc-top', path === '/'); // home: top corner over the sky, clear of the search box
   if (key && key === OFC.key && layer.firstChild) return; // same page: keep the card where it is
   ofcStop(); OFC.key = key; OFC.i = 0;
   if (!slides.length) { layer.innerHTML = ''; return; }
@@ -69,6 +70,9 @@ function ofcGo(k) {
   const bar = card.querySelector('.ofc-bar'); if (bar) { bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run'); }
 }
 function ofcPill(n) { ofcLayer().innerHTML = `<button type="button" class="ofc-pill" data-a="ofc-open">${ic('tag')}<span>${ofcTitle()}</span><span class="ofc-pn num">${n}</span></button>`; }
+// step aside while the traveller is filling in the search box, come back when they leave it
+document.addEventListener('focusin', (e) => document.body.classList.toggle('ofc-away', !!(e.target.closest && e.target.closest('form.ticket'))));
+document.addEventListener('focusout', () => setTimeout(() => { const a = document.activeElement; if (!(a && a.closest && a.closest('form.ticket'))) document.body.classList.remove('ofc-away'); }, 0));
 ACTIONS['ofc-dot'] = (el) => ofcGo(+el.dataset.k);
 ACTIONS['ofc-close'] = () => { try { sessionStorage.setItem(OFC_CLOSED, '1'); } catch (e) { } const card = document.querySelector('.ofc'); ofcStop(); const n = card ? +card.dataset.n : 0; if (card) { card.classList.remove('in'); setTimeout(() => ofcPill(n), 260); } };
 ACTIONS['ofc-open'] = () => { try { sessionStorage.removeItem(OFC_CLOSED); } catch (e) { } OFC.key = ''; ofcMount(); clearTimeout(OFC.show); const card = document.querySelector('.ofc'); if (card) requestAnimationFrame(() => { card.classList.add('in'); document.body.classList.add('ofc-on'); if (+card.dataset.n > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) OFC.timer = setInterval(() => { if (!OFC.paused && !document.hidden) ofcGo(OFC.i + 1); }, 4500); card.querySelector('.ofc-x').focus(); }); };
