@@ -831,20 +831,60 @@ details.faq[open]{border-color:rgba(111,158,198,.6);box-shadow:var(--sh-1)}
   .toasts{inset-inline:12px;max-width:none}
 }
 
-/* traveller offers block */
-.cust-offers{margin-bottom:18px;background:linear-gradient(135deg,#FFF8EC,#fff 60%);border:1px solid rgba(200,169,110,.55);border-radius:22px;padding:20px 20px 18px;box-shadow:var(--sh-1)}
-.cust-offers.on-home{border-radius:0;border-inline:0;border-top:0;margin:0;padding:24px 0 22px}
-.cust-offers h2{font-size:21px}
-.cust-offers .co-ic{width:36px;height:36px;border-radius:11px;background:var(--sand);color:var(--navy-950);display:inline-grid;place-items:center;flex:none}
-.cust-offers .camp{min-height:250px}
-.coupons{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px}.coupon .grow{min-width:0}.coupons.mt{margin-top:14px}
-.coupon{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px dashed var(--sand);border-radius:16px;padding:12px 14px}
-.coupon .cp-pct{font-family:var(--f-disp);font-weight:800;font-size:20px;color:var(--navy);background:var(--sand-50,#F6EEDD);border-radius:12px;padding:8px 10px;flex:none}
-.coupon b{color:var(--navy);font-size:14.5px}
 .cp-code{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-family:ui-monospace,Menlo,monospace;font-weight:700;letter-spacing:.06em;cursor:pointer;flex:none}
-.cp-code svg{width:16px;height:16px}
-.cp-code:hover{background:var(--navy-950)}
-@media(max-width:640px){.camp .pct{top:12px;inset-inline-end:12px;font-size:17px;padding:5px 9px;border-radius:12px}.camp .top{top:12px;inset-inline-start:12px;inset-inline-end:84px;display:flex}.camp .cb{padding-top:54px}.cust-offers h2{white-space:nowrap;font-size:17px!important}.cust-offers .sec-h{flex-wrap:nowrap}.camp .top .offer-chip{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cust-offers .sec-h p{display:none}.cust-offers .sec-h .btn{flex:none}.cust-offers{padding:16px 16px 14px}.cust-offers.on-home{padding:18px 0 16px}.cust-offers h2{font-size:18px}.coupons{grid-template-columns:1fr}.coupon{flex-wrap:wrap}.coupon .grow{flex:1 1 60%}.cp-code{width:100%;justify-content:center}}
+.cp-code svg{width:16px;height:16px}.cp-code:hover{background:var(--navy-950)}
+@media(max-width:640px){.camp .pct{top:12px;inset-inline-end:12px;font-size:17px;padding:5px 9px;border-radius:12px}.camp .top{top:12px;inset-inline-start:12px;inset-inline-end:84px;display:flex}.camp .top .offer-chip{max-width:100%;overflow:hidden}.camp .cb{padding-top:54px}}
+/* "Exclusive offers for you" corner card (travellers, home + dashboard) */
+#ofc-layer{position:fixed;z-index:85;bottom:calc(20px + env(safe-area-inset-bottom));inset-inline-start:20px;pointer-events:none}
+.ofc,.ofc-pill{pointer-events:auto}
+.ofc{width:372px;max-width:calc(100vw - 24px);background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(20,31,42,.28),0 0 0 1px rgba(200,169,110,.55);overflow:hidden;position:relative;opacity:0;transform:translateY(40px) scale(.96);transition:opacity .35s ease,transform .45s cubic-bezier(.2,1.3,.4,1)}
+.ofc.in{opacity:1;transform:none}
+.ofc-h{display:flex;align-items:center;gap:10px;padding:12px 12px 10px 16px;background:linear-gradient(120deg,var(--navy-950),var(--navy) 70%,#2a5878);color:#fff;position:relative;overflow:hidden}
+.ofc-h::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(232,206,150,.35) 50%,transparent 65%);transform:translateX(-120%);animation:ofc-shine 3.6s ease-in-out 2.2s infinite}
+[dir=ltr] .ofc-h{padding:12px 16px 10px 12px}
+.ofc-h b{font-size:15.5px;flex:1}
+.ofc-ic{width:32px;height:32px;border-radius:10px;background:var(--sand);color:var(--navy-950);display:grid;place-items:center;flex:none;animation:ofc-swing 2.8s ease-in-out 2s infinite;transform-origin:50% 0}
+.ofc-ic svg{width:18px;height:18px}
+.ofc-n{font-size:12px;color:#C9D6E2;flex:none}
+.ofc-x{width:44px;height:44px;margin:-6px -6px -6px 0;border:0;background:none;color:#fff;border-radius:12px;display:grid;place-items:center;cursor:pointer;flex:none;position:relative;z-index:1}
+.ofc-x:hover{background:rgba(255,255,255,.12)}
+.ofc-track{position:relative;height:166px}
+.ofc-slide{position:absolute;inset:0;display:flex;gap:14px;align-items:center;padding:14px 16px;color:inherit;text-decoration:none;opacity:0;transform:translateX(28px);transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.3,1);visibility:hidden}
+[dir=rtl] .ofc-slide{transform:translateX(-28px)}
+.ofc-slide.on{opacity:1;transform:none;visibility:visible}
+.ofc-slide img{width:104px;height:116px;object-fit:cover;border-radius:16px;flex:none}
+.ofc-b{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.ofc-b b{color:var(--navy);font-size:15px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ofc-b small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ofc-pct{align-self:flex-start;background:var(--bad);color:#fff;font-weight:800;font-size:12.5px;border-radius:8px;padding:2px 8px;font-family:var(--f-disp)}
+.ofc-go{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;font-weight:700;color:var(--navy);font-size:13.5px;white-space:nowrap}
+.ofc-go .btn{height:36px;flex:none}
+.ofc-big{font-family:var(--f-disp);font-weight:800;font-size:30px;color:var(--navy);background:#F6EEDD;border:1.5px dashed var(--sand);border-radius:18px;width:104px;height:104px;display:grid;place-items:center;flex:none}
+.ofc-promo .cp-code{margin-top:6px;align-self:flex-start;height:40px}
+.ofc-f{display:flex;align-items:center;justify-content:space-between;padding:0 16px 14px}
+.ofc-dots{display:flex;gap:2px}
+.ofc-dots button{width:26px;height:26px;border:0;background:none;cursor:pointer;display:grid;place-items:center;padding:0}
+.ofc-dots button::before{content:"";width:8px;height:8px;border-radius:4px;background:#D7DDE3;transition:width .3s,background .3s}
+.ofc-dots button.on::before{width:22px;background:var(--sand)}
+.ofc-bar{position:absolute;inset-inline:0;bottom:0;height:3px;background:var(--sand);transform-origin:right;transform:scaleX(0)}
+[dir=ltr] .ofc-bar{transform-origin:left}
+.ofc.in .ofc-bar,.ofc-bar.run{animation:ofc-progress 4.5s linear}
+.ofc.paused .ofc-bar{animation-play-state:paused}
+.ofc-pill{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 16px 0 12px;border-radius:24px;border:0;background:var(--navy-950);color:#fff;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 12px 30px rgba(20,31,42,.3);animation:pop .3s ease-out}
+.ofc-pill svg{width:18px;height:18px;color:var(--sand)}
+.ofc-pn{background:var(--sand);color:var(--navy-950);border-radius:10px;min-width:22px;height:22px;display:grid;place-items:center;font-size:12px;padding:0 6px}
+@keyframes ofc-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes ofc-shine{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+@keyframes ofc-swing{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(12deg)}84%{transform:rotate(-9deg)}92%{transform:rotate(5deg)}}
+body.install-open #ofc-layer{bottom:calc(120px + env(safe-area-inset-bottom))}
+body.ofc-on .toasts{bottom:calc(20px + env(safe-area-inset-bottom))}
+@media(max-width:900px){
+  #ofc-layer{inset-inline:10px;bottom:calc(74px + env(safe-area-inset-bottom))}
+  .ofc{width:auto;max-width:none}
+  body:has(.tabbar).ofc-on .toasts{bottom:calc(270px + env(safe-area-inset-bottom))}
+}
+@media(max-width:900px){.ofc-go .btn{height:44px}}
+@media(max-width:640px){.ofc-track{height:170px}.ofc-slide img{width:88px;height:104px}.ofc-big{width:88px;height:88px;font-size:26px}}
 </style>
 </head>
 <body>
@@ -2247,8 +2287,7 @@ function viewHome() {
   const banner = db.settings.banners.find((b) => b.active);
   const heroTrip = featured[0] || trips[0];
   const destOpts = db.destinations.map((d) => `<option value="${d.id}">${esc(L(d.name))}</option>`).join('');
-  const custOffers = role() === 'customer' ? customerOffers('home') : '';
-  return publicLayout(`${custOffers}
+  return publicLayout(`
   <section class="hero"><div class="hero-art"><img src="assets/hero.jpg" srcset="assets/hero-800.jpg 800w, assets/hero.jpg 1376w" sizes="100vw" alt="" fetchpriority="high" onerror="this.onerror=null;this.removeAttribute('srcset');this.src=artURL('nile',1)"></div>
     <div class="wrap hero-in" style="position:relative">
       <p class="hero-kicker" dir="ltr">${BRAND.tagline}</p>
@@ -2264,7 +2303,7 @@ function viewHome() {
       <div class="hero-stats"><span><b class="num">${trips.length}</b>${tr('رحلة متاحة الآن', 'trips available now')}</span><span><b class="num">${comps.length}</b>${tr('شركات مرخصة', 'licensed operators')}</span><span><b class="num">${r1(avg(db.reviews.map((r) => r.ratings.overall)))} ★</b>${tr(`من ${db.reviews.length} تقييم حقيقي`, `from ${db.reviews.length} verified reviews`)}</span></div>
     </div></section>
 
-  ${custOffers ? '' : homeOffers()}
+  ${homeOffers()}
   ${homePlanBand()}
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('وجهات مختارة', 'Featured destinations')}</h2><p>${tr('من البحر الأحمر إلى واحات الصحراء الغربية.', 'From the Red Sea to the Western Desert oases.')}</p></div><a class="btn btn-ghost btn-sm" href="#/destinations">${tr('كل الوجهات', 'All destinations')}</a></div>
@@ -2572,20 +2611,55 @@ function homeOffers() {
 }
 /* ---- traveller: offers up front (top of the dashboard, and under the header on the home page) ---- */
 const livePromos = () => (db.settings.offers || []).filter((o) => o.active && o.until >= iso(TODAY));
-function promoCoupon(o) {
-  const where = o.dests && o.dests.length ? o.dests.map((d) => esc(L((destById(d) || { name: { ar: d, en: d } }).name))).join(tr('، ', ', ')) : tr('كل الرحلات', 'all trips');
-  return `<div class="coupon"><span class="cp-pct num">−${o.percent}٪</span><div class="grow"><b>${tr(`خصم ${o.percent}٪ على ${where}`, `${o.percent}% off ${where}`)}</b><div class="xs muted">${tr('اكتب الكود وقت الدفع · لحد', 'Enter the code at checkout · until')} ${fmtD(o.until)}</div></div><button type="button" class="cp-code" data-a="copy-code" data-code="${esc(o.code)}" aria-label="${tr('انسخ الكود', 'Copy code')} ${esc(o.code)}"><span dir="ltr">${esc(o.code)}</span>${ic('doc')}</button></div>`;
+/* Corner card: slides in ~2 s after a traveller opens the home page or their dashboard, cycles through the
+   live seasonal offers and promo codes, pauses on hover/focus, and closes to a small "reopen" button (per visit). */
+const OFC = { i: 0, timer: null, show: null, paused: false, key: '' };
+const OFC_CLOSED = 'utravel_ofc_closed';
+function ofcSlides() {
+  const camps = liveCampaigns().map((c) => { const co = compById(c.companyId), trips = (c.tripIds || []).map(tripById).filter((t) => t && publicTrips().includes(t)); if (!co || !trips.length) return ''; const from = Math.min(...trips.map((t) => offerPrice(tripStats(t).minPrice, c)));
+    return `<a class="ofc-slide" href="#/trips?offer=${c.id}"><img src="${imgSrc(trips[0].images[0])}" alt=""><div class="ofc-b"><span class="ofc-pct">−${c.percent}٪</span><b>${esc(L(c.title))}</b><small>${esc(L(co.name))} · ${tr('حتى', 'until')} ${fmtD(c.until)}</small><span class="ofc-go"><span class="num">${tr('يبدأ من', 'From')} ${money(from)}</span><span class="btn btn-sand btn-sm">${tr('شوف الرحلات', 'See trips')}</span></span></div></a>`; }).filter(Boolean);
+  const promos = livePromos().map((o) => { const where = o.dests && o.dests.length ? o.dests.map((d) => esc(L((destById(d) || { name: { ar: d, en: d } }).name))).join(tr('، ', ', ')) : tr('كل الرحلات', 'all trips');
+    return `<div class="ofc-slide ofc-promo"><span class="ofc-big num">−${o.percent}٪</span><div class="ofc-b"><b>${tr(`خصم ${o.percent}٪ على ${where}`, `${o.percent}% off ${where}`)}</b><small>${tr('اكتب الكود وقت الدفع · لحد', 'Enter it at checkout · until')} ${fmtD(o.until)}</small><button type="button" class="cp-code" data-a="copy-code" data-code="${esc(o.code)}" aria-label="${tr('انسخ الكود', 'Copy code')} ${esc(o.code)}"><span dir="ltr">${esc(o.code)}</span>${ic('doc')}</button></div></div>`; });
+  return camps.concat(promos);
 }
-function customerOffers(where) {
-  const camps = liveCampaigns().map(campaignCard).filter(Boolean), promos = livePromos();
-  if (!camps.length && !promos.length) return '';
-  const n = camps.length + promos.length;
-  return `<section class="cust-offers ${where === 'home' ? 'on-home' : ''}" aria-labelledby="co-h-${where}"><div class="${where === 'home' ? 'wrap' : ''}">
-    <div class="sec-h" style="margin-bottom:14px"><div><h2 id="co-h-${where}" class="row" style="gap:10px"><span class="co-ic">${ic('tag')}</span>${tr('عروض ليك دلوقتي', 'Offers for you right now')} <span class="badge b-ok num">${n}</span></h2><p>${tr('الخصم بيتطبق تلقائيًا على رحلات العروض، وأكواد الخصم بتكتبها وقت الدفع.', 'Seasonal discounts apply automatically; promo codes go in at checkout.')}</p></div>${camps.length ? `<a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a>` : ''}</div>
-    ${camps.length ? `<div class="grid ${camps.length === 1 ? 'g2' : camps.length === 2 ? 'g2' : 'g3'} rail">${camps.slice(0, 3).join('')}</div>` : ''}
-    ${promos.length ? `<div class="coupons ${camps.length ? 'mt' : ''}">${promos.map(promoCoupon).join('')}</div>` : ''}
-  </div></section>`;
+const ofcTitle = () => tr('عروض حصرية ليك', 'Exclusive offers for you');
+function ofcLayer() { let l = document.getElementById('ofc-layer'); if (!l) { l = document.createElement('div'); l.id = 'ofc-layer'; document.body.appendChild(l); } return l; }
+function ofcStop() { clearInterval(OFC.timer); clearTimeout(OFC.show); OFC.timer = OFC.show = null; document.body.classList.remove('ofc-on'); }
+function ofcMount() {
+  const path = (location.hash.replace(/^#/, '') || '/').split('?')[0].replace(/\/$/, '') || '/';
+  const slides = role() === 'customer' && (path === '/' || path === '/me') ? ofcSlides() : [];
+  const layer = ofcLayer(), key = slides.length ? path + '|' + LANG + '|' + slides.length : '';
+  if (key && key === OFC.key && layer.firstChild) return; // same page: keep the card where it is
+  ofcStop(); OFC.key = key; OFC.i = 0;
+  if (!slides.length) { layer.innerHTML = ''; return; }
+  let closed = false; try { closed = sessionStorage.getItem(OFC_CLOSED) === '1'; } catch (e) { }
+  if (closed) return ofcPill(slides.length);
+  layer.innerHTML = `<aside class="ofc" role="region" aria-label="${ofcTitle()}" data-n="${slides.length}">
+    <div class="ofc-h"><span class="ofc-ic">${ic('tag')}</span><b>${ofcTitle()}</b>${slides.length > 1 ? `<span class="ofc-n num" dir="ltr" aria-hidden="true">1 / ${slides.length}</span>` : ''}<button type="button" class="ofc-x" data-a="ofc-close" aria-label="${tr('إخفاء العروض', 'Hide offers')}">${ic('x')}</button></div>
+    <div class="ofc-track">${slides.map((h, k) => h.replace('class="ofc-slide', `data-k="${k}" ${k ? 'aria-hidden="true" inert' : ''} class="ofc-slide${k ? '' : ' on'}`)).join('')}</div>
+    <div class="ofc-f">${slides.length > 1 ? `<div class="ofc-dots" role="group" aria-label="${tr('اختار عرض', 'Choose an offer')}">${slides.map((_, k) => `<button type="button" data-a="ofc-dot" data-k="${k}" class="${k ? '' : 'on'}" aria-label="${tr('عرض', 'Offer')} ${k + 1}" aria-pressed="${!k}"></button>`).join('')}</div>` : '<span></span>'}<a class="btn-link small" href="#/offers">${tr('كل العروض', 'All offers')}</a></div>
+    ${slides.length > 1 ? '<i class="ofc-bar" aria-hidden="true"></i>' : ''}</aside>`;
+  const card = layer.firstElementChild;
+  // pause for a mouse pointer or keyboard focus only (a tap on a phone must not freeze the rotation)
+  const pause = (on) => { OFC.paused = on; card.classList.toggle('paused', on); };
+  card.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') pause(true); });
+  card.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pause(false); });
+  card.addEventListener('focusin', (e) => { if (e.target.matches(':focus-visible')) pause(true); });
+  card.addEventListener('focusout', () => setTimeout(() => { if (!card.contains(document.activeElement)) pause(false); }, 0));
+  OFC.show = setTimeout(() => { card.classList.add('in'); document.body.classList.add('ofc-on'); if (slides.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) OFC.timer = setInterval(() => { if (!OFC.paused && !document.hidden) ofcGo(OFC.i + 1); }, 4500); }, 1800);
 }
+function ofcGo(k) {
+  const card = document.querySelector('.ofc'); if (!card) return;
+  const n = +card.dataset.n; OFC.i = ((k % n) + n) % n;
+  card.querySelectorAll('.ofc-slide').forEach((el) => { const on = +el.dataset.k === OFC.i; el.classList.toggle('on', on); el.toggleAttribute('inert', !on); el.setAttribute('aria-hidden', String(!on)); });
+  card.querySelectorAll('.ofc-dots button').forEach((el) => { const on = +el.dataset.k === OFC.i; el.classList.toggle('on', on); el.setAttribute('aria-pressed', String(on)); });
+  const c = card.querySelector('.ofc-n'); if (c) c.textContent = (OFC.i + 1) + ' / ' + n;
+  const bar = card.querySelector('.ofc-bar'); if (bar) { bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run'); }
+}
+function ofcPill(n) { ofcLayer().innerHTML = `<button type="button" class="ofc-pill" data-a="ofc-open">${ic('tag')}<span>${ofcTitle()}</span><span class="ofc-pn num">${n}</span></button>`; }
+ACTIONS['ofc-dot'] = (el) => ofcGo(+el.dataset.k);
+ACTIONS['ofc-close'] = () => { try { sessionStorage.setItem(OFC_CLOSED, '1'); } catch (e) { } const card = document.querySelector('.ofc'); ofcStop(); const n = card ? +card.dataset.n : 0; if (card) { card.classList.remove('in'); setTimeout(() => ofcPill(n), 260); } };
+ACTIONS['ofc-open'] = () => { try { sessionStorage.removeItem(OFC_CLOSED); } catch (e) { } OFC.key = ''; ofcMount(); clearTimeout(OFC.show); const card = document.querySelector('.ofc'); if (card) requestAnimationFrame(() => { card.classList.add('in'); document.body.classList.add('ofc-on'); if (+card.dataset.n > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) OFC.timer = setInterval(() => { if (!OFC.paused && !document.hidden) ofcGo(OFC.i + 1); }, 4500); card.querySelector('.ofc-x').focus(); }); };
 ACTIONS['copy-code'] = async (el) => { const c = el.dataset.code; try { await navigator.clipboard.writeText(c); toast(tr(`اتنسخ الكود ${c}. اكتبه وقت الدفع.`, `Copied ${c}. Enter it at checkout.`)); } catch (e) { toast(tr(`الكود: ${c}`, `Code: ${c}`), 'info'); } };
 
 function viewOffers() {
@@ -3521,7 +3595,6 @@ function viewMe() {
   const next = up[0];
   const nd = next && depById(next.departureId), nt = next && tripById(next.tripId);
   return dashLayout('me', tr(`أهلًا ${me().name.split(' ')[0]}`, `Hi ${me().name.split(' ')[0]}`), `
-    ${customerOffers('me')}
     <div style="margin-bottom:16px">${meRequestsCard()}</div>
     ${pend.map((b) => `<div class="callout warn m-stack" style="margin-bottom:12px">${ic('clock')}<div class="grow">${tr('عندك حجز في انتظار الدفع', 'You have a booking awaiting payment')}: <b>${esc(L(tripById(b.tripId).title))}</b> — ${tr('المقاعد محجوزة لحد', 'seats held until')} ${fmtDT(b.holdUntil)}</div><button class="btn btn-sm btn-sand" data-a="resume" data-id="${b.id}">${tr('أكمل الدفع', 'Complete payment')}</button></div>`).join('')}
     <div class="kpis">${kpi(tr('رحلات قادمة', 'Upcoming trips'), up.length, '', 'cal', true)}${kpi(tr('رحلات مكتملة', 'Completed trips'), done.length, '', 'check')}${kpi(tr('إجمالي المدفوع', 'Total paid'), money(spent), '', 'wallet')}${kpi(tr('بانتظار تقييمك', 'Awaiting your review'), toReview.length, toReview.length ? `<a class="btn-link" href="#/me/reviews">${tr('قيّم الآن', 'Review now')}</a>` : '', 'star')}</div>
@@ -4235,6 +4308,7 @@ function render() {
   const h1 = $('#app h1'); document.title = (h1 ? h1.textContent.trim().slice(0, 60) + ' | ' : '') + tr('UTravel', 'UTravel');
   if (path !== LAST_PATH) { scrollTo(0, 0); LAST_PATH = path; }
   tickHold();
+  ofcMount();
   if (role() !== 'admin') installEngage(path.startsWith('/trip/') ? 'trip' : path.startsWith('/me/booking/') && readQuery().new ? 'booked' : 'page');
 }
 window.addEventListener('hashchange', () => { if (db) render(); });

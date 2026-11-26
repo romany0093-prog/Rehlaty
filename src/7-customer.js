@@ -158,7 +158,6 @@ function viewMe() {
   const next = up[0];
   const nd = next && depById(next.departureId), nt = next && tripById(next.tripId);
   return dashLayout('me', tr(`أهلًا ${me().name.split(' ')[0]}`, `Hi ${me().name.split(' ')[0]}`), `
-    ${customerOffers('me')}
     <div style="margin-bottom:16px">${meRequestsCard()}</div>
     ${pend.map((b) => `<div class="callout warn m-stack" style="margin-bottom:12px">${ic('clock')}<div class="grow">${tr('عندك حجز في انتظار الدفع', 'You have a booking awaiting payment')}: <b>${esc(L(tripById(b.tripId).title))}</b> — ${tr('المقاعد محجوزة لحد', 'seats held until')} ${fmtDT(b.holdUntil)}</div><button class="btn btn-sm btn-sand" data-a="resume" data-id="${b.id}">${tr('أكمل الدفع', 'Complete payment')}</button></div>`).join('')}
     <div class="kpis">${kpi(tr('رحلات قادمة', 'Upcoming trips'), up.length, '', 'cal', true)}${kpi(tr('رحلات مكتملة', 'Completed trips'), done.length, '', 'check')}${kpi(tr('إجمالي المدفوع', 'Total paid'), money(spent), '', 'wallet')}${kpi(tr('بانتظار تقييمك', 'Awaiting your review'), toReview.length, toReview.length ? `<a class="btn-link" href="#/me/reviews">${tr('قيّم الآن', 'Review now')}</a>` : '', 'star')}</div>

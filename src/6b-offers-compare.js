@@ -23,20 +23,55 @@ function homeOffers() {
 }
 /* ---- traveller: offers up front (top of the dashboard, and under the header on the home page) ---- */
 const livePromos = () => (db.settings.offers || []).filter((o) => o.active && o.until >= iso(TODAY));
-function promoCoupon(o) {
-  const where = o.dests && o.dests.length ? o.dests.map((d) => esc(L((destById(d) || { name: { ar: d, en: d } }).name))).join(tr('، ', ', ')) : tr('كل الرحلات', 'all trips');
-  return `<div class="coupon"><span class="cp-pct num">−${o.percent}٪</span><div class="grow"><b>${tr(`خصم ${o.percent}٪ على ${where}`, `${o.percent}% off ${where}`)}</b><div class="xs muted">${tr('اكتب الكود وقت الدفع · لحد', 'Enter the code at checkout · until')} ${fmtD(o.until)}</div></div><button type="button" class="cp-code" data-a="copy-code" data-code="${esc(o.code)}" aria-label="${tr('انسخ الكود', 'Copy code')} ${esc(o.code)}"><span dir="ltr">${esc(o.code)}</span>${ic('doc')}</button></div>`;
+/* Corner card: slides in ~2 s after a traveller opens the home page or their dashboard, cycles through the
+   live seasonal offers and promo codes, pauses on hover/focus, and closes to a small "reopen" button (per visit). */
+const OFC = { i: 0, timer: null, show: null, paused: false, key: '' };
+const OFC_CLOSED = 'utravel_ofc_closed';
+function ofcSlides() {
+  const camps = liveCampaigns().map((c) => { const co = compById(c.companyId), trips = (c.tripIds || []).map(tripById).filter((t) => t && publicTrips().includes(t)); if (!co || !trips.length) return ''; const from = Math.min(...trips.map((t) => offerPrice(tripStats(t).minPrice, c)));
+    return `<a class="ofc-slide" href="#/trips?offer=${c.id}"><img src="${imgSrc(trips[0].images[0])}" alt=""><div class="ofc-b"><span class="ofc-pct">−${c.percent}٪</span><b>${esc(L(c.title))}</b><small>${esc(L(co.name))} · ${tr('حتى', 'until')} ${fmtD(c.until)}</small><span class="ofc-go"><span class="num">${tr('يبدأ من', 'From')} ${money(from)}</span><span class="btn btn-sand btn-sm">${tr('شوف الرحلات', 'See trips')}</span></span></div></a>`; }).filter(Boolean);
+  const promos = livePromos().map((o) => { const where = o.dests && o.dests.length ? o.dests.map((d) => esc(L((destById(d) || { name: { ar: d, en: d } }).name))).join(tr('، ', ', ')) : tr('كل الرحلات', 'all trips');
+    return `<div class="ofc-slide ofc-promo"><span class="ofc-big num">−${o.percent}٪</span><div class="ofc-b"><b>${tr(`خصم ${o.percent}٪ على ${where}`, `${o.percent}% off ${where}`)}</b><small>${tr('اكتب الكود وقت الدفع · لحد', 'Enter it at checkout · until')} ${fmtD(o.until)}</small><button type="button" class="cp-code" data-a="copy-code" data-code="${esc(o.code)}" aria-label="${tr('انسخ الكود', 'Copy code')} ${esc(o.code)}"><span dir="ltr">${esc(o.code)}</span>${ic('doc')}</button></div></div>`; });
+  return camps.concat(promos);
 }
-function customerOffers(where) {
-  const camps = liveCampaigns().map(campaignCard).filter(Boolean), promos = livePromos();
-  if (!camps.length && !promos.length) return '';
-  const n = camps.length + promos.length;
-  return `<section class="cust-offers ${where === 'home' ? 'on-home' : ''}" aria-labelledby="co-h-${where}"><div class="${where === 'home' ? 'wrap' : ''}">
-    <div class="sec-h" style="margin-bottom:14px"><div><h2 id="co-h-${where}" class="row" style="gap:10px"><span class="co-ic">${ic('tag')}</span>${tr('عروض ليك دلوقتي', 'Offers for you right now')} <span class="badge b-ok num">${n}</span></h2><p>${tr('الخصم بيتطبق تلقائيًا على رحلات العروض، وأكواد الخصم بتكتبها وقت الدفع.', 'Seasonal discounts apply automatically; promo codes go in at checkout.')}</p></div>${camps.length ? `<a class="btn btn-ghost btn-sm" href="#/offers">${tr('كل العروض', 'All offers')}</a>` : ''}</div>
-    ${camps.length ? `<div class="grid ${camps.length === 1 ? 'g2' : camps.length === 2 ? 'g2' : 'g3'} rail">${camps.slice(0, 3).join('')}</div>` : ''}
-    ${promos.length ? `<div class="coupons ${camps.length ? 'mt' : ''}">${promos.map(promoCoupon).join('')}</div>` : ''}
-  </div></section>`;
+const ofcTitle = () => tr('عروض حصرية ليك', 'Exclusive offers for you');
+function ofcLayer() { let l = document.getElementById('ofc-layer'); if (!l) { l = document.createElement('div'); l.id = 'ofc-layer'; document.body.appendChild(l); } return l; }
+function ofcStop() { clearInterval(OFC.timer); clearTimeout(OFC.show); OFC.timer = OFC.show = null; document.body.classList.remove('ofc-on'); }
+function ofcMount() {
+  const path = (location.hash.replace(/^#/, '') || '/').split('?')[0].replace(/\/$/, '') || '/';
+  const slides = role() === 'customer' && (path === '/' || path === '/me') ? ofcSlides() : [];
+  const layer = ofcLayer(), key = slides.length ? path + '|' + LANG + '|' + slides.length : '';
+  if (key && key === OFC.key && layer.firstChild) return; // same page: keep the card where it is
+  ofcStop(); OFC.key = key; OFC.i = 0;
+  if (!slides.length) { layer.innerHTML = ''; return; }
+  let closed = false; try { closed = sessionStorage.getItem(OFC_CLOSED) === '1'; } catch (e) { }
+  if (closed) return ofcPill(slides.length);
+  layer.innerHTML = `<aside class="ofc" role="region" aria-label="${ofcTitle()}" data-n="${slides.length}">
+    <div class="ofc-h"><span class="ofc-ic">${ic('tag')}</span><b>${ofcTitle()}</b>${slides.length > 1 ? `<span class="ofc-n num" dir="ltr" aria-hidden="true">1 / ${slides.length}</span>` : ''}<button type="button" class="ofc-x" data-a="ofc-close" aria-label="${tr('إخفاء العروض', 'Hide offers')}">${ic('x')}</button></div>
+    <div class="ofc-track">${slides.map((h, k) => h.replace('class="ofc-slide', `data-k="${k}" ${k ? 'aria-hidden="true" inert' : ''} class="ofc-slide${k ? '' : ' on'}`)).join('')}</div>
+    <div class="ofc-f">${slides.length > 1 ? `<div class="ofc-dots" role="group" aria-label="${tr('اختار عرض', 'Choose an offer')}">${slides.map((_, k) => `<button type="button" data-a="ofc-dot" data-k="${k}" class="${k ? '' : 'on'}" aria-label="${tr('عرض', 'Offer')} ${k + 1}" aria-pressed="${!k}"></button>`).join('')}</div>` : '<span></span>'}<a class="btn-link small" href="#/offers">${tr('كل العروض', 'All offers')}</a></div>
+    ${slides.length > 1 ? '<i class="ofc-bar" aria-hidden="true"></i>' : ''}</aside>`;
+  const card = layer.firstElementChild;
+  // pause for a mouse pointer or keyboard focus only (a tap on a phone must not freeze the rotation)
+  const pause = (on) => { OFC.paused = on; card.classList.toggle('paused', on); };
+  card.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') pause(true); });
+  card.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pause(false); });
+  card.addEventListener('focusin', (e) => { if (e.target.matches(':focus-visible')) pause(true); });
+  card.addEventListener('focusout', () => setTimeout(() => { if (!card.contains(document.activeElement)) pause(false); }, 0));
+  OFC.show = setTimeout(() => { card.classList.add('in'); document.body.classList.add('ofc-on'); if (slides.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) OFC.timer = setInterval(() => { if (!OFC.paused && !document.hidden) ofcGo(OFC.i + 1); }, 4500); }, 1800);
 }
+function ofcGo(k) {
+  const card = document.querySelector('.ofc'); if (!card) return;
+  const n = +card.dataset.n; OFC.i = ((k % n) + n) % n;
+  card.querySelectorAll('.ofc-slide').forEach((el) => { const on = +el.dataset.k === OFC.i; el.classList.toggle('on', on); el.toggleAttribute('inert', !on); el.setAttribute('aria-hidden', String(!on)); });
+  card.querySelectorAll('.ofc-dots button').forEach((el) => { const on = +el.dataset.k === OFC.i; el.classList.toggle('on', on); el.setAttribute('aria-pressed', String(on)); });
+  const c = card.querySelector('.ofc-n'); if (c) c.textContent = (OFC.i + 1) + ' / ' + n;
+  const bar = card.querySelector('.ofc-bar'); if (bar) { bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run'); }
+}
+function ofcPill(n) { ofcLayer().innerHTML = `<button type="button" class="ofc-pill" data-a="ofc-open">${ic('tag')}<span>${ofcTitle()}</span><span class="ofc-pn num">${n}</span></button>`; }
+ACTIONS['ofc-dot'] = (el) => ofcGo(+el.dataset.k);
+ACTIONS['ofc-close'] = () => { try { sessionStorage.setItem(OFC_CLOSED, '1'); } catch (e) { } const card = document.querySelector('.ofc'); ofcStop(); const n = card ? +card.dataset.n : 0; if (card) { card.classList.remove('in'); setTimeout(() => ofcPill(n), 260); } };
+ACTIONS['ofc-open'] = () => { try { sessionStorage.removeItem(OFC_CLOSED); } catch (e) { } OFC.key = ''; ofcMount(); clearTimeout(OFC.show); const card = document.querySelector('.ofc'); if (card) requestAnimationFrame(() => { card.classList.add('in'); document.body.classList.add('ofc-on'); if (+card.dataset.n > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) OFC.timer = setInterval(() => { if (!OFC.paused && !document.hidden) ofcGo(OFC.i + 1); }, 4500); card.querySelector('.ofc-x').focus(); }); };
 ACTIONS['copy-code'] = async (el) => { const c = el.dataset.code; try { await navigator.clipboard.writeText(c); toast(tr(`اتنسخ الكود ${c}. اكتبه وقت الدفع.`, `Copied ${c}. Enter it at checkout.`)); } catch (e) { toast(tr(`الكود: ${c}`, `Code: ${c}`), 'info'); } };
 
 function viewOffers() {

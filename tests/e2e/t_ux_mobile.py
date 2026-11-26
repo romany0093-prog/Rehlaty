@@ -11,7 +11,7 @@ def ok(n, c, x=''):
     res.append(bool(c)); print(('PASS ' if c else 'FAIL ') + n + (' :: ' + str(x) if x != '' else ''))
 def login(pg, who):
     pg.evaluate("setSession(null)"); pg.goto(U + '#/login'); pg.wait_for_timeout(250); pg.click(f'[data-a=demo-login][data-e="{who}"]'); pg.wait_for_timeout(450)
-SMALL = """() => [...document.querySelectorAll('.btn-sm,.icon-btn,.lang-btn,.tcard .fav,.cmp-btn,.chip,.tabbar a,.m-book .btn')].filter(e => e.offsetParent).map(e => [e, e.getBoundingClientRect()]).filter(([e, r]) => r.height < 43.5 || r.width < 43.5).map(([e, r]) => (e.textContent.trim().slice(0, 14) || e.getAttribute('aria-label') || e.className) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height))"""
+SMALL = """() => [...document.querySelectorAll('.btn-sm,.icon-btn,.lang-btn,.tcard .fav,.cmp-btn,.chip,.tabbar a,.m-book .btn')].filter(e => e.offsetParent && e.checkVisibility({ visibilityProperty: true, opacityProperty: true }) && !e.closest('.ofc:not(.in)')).map(e => [e, e.getBoundingClientRect()]).filter(([e, r]) => r.height < 43.5 || r.width < 43.5).map(([e, r]) => (e.textContent.trim().slice(0, 14) || e.getAttribute('aria-label') || e.className) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height))"""
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=CHROME, args=['--no-sandbox'])
     m = b.new_page(viewport={'width': 390, 'height': 844}); m.on('pageerror', lambda e: err.append(str(e)[:160]))

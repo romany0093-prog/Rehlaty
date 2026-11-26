@@ -831,20 +831,60 @@ details.faq[open]{border-color:rgba(111,158,198,.6);box-shadow:var(--sh-1)}
   .toasts{inset-inline:12px;max-width:none}
 }
 
-/* traveller offers block */
-.cust-offers{margin-bottom:18px;background:linear-gradient(135deg,#FFF8EC,#fff 60%);border:1px solid rgba(200,169,110,.55);border-radius:22px;padding:20px 20px 18px;box-shadow:var(--sh-1)}
-.cust-offers.on-home{border-radius:0;border-inline:0;border-top:0;margin:0;padding:24px 0 22px}
-.cust-offers h2{font-size:21px}
-.cust-offers .co-ic{width:36px;height:36px;border-radius:11px;background:var(--sand);color:var(--navy-950);display:inline-grid;place-items:center;flex:none}
-.cust-offers .camp{min-height:250px}
-.coupons{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px}.coupon .grow{min-width:0}.coupons.mt{margin-top:14px}
-.coupon{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px dashed var(--sand);border-radius:16px;padding:12px 14px}
-.coupon .cp-pct{font-family:var(--f-disp);font-weight:800;font-size:20px;color:var(--navy);background:var(--sand-50,#F6EEDD);border-radius:12px;padding:8px 10px;flex:none}
-.coupon b{color:var(--navy);font-size:14.5px}
 .cp-code{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-family:ui-monospace,Menlo,monospace;font-weight:700;letter-spacing:.06em;cursor:pointer;flex:none}
-.cp-code svg{width:16px;height:16px}
-.cp-code:hover{background:var(--navy-950)}
-@media(max-width:640px){.camp .pct{top:12px;inset-inline-end:12px;font-size:17px;padding:5px 9px;border-radius:12px}.camp .top{top:12px;inset-inline-start:12px;inset-inline-end:84px;display:flex}.camp .cb{padding-top:54px}.cust-offers h2{white-space:nowrap;font-size:17px!important}.cust-offers .sec-h{flex-wrap:nowrap}.camp .top .offer-chip{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cust-offers .sec-h p{display:none}.cust-offers .sec-h .btn{flex:none}.cust-offers{padding:16px 16px 14px}.cust-offers.on-home{padding:18px 0 16px}.cust-offers h2{font-size:18px}.coupons{grid-template-columns:1fr}.coupon{flex-wrap:wrap}.coupon .grow{flex:1 1 60%}.cp-code{width:100%;justify-content:center}}
+.cp-code svg{width:16px;height:16px}.cp-code:hover{background:var(--navy-950)}
+@media(max-width:640px){.camp .pct{top:12px;inset-inline-end:12px;font-size:17px;padding:5px 9px;border-radius:12px}.camp .top{top:12px;inset-inline-start:12px;inset-inline-end:84px;display:flex}.camp .top .offer-chip{max-width:100%;overflow:hidden}.camp .cb{padding-top:54px}}
+/* "Exclusive offers for you" corner card (travellers, home + dashboard) */
+#ofc-layer{position:fixed;z-index:85;bottom:calc(20px + env(safe-area-inset-bottom));inset-inline-start:20px;pointer-events:none}
+.ofc,.ofc-pill{pointer-events:auto}
+.ofc{width:372px;max-width:calc(100vw - 24px);background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(20,31,42,.28),0 0 0 1px rgba(200,169,110,.55);overflow:hidden;position:relative;opacity:0;transform:translateY(40px) scale(.96);transition:opacity .35s ease,transform .45s cubic-bezier(.2,1.3,.4,1)}
+.ofc.in{opacity:1;transform:none}
+.ofc-h{display:flex;align-items:center;gap:10px;padding:12px 12px 10px 16px;background:linear-gradient(120deg,var(--navy-950),var(--navy) 70%,#2a5878);color:#fff;position:relative;overflow:hidden}
+.ofc-h::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(232,206,150,.35) 50%,transparent 65%);transform:translateX(-120%);animation:ofc-shine 3.6s ease-in-out 2.2s infinite}
+[dir=ltr] .ofc-h{padding:12px 16px 10px 12px}
+.ofc-h b{font-size:15.5px;flex:1}
+.ofc-ic{width:32px;height:32px;border-radius:10px;background:var(--sand);color:var(--navy-950);display:grid;place-items:center;flex:none;animation:ofc-swing 2.8s ease-in-out 2s infinite;transform-origin:50% 0}
+.ofc-ic svg{width:18px;height:18px}
+.ofc-n{font-size:12px;color:#C9D6E2;flex:none}
+.ofc-x{width:44px;height:44px;margin:-6px -6px -6px 0;border:0;background:none;color:#fff;border-radius:12px;display:grid;place-items:center;cursor:pointer;flex:none;position:relative;z-index:1}
+.ofc-x:hover{background:rgba(255,255,255,.12)}
+.ofc-track{position:relative;height:166px}
+.ofc-slide{position:absolute;inset:0;display:flex;gap:14px;align-items:center;padding:14px 16px;color:inherit;text-decoration:none;opacity:0;transform:translateX(28px);transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.3,1);visibility:hidden}
+[dir=rtl] .ofc-slide{transform:translateX(-28px)}
+.ofc-slide.on{opacity:1;transform:none;visibility:visible}
+.ofc-slide img{width:104px;height:116px;object-fit:cover;border-radius:16px;flex:none}
+.ofc-b{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.ofc-b b{color:var(--navy);font-size:15px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ofc-b small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ofc-pct{align-self:flex-start;background:var(--bad);color:#fff;font-weight:800;font-size:12.5px;border-radius:8px;padding:2px 8px;font-family:var(--f-disp)}
+.ofc-go{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;font-weight:700;color:var(--navy);font-size:13.5px;white-space:nowrap}
+.ofc-go .btn{height:36px;flex:none}
+.ofc-big{font-family:var(--f-disp);font-weight:800;font-size:30px;color:var(--navy);background:#F6EEDD;border:1.5px dashed var(--sand);border-radius:18px;width:104px;height:104px;display:grid;place-items:center;flex:none}
+.ofc-promo .cp-code{margin-top:6px;align-self:flex-start;height:40px}
+.ofc-f{display:flex;align-items:center;justify-content:space-between;padding:0 16px 14px}
+.ofc-dots{display:flex;gap:2px}
+.ofc-dots button{width:26px;height:26px;border:0;background:none;cursor:pointer;display:grid;place-items:center;padding:0}
+.ofc-dots button::before{content:"";width:8px;height:8px;border-radius:4px;background:#D7DDE3;transition:width .3s,background .3s}
+.ofc-dots button.on::before{width:22px;background:var(--sand)}
+.ofc-bar{position:absolute;inset-inline:0;bottom:0;height:3px;background:var(--sand);transform-origin:right;transform:scaleX(0)}
+[dir=ltr] .ofc-bar{transform-origin:left}
+.ofc.in .ofc-bar,.ofc-bar.run{animation:ofc-progress 4.5s linear}
+.ofc.paused .ofc-bar{animation-play-state:paused}
+.ofc-pill{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 16px 0 12px;border-radius:24px;border:0;background:var(--navy-950);color:#fff;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 12px 30px rgba(20,31,42,.3);animation:pop .3s ease-out}
+.ofc-pill svg{width:18px;height:18px;color:var(--sand)}
+.ofc-pn{background:var(--sand);color:var(--navy-950);border-radius:10px;min-width:22px;height:22px;display:grid;place-items:center;font-size:12px;padding:0 6px}
+@keyframes ofc-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes ofc-shine{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+@keyframes ofc-swing{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(12deg)}84%{transform:rotate(-9deg)}92%{transform:rotate(5deg)}}
+body.install-open #ofc-layer{bottom:calc(120px + env(safe-area-inset-bottom))}
+body.ofc-on .toasts{bottom:calc(20px + env(safe-area-inset-bottom))}
+@media(max-width:900px){
+  #ofc-layer{inset-inline:10px;bottom:calc(74px + env(safe-area-inset-bottom))}
+  .ofc{width:auto;max-width:none}
+  body:has(.tabbar).ofc-on .toasts{bottom:calc(270px + env(safe-area-inset-bottom))}
+}
+@media(max-width:900px){.ofc-go .btn{height:44px}}
+@media(max-width:640px){.ofc-track{height:170px}.ofc-slide img{width:88px;height:104px}.ofc-big{width:88px;height:88px;font-size:26px}}
 </style>
 </head>
 <body>

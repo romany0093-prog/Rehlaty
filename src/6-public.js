@@ -87,8 +87,7 @@ function viewHome() {
   const banner = db.settings.banners.find((b) => b.active);
   const heroTrip = featured[0] || trips[0];
   const destOpts = db.destinations.map((d) => `<option value="${d.id}">${esc(L(d.name))}</option>`).join('');
-  const custOffers = role() === 'customer' ? customerOffers('home') : '';
-  return publicLayout(`${custOffers}
+  return publicLayout(`
   <section class="hero"><div class="hero-art"><img src="assets/hero.jpg" srcset="assets/hero-800.jpg 800w, assets/hero.jpg 1376w" sizes="100vw" alt="" fetchpriority="high" onerror="this.onerror=null;this.removeAttribute('srcset');this.src=artURL('nile',1)"></div>
     <div class="wrap hero-in" style="position:relative">
       <p class="hero-kicker" dir="ltr">${BRAND.tagline}</p>
@@ -104,7 +103,7 @@ function viewHome() {
       <div class="hero-stats"><span><b class="num">${trips.length}</b>${tr('رحلة متاحة الآن', 'trips available now')}</span><span><b class="num">${comps.length}</b>${tr('شركات مرخصة', 'licensed operators')}</span><span><b class="num">${r1(avg(db.reviews.map((r) => r.ratings.overall)))} ★</b>${tr(`من ${db.reviews.length} تقييم حقيقي`, `from ${db.reviews.length} verified reviews`)}</span></div>
     </div></section>
 
-  ${custOffers ? '' : homeOffers()}
+  ${homeOffers()}
   ${homePlanBand()}
   <section class="sec"><div class="wrap">
     <div class="sec-h"><div><h2>${tr('وجهات مختارة', 'Featured destinations')}</h2><p>${tr('من البحر الأحمر إلى واحات الصحراء الغربية.', 'From the Red Sea to the Western Desert oases.')}</p></div><a class="btn btn-ghost btn-sm" href="#/destinations">${tr('كل الوجهات', 'All destinations')}</a></div>

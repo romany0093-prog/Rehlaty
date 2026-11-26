@@ -84,6 +84,7 @@ function render() {
   const h1 = $('#app h1'); document.title = (h1 ? h1.textContent.trim().slice(0, 60) + ' | ' : '') + tr('UTravel', 'UTravel');
   if (path !== LAST_PATH) { scrollTo(0, 0); LAST_PATH = path; }
   tickHold();
+  ofcMount();
   if (role() !== 'admin') installEngage(path.startsWith('/trip/') ? 'trip' : path.startsWith('/me/booking/') && readQuery().new ? 'booked' : 'page');
 }
 window.addEventListener('hashchange', () => { if (db) render(); });
